@@ -20,7 +20,12 @@ app.get('/', (req, res) => {
       'Unit Conversion (IN/CM)',
       'Global Support',
       'India Inches Default'
-    ]
+    ],
+    endpoints: {
+      'size-recommendation': '/api/recommend-size',
+      'unit-conversion': '/api/convert-units',
+      'health-check': '/api/health'
+    }
   });
 });
 
@@ -126,3 +131,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = app;
+
