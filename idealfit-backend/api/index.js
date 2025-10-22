@@ -1,134 +1,133 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+// Simple Vercel-compatible API
+export default function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+  // Root endpoint
+  if (req.url === '/') {
+    return res.status(200).json({
+      message: 'IdealFit API Server',
+      status: 'running',
+      version: '1.0.0',
+      features: [
+        'Size Recommendation',
+        'Unit Conversion (IN/CM)',
+        'Global Support',
+        'India Inches Default'
+      ],
+      endpoints: {
+        'size-recommendation': '/api/recommend-size',
+        'unit-conversion': '/api/convert-units',
+        'health-check': '/api/health'
+      }
+    });
+  }
 
-// Routes
-app.get('/', (req, res) => {
-  res.json({
-    message: 'IdealFit API Server',
-    status: 'running',
-    version: '1.0.0',
-    features: [
-      'Size Recommendation',
-      'Unit Conversion (IN/CM)',
-      'Global Support',
-      'India Inches Default'
-    ],
-    endpoints: {
-      'size-recommendation': '/api/recommend-size',
-      'unit-conversion': '/api/convert-units',
-      'health-check': '/api/health'
+  // Health check endpoint
+  if (req.url === '/api/health') {
+    return res.status(200).json({
+      status: 'healthy',
+      message: 'IdealFit API is running!',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Size recommendation endpoint
+  if (req.url === '/api/recommend-size' && req.method === 'POST') {
+    const { bust, waist, hip, unit = 'inches' } = req.body;
+
+    if (!bust || !waist || !hip) {
+      return res.status(400).json({
+        error: 'Missing measurement data. Please provide bust, waist, and hip measurements.'
+      });
     }
-  });
-});
 
-// Size recommendation endpoint
-app.post('/api/recommend-size', (req, res) => {
-  const { bust, waist, hip, unit = 'inches' } = req.body;
-  
-  // Convert to inches if needed
-  let bustInches = bust;
-  let waistInches = waist;
-  let hipInches = hip;
-  
-  if (unit === 'cm') {
-    bustInches = bust / 2.54;
-    waistInches = waist / 2.54;
-    hipInches = hip / 2.54;
-  }
-  
-  // Standard women's size chart (in inches)
-  const sizeChart = [
-    { size: 'XS', bust: 30, waist: 25, hip: 35 },
-    { size: 'S', bust: 32, waist: 27, hip: 37 },
-    { size: 'M', bust: 34, waist: 29, hip: 39 },
-    { size: 'L', bust: 36, waist: 31, hip: 41 },
-    { size: 'XL', bust: 38, waist: 33, hip: 43 },
-    { size: 'XXL', bust: 40, waist: 35, hip: 45 }
-  ];
-  
-  // Option 3: Comfort Fit algorithm
-  let recommendedSize = 'N/A';
-  
-  for (let i = 0; i < sizeChart.length; i++) {
-    const size = sizeChart[i];
-    const bustFits = bustInches <= size.bust;
-    const waistFits = waistInches <= size.waist;
-    const hipsFits = hipInches <= size.hip;
-    
-    if (bustFits && waistFits && hipsFits) {
-      recommendedSize = size.size;
-      break;
+    // Conversion functions
+    const inchesToCm = (inches) => inches * 2.54;
+    const cmToInches = (cm) => cm / 2.54;
+
+    // Convert incoming measurements to inches for consistent comparison
+    const convertedBust = unit === 'cm' ? cmToInches(bust) : bust;
+    const convertedWaist = unit === 'cm' ? cmToInches(waist) : waist;
+    const convertedHip = unit === 'cm' ? cmToInches(hip) : hip;
+
+    // Default size chart (in inches)
+    const sizeChart = [
+      { size: 'XS', bust: 32, waist: 24, hips: 34 },
+      { size: 'S', bust: 34, waist: 26, hips: 36 },
+      { size: 'M', bust: 36, waist: 28, hips: 38 },
+      { size: 'L', bust: 38, waist: 30, hips: 40 },
+      { size: 'XL', bust: 40, waist: 32, hips: 42 },
+      { size: 'XXL', bust: 42, waist: 34, hips: 44 }
+    ];
+
+    // Find recommended size using comfort fit algorithm
+    let recommendedSize = 'XXL'; // Default to largest size
+
+    for (const sizeEntry of sizeChart) {
+      if (convertedBust <= sizeEntry.bust &&
+          convertedWaist <= sizeEntry.waist &&
+          convertedHip <= sizeEntry.hips) {
+        recommendedSize = sizeEntry.size;
+        break;
+      }
     }
-  }
-  
-  // If no size fits, return largest
-  if (recommendedSize === 'N/A') {
-    recommendedSize = sizeChart[sizeChart.length - 1].size;
-  }
-  
-  res.json({
-    success: true,
-    recommendedSize,
-    measurements: {
-      bust: unit === 'inches' ? bust : (bust / 2.54).toFixed(1),
-      waist: unit === 'inches' ? waist : (waist / 2.54).toFixed(1),
-      hip: unit === 'inches' ? hip : (hip / 2.54).toFixed(1),
-      unit: unit === 'inches' ? 'inches' : 'cm'
-    },
-    algorithm: 'Option 3: Comfort Fit'
-  });
-});
 
-// Unit conversion endpoint
-app.post('/api/convert-units', (req, res) => {
-  const { value, fromUnit, toUnit } = req.body;
-  
-  if (fromUnit === toUnit) {
-    return res.json({ success: true, convertedValue: value });
+    return res.json({
+      recommendedSize,
+      measurements: {
+        bust: convertedBust,
+        waist: convertedWaist,
+        hip: convertedHip,
+        unit: 'inches'
+      },
+      algorithm: 'comfort-fit'
+    });
   }
-  
-  let convertedValue;
-  if (fromUnit === 'inches' && toUnit === 'cm') {
-    convertedValue = value * 2.54;
-  } else if (fromUnit === 'cm' && toUnit === 'inches') {
-    convertedValue = value / 2.54;
-  } else {
-    return res.status(400).json({ success: false, error: 'Invalid unit conversion' });
+
+  // Unit conversion endpoint
+  if (req.url === '/api/convert-units' && req.method === 'POST') {
+    const { value, fromUnit, toUnit } = req.body;
+
+    if (typeof value === 'undefined' || !fromUnit || !toUnit) {
+      return res.status(400).json({
+        error: 'Missing value, fromUnit, or toUnit.'
+      });
+    }
+
+    const inchesToCm = (inches) => inches * 2.54;
+    const cmToInches = (cm) => cm / 2.54;
+
+    let convertedValue = value;
+    if (fromUnit === 'inches' && toUnit === 'cm') {
+      convertedValue = inchesToCm(value);
+    } else if (fromUnit === 'cm' && toUnit === 'inches') {
+      convertedValue = cmToInches(value);
+    }
+
+    return res.json({
+      originalValue: value,
+      originalUnit: fromUnit,
+      convertedValue: parseFloat(convertedValue.toFixed(2)),
+      convertedUnit: toUnit
+    });
   }
-  
-  res.json({
-    success: true,
-    originalValue: value,
-    convertedValue: Math.round(convertedValue * 10) / 10,
-    fromUnit,
-    toUnit
-  });
-});
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-// Start server
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 IdealFit API Server running on port ${PORT}`);
-    console.log(`📊 Features: Size Recommendation, Unit Conversion, Global Support`);
+  // 404 for unmatched routes
+  res.status(404).json({
+    error: 'Endpoint not found',
+    availableEndpoints: [
+      'GET /',
+      'GET /api/health',
+      'POST /api/recommend-size',
+      'POST /api/convert-units'
+    ]
   });
 }
-
-module.exports = app;
-
