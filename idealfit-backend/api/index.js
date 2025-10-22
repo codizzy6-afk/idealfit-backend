@@ -1,7 +1,9 @@
-export default function handler(req, res) {
+module.exports = (req, res) => {
   res.status(200).json({
     message: 'Hello World from IdealFit!',
     status: 'working',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    url: req.url,
+    method: req.method
   });
-}
+};
