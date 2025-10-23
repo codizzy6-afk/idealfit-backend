@@ -98,15 +98,45 @@ app.post('/api/shopify/webhook/orders/create', (req, res) => {
   try {
     const order = req.body;
     console.log('📦 New Shopify Order Received:', order.id);
+      console.log('🔍 Full Order Data:', JSON.stringify(order, null, 2));
+      console.log('🔍 Order Attributes:', order.attributes);
+      console.log('🔍 Order Note Attributes:', order.note_attributes);
+      console.log('🔍 Line Items:', order.line_items);
+      
+      // Check line items for measurement data
+      if (order.line_items && order.line_items.length > 0) {
+        order.line_items.forEach((item, index) => {
+          console.log(`🔍 Line Item ${index + 1}:`, {
+            title: item.title,
+            variant_title: item.variant_title,
+            properties: item.properties,
+            attributes: item.attributes
+          });
+        });
+      }
     
-    // Extract measurement data from order attributes
-    const measurements = {
-      bust: order.attributes?._measurement_bust || null,
-      waist: order.attributes?._measurement_waist || null,
-      hip: order.attributes?._measurement_hip || null,
-      recommendedSize: order.attributes?._recommended_size || null,
-      unit: order.attributes?._measurement_unit || 'inches'
+    // Extract measurement data from multiple sources (order attributes, note attributes, line item properties)
+    let measurements = {
+      bust: order.attributes?._measurement_bust || order.note_attributes?._measurement_bust || null,
+      waist: order.attributes?._measurement_waist || order.note_attributes?._measurement_waist || null,
+      hip: order.attributes?._measurement_hip || order.note_attributes?._measurement_hip || null,
+      recommendedSize: order.attributes?._recommended_size || order.note_attributes?._recommended_size || null,
+      unit: order.attributes?._measurement_unit || order.note_attributes?._measurement_unit || 'inches'
     };
+    
+    // Check line item properties for measurements (scenario 2: direct checkout)
+    if (order.line_items && order.line_items.length > 0) {
+      const firstItem = order.line_items[0];
+      if (firstItem.properties) {
+        firstItem.properties.forEach(prop => {
+          if (prop.name === '_measurement_bust') measurements.bust = prop.value;
+          if (prop.name === '_measurement_waist') measurements.waist = prop.value;
+          if (prop.name === '_measurement_hip') measurements.hip = prop.value;
+          if (prop.name === '_measurement_unit') measurements.unit = prop.value;
+          if (prop.name === '_recommended_size') measurements.recommendedSize = prop.value;
+        });
+      }
+    }
     
     // Extract customer info
     const customer = order.customer;
