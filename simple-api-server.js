@@ -541,7 +541,7 @@ app.get('/api/shopify/merchants', (req, res) => {
     }
   ];
   
-  console.log('🏪 Returning mock merchants with size chart check');
+  console.log('🏪 Returning mock merchants with size chart check - VERSION 2');
   res.json(merchants);
 });
 
