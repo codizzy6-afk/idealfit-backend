@@ -510,7 +510,7 @@ app.get('/api/shopify/merchants', (req, res) => {
     }));
   }
   
-  // Fallback to mock data
+  // Fallback to mock data - but check for saved size charts first
   const merchants = [
     {
       id: 'idealfit',
@@ -518,17 +518,30 @@ app.get('/api/shopify/merchants', (req, res) => {
       totalOrders: 3,
       avgOrderValue: 165,
       lastOrder: '2025-10-23',
-      sizeChart: [
-        { size: 'XS', bust: 32, waist: 24, hip: 35 },
-        { size: 'S', bust: 34, waist: 26, hip: 37 },
-        { size: 'M', bust: 36, waist: 28, hip: 39 },
-        { size: 'L', bust: 38, waist: 30, hip: 41 },
-        { size: 'XL', bust: 40, waist: 32, hip: 43 },
-        { size: 'XXL', bust: 42, waist: 34, hip: 45 }
-      ],
-      unit: 'inches'
+      sizeChart: (() => {
+        const savedSizeChart = merchantSizeCharts.get('idealfit');
+        if (savedSizeChart) {
+          console.log('🏪 Using saved size chart for idealfit');
+          return savedSizeChart.sizeChart;
+        }
+        console.log('🏪 Using default size chart for idealfit');
+        return [
+          { size: 'XS', bust: 32, waist: 24, hip: 35 },
+          { size: 'S', bust: 34, waist: 26, hip: 37 },
+          { size: 'M', bust: 36, waist: 28, hip: 39 },
+          { size: 'L', bust: 38, waist: 30, hip: 41 },
+          { size: 'XL', bust: 40, waist: 32, hip: 43 },
+          { size: 'XXL', bust: 42, waist: 34, hip: 45 }
+        ];
+      })(),
+      unit: (() => {
+        const savedSizeChart = merchantSizeCharts.get('idealfit');
+        return savedSizeChart ? savedSizeChart.unit : 'inches';
+      })()
     }
   ];
+  
+  console.log('🏪 Returning mock merchants with size chart check');
   res.json(merchants);
 });
 
