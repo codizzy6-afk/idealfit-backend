@@ -1,6 +1,9 @@
 const express = require('express');
 const app = express();
 
+// CRITICAL: Force server restart for size chart sync fix
+console.log('🚨 CRITICAL: Server starting with size chart sync fix');
+
 // Enable CORS for all routes
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
