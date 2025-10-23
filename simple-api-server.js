@@ -245,11 +245,12 @@ app.get('/api/debug', (req, res) => {
   });
 });
 
-// Test endpoint to verify deployment
-app.get('/api/test-deployment', (req, res) => {
+// CRITICAL TEST: Verify deployment is working
+app.get('/api/critical-test', (req, res) => {
   res.json({
-    message: 'Deployment test successful - VERSION 3',
+    message: 'CRITICAL TEST - Size Chart Sync Fix Deployed',
     timestamp: new Date().toISOString(),
+    version: 'CRITICAL-FIX-v1',
     merchantSizeCharts: Array.from(merchantSizeCharts.keys()),
     hasIdealfitChart: merchantSizeCharts.has('idealfit')
   });
@@ -474,15 +475,16 @@ app.get('/api/shopify/customers', (req, res) => {
   res.json(customers);
 });
 
+// CRITICAL FIX: Force size chart synchronization
 app.get('/api/shopify/merchants', (req, res) => {
-  console.log('🏪 Merchants endpoint called. Real merchants count:', realMerchants.size);
+  console.log('🚨 CRITICAL: Merchants endpoint called');
   console.log('📊 Saved size charts:', Array.from(merchantSizeCharts.keys()));
   
-  // FORCE: Always check for saved size charts first - this is the priority
+  // CRITICAL: Check for saved size charts FIRST - this is the most important part
   const savedSizeChart = merchantSizeCharts.get('idealfit');
   if (savedSizeChart) {
-    console.log('🏪 FORCE: Returning saved size chart for idealfit');
-    console.log('🏪 Saved chart:', JSON.stringify(savedSizeChart.sizeChart, null, 2));
+    console.log('✅ CRITICAL: Found saved size chart for idealfit');
+    console.log('📊 Saved chart data:', JSON.stringify(savedSizeChart.sizeChart, null, 2));
     return res.json([{
       id: 'idealfit',
       name: 'idealfit',
@@ -494,7 +496,7 @@ app.get('/api/shopify/merchants', (req, res) => {
     }]);
   }
   
-  console.log('🏪 No saved size chart found, using default');
+  console.log('⚠️ CRITICAL: No saved size chart found, using default');
   
   // Fallback to default data
   const merchants = [
@@ -516,7 +518,7 @@ app.get('/api/shopify/merchants', (req, res) => {
     }
   ];
   
-  console.log('🏪 Returning default merchants');
+  console.log('📤 CRITICAL: Returning default merchants');
   res.json(merchants);
 });
 
