@@ -232,8 +232,22 @@ app.post('/api/shopify/webhook/orders/create', (req, res) => {
   }
 });
 
+// Debug endpoint to check data state
+app.get('/api/debug', (req, res) => {
+  res.json({
+    realOrdersCount: realOrders.length,
+    realCustomersCount: realCustomers.length,
+    realMerchantsCount: realMerchants.size,
+    realOrders: realOrders,
+    realCustomers: realCustomers,
+    realMerchants: Array.from(realMerchants)
+  });
+});
+
 // Shopify Data Endpoints for Dashboards
 app.get('/api/shopify/orders', (req, res) => {
+  console.log('📊 Orders endpoint called. Real orders count:', realOrders.length);
+  
   // Return real data if available, otherwise mock data
   if (realOrders.length > 0) {
     console.log('📊 Returning real orders:', realOrders.length);
