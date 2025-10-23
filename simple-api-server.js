@@ -478,10 +478,11 @@ app.get('/api/shopify/merchants', (req, res) => {
   console.log('🏪 Merchants endpoint called. Real merchants count:', realMerchants.size);
   console.log('📊 Saved size charts:', Array.from(merchantSizeCharts.keys()));
   
-  // Check if we have saved size charts for idealfit
+  // FORCE: Always check for saved size charts first - this is the priority
   const savedSizeChart = merchantSizeCharts.get('idealfit');
   if (savedSizeChart) {
-    console.log('🏪 Returning saved size chart for idealfit');
+    console.log('🏪 FORCE: Returning saved size chart for idealfit');
+    console.log('🏪 Saved chart:', JSON.stringify(savedSizeChart.sizeChart, null, 2));
     return res.json([{
       id: 'idealfit',
       name: 'idealfit',
@@ -493,49 +494,9 @@ app.get('/api/shopify/merchants', (req, res) => {
     }]);
   }
   
-  // Always check for saved size charts first
-  const savedMerchants = Array.from(merchantSizeCharts.keys());
-  if (savedMerchants.length > 0) {
-    console.log('🏪 Returning merchants with saved size charts:', savedMerchants);
-    return res.json(savedMerchants.map(merchant => {
-      const savedSizeChart = merchantSizeCharts.get(merchant);
-      return {
-        id: merchant,
-        name: merchant,
-        totalOrders: realOrders.filter(order => order.merchant === merchant).length,
-        avgOrderValue: 150,
-        lastOrder: '2025-01-23',
-        sizeChart: savedSizeChart.sizeChart,
-        unit: savedSizeChart.unit
-      };
-    }));
-  }
+  console.log('🏪 No saved size chart found, using default');
   
-  // Return real data if available, otherwise mock data
-  if (realMerchants.size > 0) {
-    console.log('🏪 Returning real merchants:', Array.from(realMerchants));
-    return res.json(Array.from(realMerchants).map(merchant => {
-      const savedSizeChart = merchantSizeCharts.get(merchant);
-      return {
-        id: merchant,
-        name: merchant,
-        totalOrders: realOrders.filter(order => order.merchant === merchant).length,
-        avgOrderValue: 150,
-        lastOrder: '2025-01-23',
-        sizeChart: savedSizeChart ? savedSizeChart.sizeChart : [
-          { size: 'XS', bust: 32, waist: 24, hip: 35 },
-          { size: 'S', bust: 34, waist: 26, hip: 37 },
-          { size: 'M', bust: 36, waist: 28, hip: 39 },
-          { size: 'L', bust: 38, waist: 30, hip: 41 },
-          { size: 'XL', bust: 40, waist: 32, hip: 43 },
-          { size: 'XXL', bust: 42, waist: 34, hip: 45 }
-        ],
-        unit: savedSizeChart ? savedSizeChart.unit : 'inches'
-      };
-    }));
-  }
-  
-  // Fallback to mock data - but check for saved size charts first
+  // Fallback to default data
   const merchants = [
     {
       id: 'idealfit',
@@ -543,30 +504,19 @@ app.get('/api/shopify/merchants', (req, res) => {
       totalOrders: 3,
       avgOrderValue: 165,
       lastOrder: '2025-10-23',
-      sizeChart: (() => {
-        const savedSizeChart = merchantSizeCharts.get('idealfit');
-        if (savedSizeChart) {
-          console.log('🏪 Using saved size chart for idealfit');
-          return savedSizeChart.sizeChart;
-        }
-        console.log('🏪 Using default size chart for idealfit');
-        return [
-          { size: 'XS', bust: 32, waist: 24, hip: 35 },
-          { size: 'S', bust: 34, waist: 26, hip: 37 },
-          { size: 'M', bust: 36, waist: 28, hip: 39 },
-          { size: 'L', bust: 38, waist: 30, hip: 41 },
-          { size: 'XL', bust: 40, waist: 32, hip: 43 },
-          { size: 'XXL', bust: 42, waist: 34, hip: 45 }
-        ];
-      })(),
-      unit: (() => {
-        const savedSizeChart = merchantSizeCharts.get('idealfit');
-        return savedSizeChart ? savedSizeChart.unit : 'inches';
-      })()
+      sizeChart: [
+        { size: 'XS', bust: 32, waist: 24, hip: 35 },
+        { size: 'S', bust: 34, waist: 26, hip: 37 },
+        { size: 'M', bust: 36, waist: 28, hip: 39 },
+        { size: 'L', bust: 38, waist: 30, hip: 41 },
+        { size: 'XL', bust: 40, waist: 32, hip: 43 },
+        { size: 'XXL', bust: 42, waist: 34, hip: 45 }
+      ],
+      unit: 'inches'
     }
   ];
   
-  console.log('🏪 Returning mock merchants with size chart check - VERSION 2');
+  console.log('🏪 Returning default merchants');
   res.json(merchants);
 });
 
