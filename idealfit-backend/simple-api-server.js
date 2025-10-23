@@ -117,12 +117,32 @@ app.post('/api/shopify/webhook/orders/create', (req, res) => {
     
     // Extract measurement data from multiple sources (order attributes, note attributes, line item properties)
     let measurements = {
-      bust: order.attributes?._measurement_bust || order.note_attributes?._measurement_bust || null,
-      waist: order.attributes?._measurement_waist || order.note_attributes?._measurement_waist || null,
-      hip: order.attributes?._measurement_hip || order.note_attributes?._measurement_hip || null,
-      recommendedSize: order.attributes?._recommended_size || order.note_attributes?._recommended_size || null,
-      unit: order.attributes?._measurement_unit || order.note_attributes?._measurement_unit || 'inches'
+      bust: null,
+      waist: null,
+      hip: null,
+      recommendedSize: null,
+      unit: 'inches'
     };
+    
+    // Check order attributes first
+    if (order.attributes) {
+      measurements.bust = order.attributes._measurement_bust || measurements.bust;
+      measurements.waist = order.attributes._measurement_waist || measurements.waist;
+      measurements.hip = order.attributes._measurement_hip || measurements.hip;
+      measurements.recommendedSize = order.attributes._recommended_size || measurements.recommendedSize;
+      measurements.unit = order.attributes._measurement_unit || measurements.unit;
+    }
+    
+    // Check note attributes (this is where the data is!)
+    if (order.note_attributes && Array.isArray(order.note_attributes)) {
+      order.note_attributes.forEach(attr => {
+        if (attr.name === '_measurement_bust') measurements.bust = attr.value;
+        if (attr.name === '_measurement_waist') measurements.waist = attr.value;
+        if (attr.name === '_measurement_hip') measurements.hip = attr.value;
+        if (attr.name === '_measurement_unit') measurements.unit = attr.value;
+        if (attr.name === '_recommended_size') measurements.recommendedSize = attr.value;
+      });
+    }
     
     // Check line item properties for measurements (scenario 2: direct checkout)
     if (order.line_items && order.line_items.length > 0) {
