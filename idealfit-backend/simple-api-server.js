@@ -88,9 +88,96 @@ app.post('/api/convert-units', (req, res) => {
   });
 });
 
+// In-memory storage for real order data (replace with database later)
+let realOrders = [];
+let realCustomers = [];
+let realMerchants = new Set();
+
+// Shopify Webhook to receive real order data
+app.post('/api/shopify/webhook/orders/create', (req, res) => {
+  try {
+    const order = req.body;
+    console.log('📦 New Shopify Order Received:', order.id);
+    
+    // Extract measurement data from order attributes
+    const measurements = {
+      bust: order.attributes?._measurement_bust || null,
+      waist: order.attributes?._measurement_waist || null,
+      hip: order.attributes?._measurement_hip || null,
+      recommendedSize: order.attributes?._recommended_size || null,
+      unit: order.attributes?._measurement_unit || 'inches'
+    };
+    
+    // Extract customer info
+    const customer = order.customer;
+    const customerData = {
+      id: customer?.id || 'unknown',
+      name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim(),
+      email: customer?.email || 'unknown@email.com',
+      totalOrders: 1,
+      avgOrderValue: parseFloat(order.total_price || 0),
+      lastOrder: new Date().toISOString().split('T')[0],
+      measurements: measurements,
+      preferredSize: measurements.recommendedSize
+    };
+    
+    // Extract merchant info (from order line items)
+    const merchantName = order.line_items?.[0]?.vendor || 'Unknown Store';
+    
+    // Create order data
+    const orderData = {
+      id: order.id.toString(),
+      customer: customerData.name,
+      merchant: merchantName,
+      measurements: measurements,
+      recommendedSize: measurements.recommendedSize,
+      orderDate: new Date(order.created_at).toISOString().split('T')[0],
+      status: order.financial_status || 'pending',
+      amount: parseFloat(order.total_price || 0),
+      unit: measurements.unit,
+      currency: order.currency || 'USD',
+      orderNumber: order.order_number || order.id,
+      customerEmail: customerData.email
+    };
+    
+    // Store the data
+    realOrders.unshift(orderData); // Add to beginning
+    realCustomers.unshift(customerData);
+    realMerchants.add(merchantName);
+    
+    // Keep only last 100 orders to prevent memory issues
+    if (realOrders.length > 100) {
+      realOrders = realOrders.slice(0, 100);
+    }
+    
+    console.log('📏 Order Measurements:', measurements);
+    console.log('👤 Customer Data:', customerData);
+    console.log('🏪 Merchant:', merchantName);
+    console.log('📊 Total Orders Stored:', realOrders.length);
+    
+    res.status(200).json({ 
+      received: true, 
+      orderId: order.id,
+      measurements: measurements,
+      customer: customerData.name,
+      merchant: merchantName
+    });
+    
+  } catch (error) {
+    console.error('❌ Webhook Error:', error);
+    res.status(500).json({ error: 'Webhook processing failed' });
+  }
+});
+
 // Shopify Data Endpoints for Dashboards
 app.get('/api/shopify/orders', (req, res) => {
-  // Mock Shopify orders data
+  // Return real data if available, otherwise mock data
+  if (realOrders.length > 0) {
+    console.log('📊 Returning real orders:', realOrders.length);
+    return res.json(realOrders);
+  }
+  
+  // Fallback to mock data
   const orders = [
     {
       id: '1001',
@@ -130,6 +217,13 @@ app.get('/api/shopify/orders', (req, res) => {
 });
 
 app.get('/api/shopify/customers', (req, res) => {
+  // Return real data if available, otherwise mock data
+  if (realCustomers.length > 0) {
+    console.log('👥 Returning real customers:', realCustomers.length);
+    return res.json(realCustomers);
+  }
+  
+  // Fallback to mock data
   const customers = [
     {
       id: 'C001',
