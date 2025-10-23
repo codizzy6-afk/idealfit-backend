@@ -105,6 +105,7 @@ app.post('/api/convert-units', (req, res) => {
 let realOrders = [];
 let realCustomers = [];
 let realMerchants = new Set();
+let merchantSizeCharts = new Map(); // Store merchant size charts
 
 // Shopify Webhook to receive real order data
 app.post('/api/shopify/webhook/orders/create', (req, res) => {
@@ -242,6 +243,41 @@ app.get('/api/debug', (req, res) => {
     realCustomers: realCustomers,
     realMerchants: Array.from(realMerchants)
   });
+});
+
+// Save merchant size chart
+app.post('/api/shopify/merchants/sizechart', (req, res) => {
+  try {
+    const { merchantId, sizeChart, unit } = req.body;
+    
+    console.log('💾 Saving size chart for merchant:', merchantId);
+    console.log('📊 Size chart data:', sizeChart);
+    console.log('📏 Unit:', unit);
+    
+    // Store the size chart
+    merchantSizeCharts.set(merchantId, {
+      sizeChart: sizeChart,
+      unit: unit,
+      lastUpdated: new Date().toISOString()
+    });
+    
+    console.log('✅ Size chart saved successfully');
+    
+    res.json({
+      success: true,
+      message: 'Size chart saved successfully',
+      merchantId: merchantId,
+      sizeCount: sizeChart.length,
+      unit: unit
+    });
+    
+  } catch (error) {
+    console.error('❌ Error saving size chart:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save size chart'
+    });
+  }
 });
 
 // Shopify Data Endpoints for Dashboards
@@ -434,21 +470,25 @@ app.get('/api/shopify/merchants', (req, res) => {
   // Return real data if available, otherwise mock data
   if (realMerchants.size > 0) {
     console.log('🏪 Returning real merchants:', Array.from(realMerchants));
-    return res.json(Array.from(realMerchants).map(merchant => ({
-      id: merchant,
-      name: merchant,
-      totalOrders: realOrders.filter(order => order.merchant === merchant).length,
-      avgOrderValue: 150,
-      lastOrder: '2025-01-23',
-      sizeChart: [
-        { size: 'XS', bust: 32, waist: 24, hip: 35 },
-        { size: 'S', bust: 34, waist: 26, hip: 37 },
-        { size: 'M', bust: 36, waist: 28, hip: 39 },
-        { size: 'L', bust: 38, waist: 30, hip: 41 },
-        { size: 'XL', bust: 40, waist: 32, hip: 43 },
-        { size: 'XXL', bust: 42, waist: 34, hip: 45 }
-      ]
-    })));
+    return res.json(Array.from(realMerchants).map(merchant => {
+      const savedSizeChart = merchantSizeCharts.get(merchant);
+      return {
+        id: merchant,
+        name: merchant,
+        totalOrders: realOrders.filter(order => order.merchant === merchant).length,
+        avgOrderValue: 150,
+        lastOrder: '2025-01-23',
+        sizeChart: savedSizeChart ? savedSizeChart.sizeChart : [
+          { size: 'XS', bust: 32, waist: 24, hip: 35 },
+          { size: 'S', bust: 34, waist: 26, hip: 37 },
+          { size: 'M', bust: 36, waist: 28, hip: 39 },
+          { size: 'L', bust: 38, waist: 30, hip: 41 },
+          { size: 'XL', bust: 40, waist: 32, hip: 43 },
+          { size: 'XXL', bust: 42, waist: 34, hip: 45 }
+        ],
+        unit: savedSizeChart ? savedSizeChart.unit : 'inches'
+      };
+    }));
   }
   
   // Fallback to mock data
@@ -466,7 +506,8 @@ app.get('/api/shopify/merchants', (req, res) => {
         { size: 'L', bust: 38, waist: 30, hip: 41 },
         { size: 'XL', bust: 40, waist: 32, hip: 43 },
         { size: 'XXL', bust: 42, waist: 34, hip: 45 }
-      ]
+      ],
+      unit: 'inches'
     }
   ];
   res.json(merchants);
