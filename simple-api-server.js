@@ -245,6 +245,16 @@ app.get('/api/debug', (req, res) => {
   });
 });
 
+// Test endpoint to verify deployment
+app.get('/api/test-deployment', (req, res) => {
+  res.json({
+    message: 'Deployment test successful - VERSION 3',
+    timestamp: new Date().toISOString(),
+    merchantSizeCharts: Array.from(merchantSizeCharts.keys()),
+    hasIdealfitChart: merchantSizeCharts.has('idealfit')
+  });
+});
+
 // Save merchant size chart
 app.post('/api/shopify/merchants/sizechart', (req, res) => {
   try {
