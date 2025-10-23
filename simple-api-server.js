@@ -468,6 +468,21 @@ app.get('/api/shopify/merchants', (req, res) => {
   console.log('🏪 Merchants endpoint called. Real merchants count:', realMerchants.size);
   console.log('📊 Saved size charts:', Array.from(merchantSizeCharts.keys()));
   
+  // Check if we have saved size charts for idealfit
+  const savedSizeChart = merchantSizeCharts.get('idealfit');
+  if (savedSizeChart) {
+    console.log('🏪 Returning saved size chart for idealfit');
+    return res.json([{
+      id: 'idealfit',
+      name: 'idealfit',
+      totalOrders: realOrders.filter(order => order.merchant === 'idealfit').length,
+      avgOrderValue: 150,
+      lastOrder: '2025-01-23',
+      sizeChart: savedSizeChart.sizeChart,
+      unit: savedSizeChart.unit
+    }]);
+  }
+  
   // Always check for saved size charts first
   const savedMerchants = Array.from(merchantSizeCharts.keys());
   if (savedMerchants.length > 0) {
