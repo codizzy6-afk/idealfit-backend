@@ -429,26 +429,44 @@ app.get('/api/shopify/customers', (req, res) => {
 });
 
 app.get('/api/shopify/merchants', (req, res) => {
+  console.log('🏪 Merchants endpoint called. Real merchants count:', realMerchants.size);
+  
+  // Return real data if available, otherwise mock data
+  if (realMerchants.size > 0) {
+    console.log('🏪 Returning real merchants:', Array.from(realMerchants));
+    return res.json(Array.from(realMerchants).map(merchant => ({
+      id: merchant,
+      name: merchant,
+      totalOrders: realOrders.filter(order => order.merchant === merchant).length,
+      avgOrderValue: 150,
+      lastOrder: '2025-01-23',
+      sizeChart: [
+        { size: 'XS', bust: 32, waist: 24, hip: 35 },
+        { size: 'S', bust: 34, waist: 26, hip: 37 },
+        { size: 'M', bust: 36, waist: 28, hip: 39 },
+        { size: 'L', bust: 38, waist: 30, hip: 41 },
+        { size: 'XL', bust: 40, waist: 32, hip: 43 },
+        { size: 'XXL', bust: 42, waist: 34, hip: 45 }
+      ]
+    })));
+  }
+  
+  // Fallback to mock data
   const merchants = [
     {
-      id: 'M001',
-      name: 'Fashion Store',
-      email: 'merchant@fashionstore.com',
-      totalOrders: 15,
-      revenue: 1349.85,
-      status: 'active',
-      joinDate: '2025-01-15',
-      avgOrderValue: 89.99
-    },
-    {
-      id: 'M002',
-      name: 'Style Boutique',
-      email: 'merchant@styleboutique.com',
-      totalOrders: 8,
-      revenue: 1039.92,
-      status: 'active',
-      joinDate: '2025-01-10',
-      avgOrderValue: 129.99
+      id: 'idealfit',
+      name: 'idealfit',
+      totalOrders: 3,
+      avgOrderValue: 165,
+      lastOrder: '2025-10-23',
+      sizeChart: [
+        { size: 'XS', bust: 32, waist: 24, hip: 35 },
+        { size: 'S', bust: 34, waist: 26, hip: 37 },
+        { size: 'M', bust: 36, waist: 28, hip: 39 },
+        { size: 'L', bust: 38, waist: 30, hip: 41 },
+        { size: 'XL', bust: 40, waist: 32, hip: 43 },
+        { size: 'XXL', bust: 42, waist: 34, hip: 45 }
+      ]
     }
   ];
   res.json(merchants);
