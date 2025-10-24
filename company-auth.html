@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdealFit Company - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .auth-logo {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .auth-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .auth-body {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .form-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .form-link:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 14px;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Login Form -->
+        <div id="loginForm">
+            <div class="auth-header">
+                <div class="auth-logo">🏢</div>
+                <div class="auth-title">IdealFit Company</div>
+                <div class="auth-subtitle">Admin Dashboard Login</div>
+            </div>
+            <div class="auth-body">
+                <div id="loginMessage"></div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="admin@idealfit.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Remember me for 30 days</label>
+                </div>
+
+                <button class="btn btn-primary" onclick="handleLogin()">🔐 Login to Dashboard</button>
+
+                <div class="form-footer">
+                    <a class="form-link" onclick="showForgotPassword()">Forgot Password?</a>
+                    <div style="margin-top: 15px; color: #64748b;">
+                        Don't have an account? <a class="form-link" onclick="showSignup()">Sign Up</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signupForm" class="hidden">
+            <div class="auth-header">
+                <div class="auth-logo">🏢</div>
+                <div class="auth-title">Create Company Account</div>
+                <div class="auth-subtitle">Join IdealFit Platform</div>
+            </div>
+            <div class="auth-body">
+                <div id="signupMessage"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Company Name</label>
+                    <input type="text" id="signupCompany" class="form-input" placeholder="Your Company Name" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="signupName" class="form-input" placeholder="John Doe" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="signupEmail" class="form-input" placeholder="admin@yourcompany.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="signupPassword" class="form-input" placeholder="••••••••" required>
+                    <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Minimum 8 characters, include uppercase, lowercase, and number</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreeTerms" required>
+                    <label for="agreeTerms">I agree to the <a href="#" class="form-link">Terms of Service</a> and <a href="#" class="form-link">Privacy Policy</a></label>
+                </div>
+
+                <button class="btn btn-primary" onclick="handleSignup()">🚀 Create Account</button>
+                <button class="btn btn-secondary" onclick="showLogin()">← Back to Login</button>
+
+                <div class="form-footer">
+                    <p style="color: #64748b; font-size: 13px;">
+                        Already have an account? <a class="form-link" onclick="showLogin()">Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forgot Password Form -->
+        <div id="forgotPasswordForm" class="hidden">
+            <div class="auth-header">
+                <div class="auth-logo">🔑</div>
+                <div class="auth-title">Reset Password</div>
+                <div class="auth-subtitle">We'll send you a reset link</div>
+            </div>
+            <div class="auth-body">
+                <div id="forgotMessage"></div>
+
+                <div class="alert alert-info">
+                    Enter your email address and we'll send you a link to reset your password.
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="forgotEmail" class="form-input" placeholder="admin@idealfit.com" required>
+                </div>
+
+                <button class="btn btn-primary" onclick="handleForgotPassword()">📧 Send Reset Link</button>
+                <button class="btn btn-secondary" onclick="showLogin()">← Back to Login</button>
+            </div>
+        </div>
+
+        <!-- Reset Password Form -->
+        <div id="resetPasswordForm" class="hidden">
+            <div class="auth-header">
+                <div class="auth-logo">🔑</div>
+                <div class="auth-title">Set New Password</div>
+                <div class="auth-subtitle">Enter your new password</div>
+            </div>
+            <div class="auth-body">
+                <div id="resetMessage"></div>
+
+                <div class="form-group">
+                    <label class="form-label">New Password</label>
+                    <input type="password" id="resetPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirm New Password</label>
+                    <input type="password" id="resetConfirmPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <button class="btn btn-primary" onclick="handleResetPassword()">✅ Reset Password</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide forms
+        function showLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
+            document.getElementById('resetPasswordForm').classList.add('hidden');
+        }
+
+        function showSignup() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.remove('hidden');
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
+            document.getElementById('resetPasswordForm').classList.add('hidden');
+        }
+
+        function showForgotPassword() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.remove('hidden');
+            document.getElementById('resetPasswordForm').classList.add('hidden');
+        }
+
+        function showResetPassword() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
+            document.getElementById('resetPasswordForm').classList.remove('hidden');
+        }
+
+        // Handle login
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            if (!email || !password) {
+                showMessage('loginMessage', 'error', '❌ Please enter both email and password');
+                return;
+            }
+
+            // Demo login (replace with API call in production)
+            if (email === 'admin@idealfit.com' && password === 'admin123') {
+                // Save session
+                localStorage.setItem('company_admin_logged_in', 'true');
+                localStorage.setItem('company_admin_email', email);
+                localStorage.setItem('company_admin_name', 'Admin User');
+                
+                if (rememberMe) {
+                    localStorage.setItem('company_admin_remember', 'true');
+                }
+
+                showMessage('loginMessage', 'success', '✅ Login successful! Redirecting...');
+                
+                setTimeout(() => {
+                    window.location.href = 'company-admin-dashboard.html';
+                }, 1000);
+            } else {
+                showMessage('loginMessage', 'error', '❌ Invalid email or password');
+            }
+        }
+
+        // Handle signup
+        function handleSignup() {
+            const company = document.getElementById('signupCompany').value;
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+
+            // Validation
+            if (!company || !name || !email || !password || !confirmPassword) {
+                showMessage('signupMessage', 'error', '❌ Please fill in all fields');
+                return;
+            }
+
+            if (!agreeTerms) {
+                showMessage('signupMessage', 'error', '❌ Please agree to the Terms of Service');
+                return;
+            }
+
+            if (password.length < 8) {
+                showMessage('signupMessage', 'error', '❌ Password must be at least 8 characters');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('signupMessage', 'error', '❌ Passwords do not match');
+                return;
+            }
+
+            // Password strength check
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+
+            if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+                showMessage('signupMessage', 'error', '❌ Password must include uppercase, lowercase, and number');
+                return;
+            }
+
+            // Demo signup (replace with API call in production)
+            showMessage('signupMessage', 'success', '✅ Account created successfully! Please check your email to verify.');
+            
+            setTimeout(() => {
+                showMessage('signupMessage', 'info', '📧 Verification email sent to ' + email + '\n\nFor demo purposes, you can login now with:\nEmail: admin@idealfit.com\nPassword: admin123');
+            }, 1500);
+        }
+
+        // Handle forgot password
+        function handleForgotPassword() {
+            const email = document.getElementById('forgotEmail').value;
+
+            if (!email) {
+                showMessage('forgotMessage', 'error', '❌ Please enter your email address');
+                return;
+            }
+
+            // Demo forgot password (replace with API call in production)
+            showMessage('forgotMessage', 'success', '✅ Password reset link sent!\\n\\nCheck your email for instructions.\\n\\nFor demo purposes, the reset link would be:\\nhttp://localhost:8081/company-auth.html?reset=token123');
+            
+            setTimeout(() => {
+                showMessage('forgotMessage', 'info', '💡 Didn\'t receive the email?\n\n• Check your spam folder\n• Make sure the email is correct\n• Wait a few minutes and try again');
+            }, 2000);
+        }
+
+        // Handle reset password
+        function handleResetPassword() {
+            const password = document.getElementById('resetPassword').value;
+            const confirmPassword = document.getElementById('resetConfirmPassword').value;
+
+            if (!password || !confirmPassword) {
+                showMessage('resetMessage', 'error', '❌ Please enter both password fields');
+                return;
+            }
+
+            if (password.length < 8) {
+                showMessage('resetMessage', 'error', '❌ Password must be at least 8 characters');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('resetMessage', 'error', '❌ Passwords do not match');
+                return;
+            }
+
+            // Demo reset (replace with API call in production)
+            showMessage('resetMessage', 'success', '✅ Password reset successful!\n\nYou can now login with your new password.');
+            
+            setTimeout(() => {
+                showLogin();
+            }, 2000);
+        }
+
+        // Show message helper
+        function showMessage(elementId, type, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert alert-${type}">${message.replace(/\n/g, '<br>')}</div>`;
+        }
+
+        // Check if already logged in
+        window.onload = function() {
+            const isLoggedIn = localStorage.getItem('company_admin_logged_in');
+            
+            if (isLoggedIn === 'true') {
+                // Already logged in, redirect to dashboard
+                window.location.href = 'company-admin-dashboard.html';
+            }
+
+            // Check for reset token in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const resetToken = urlParams.get('reset');
+            
+            if (resetToken) {
+                showResetPassword();
+                showMessage('resetMessage', 'info', '🔑 Enter your new password below');
+            }
+        };
+
+        // Enter key support
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('loginForm').classList.contains('hidden')) {
+                    handleLogin();
+                } else if (!document.getElementById('signupForm').classList.contains('hidden')) {
+                    handleSignup();
+                } else if (!document.getElementById('forgotPasswordForm').classList.contains('hidden')) {
+                    handleForgotPassword();
+                } else if (!document.getElementById('resetPasswordForm').classList.contains('hidden')) {
+                    handleResetPassword();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

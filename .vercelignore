@@ -1,0 +1,19 @@
+node_modules
+.git
+*.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.vercel
+*.bat
+*.md
+!README.md
+ideal-fit/
+idealfit/
+apps/
+docs/
+extensions/
+liquid file/
+size-recommender/
+*.txt

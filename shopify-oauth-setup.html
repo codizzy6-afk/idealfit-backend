@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify OAuth Setup - IdealFit</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e3a8a;
+            margin-bottom: 20px;
+        }
+        .step {
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .step h3 {
+            color: #1e40af;
+            margin-top: 0;
+        }
+        .code {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .button.secondary {
+            background: #6b7280;
+        }
+        .button.secondary:hover {
+            background: #4b5563;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #22c55e;
+        }
+        .status.error {
+            background: #fecaca;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-group button {
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Shopify OAuth Setup</h1>
+        <p>Complete the OAuth flow to get real customer data from your Shopify store.</p>
+
+        <div class="step">
+            <h3>Step 1: Get Authorization URL</h3>
+            <p>Click the button below to get the Shopify authorization URL:</p>
+            <button class="button" onclick="getAuthUrl()">Get Authorization URL</button>
+            <div id="authUrlResult"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Authorize the App</h3>
+            <p>Once you have the authorization URL, click it to authorize the app in Shopify.</p>
+            <div id="authorizeStep" style="display: none;">
+                <a id="authLink" href="#" target="_blank" class="button">Open Shopify Authorization</a>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Exchange Authorization Code</h3>
+            <p>After authorizing, you'll be redirected to a callback page. Copy the authorization code and paste it below:</p>
+            <div class="form-group">
+                <label for="authCode">Authorization Code:</label>
+                <input type="text" id="authCode" placeholder="Paste authorization code here">
+                <button onclick="exchangeCode()">Exchange for Access Token</button>
+            </div>
+            <div id="exchangeResult"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Set Environment Variable</h3>
+            <p>Once you have the access token, set it as an environment variable and restart the server:</p>
+            <div id="envInstructions"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Test Real Data</h3>
+            <p>Test the endpoints to verify you're getting real Shopify data:</p>
+            <button class="button secondary" onclick="testEndpoints()">Test Endpoints</button>
+            <div id="testResults"></div>
+        </div>
+
+        <div class="step">
+            <h3>Current Status</h3>
+            <button class="button secondary" onclick="checkStatus()">Check Status</button>
+            <div id="statusResult"></div>
+        </div>
+    </div>
+
+    <script>
+        async function getAuthUrl() {
+            try {
+                const response = await fetch('http://localhost:3001/auth/shopify');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('authUrlResult').innerHTML = `
+                        <div class="status success">
+                            <strong>Authorization URL generated successfully!</strong>
+                            <p>Click the link below to authorize the app:</p>
+                            <a href="${data.authUrl}" target="_blank" class="button">Authorize App in Shopify</a>
+                        </div>
+                    `;
+                    
+                    document.getElementById('authorizeStep').style.display = 'block';
+                    document.getElementById('authLink').href = data.authUrl;
+                } else {
+                    document.getElementById('authUrlResult').innerHTML = `
+                        <div class="status error">
+                            <strong>Error:</strong> ${data.error || data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('authUrlResult').innerHTML = `
+                    <div class="status error">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function exchangeCode() {
+            const code = document.getElementById('authCode').value;
+            if (!code) {
+                alert('Please enter the authorization code');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3001/auth/exchange', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code: code })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('exchangeResult').innerHTML = `
+                        <div class="status success">
+                            <strong>Access token obtained successfully!</strong>
+                            <p><strong>Access Token:</strong> ${data.accessToken}</p>
+                            <p><strong>Scope:</strong> ${data.scope}</p>
+                        </div>
+                    `;
+                    
+                    document.getElementById('envInstructions').innerHTML = `
+                        <div class="status info">
+                            <strong>Set Environment Variable:</strong>
+                            <div class="code">export SHOPIFY_ACCESS_TOKEN="${data.accessToken}"</div>
+                            <p>Then restart the server: <code>node server.js</code></p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('exchangeResult').innerHTML = `
+                        <div class="status error">
+                            <strong>Error:</strong> ${data.error || data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('exchangeResult').innerHTML = `
+                    <div class="status error">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('http://localhost:3001/auth/status');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const statusClass = data.hasAccessToken ? 'success' : 'error';
+                    document.getElementById('statusResult').innerHTML = `
+                        <div class="status ${statusClass}">
+                            <strong>Status:</strong> ${data.message}
+                            <p><strong>Access Token Set:</strong> ${data.accessTokenSet ? 'Yes' : 'No'}</p>
+                            <p><strong>Has Valid Token:</strong> ${data.hasAccessToken ? 'Yes' : 'No'}</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('statusResult').innerHTML = `
+                        <div class="status error">
+                            <strong>Error:</strong> ${data.error || data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('statusResult').innerHTML = `
+                    <div class="status error">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testEndpoints() {
+            const endpoints = [
+                'http://localhost:3001/api/shopify-rest-customers?limit=5',
+                'http://localhost:3001/api/shopify-rest-analytics?period=30d'
+            ];
+            
+            let results = '<div class="status info"><strong>Testing Endpoints:</strong><br>';
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.fallback) {
+                            results += `✅ ${endpoint} - Using fallback data<br>`;
+                        } else {
+                            results += `🎉 ${endpoint} - Real Shopify data!<br>`;
+                        }
+                    } else {
+                        results += `❌ ${endpoint} - Error: ${data.error}<br>`;
+                    }
+                } catch (error) {
+                    results += `❌ ${endpoint} - Error: ${error.message}<br>`;
+                }
+            }
+            
+            results += '</div>';
+            document.getElementById('testResults').innerHTML = results;
+        }
+
+        // Check status on page load
+        window.onload = function() {
+            checkStatus();
+        };
+    </script>
+</body>
+</html>

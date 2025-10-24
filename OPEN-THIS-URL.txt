@@ -1,0 +1,30 @@
+🎯 IMPORTANT: Use This URL to See Updated Code
+================================================
+
+Your regular product page URL is CACHED and showing old code.
+
+Instead, open this URL in your browser:
+
+http://127.0.0.1:9293
+
+This is the Shopify DEV PREVIEW URL that shows the LATEST code.
+
+Steps:
+1. Copy the URL above
+2. Paste it in your browser
+3. Navigate to a product page
+4. The measurement form should now show the UPDATED size chart
+5. Test with: Bust 40, Waist 31, Hip 41
+6. Should show: XXL ✅
+
+If port 9293 doesn't work, check your terminal for the actual preview URL.
+It will say: "Preview your theme app extension at http://127.0.0.1:XXXX"
+
+================================================
+
+
+
+
+
+
+

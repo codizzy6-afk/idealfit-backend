@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdealFit Size Chart Sync Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #047857;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        
+        .result.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .result.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .result.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .size-chart-display {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            margin-top: 10px;
+        }
+        
+        .size-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .size-row:last-child {
+            border-bottom: none;
+        }
+        
+        .size-row.header {
+            font-weight: bold;
+            background: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            🧪 IdealFit Size Chart Sync Test
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Current Size Chart Status</h3>
+            <button class="btn btn-primary" onclick="checkSizeChart()">Check Size Chart</button>
+            <button class="btn btn-success" onclick="testSizeRecommendation()">Test Size Recommendation</button>
+            <div id="sizeChartResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔄 Sync Test</h3>
+            <button class="btn btn-primary" onclick="testSync()">Test Sync Between Dashboard and Store</button>
+            <div id="syncResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🛒 Shopify Store Test</h3>
+            <button class="btn btn-primary" onclick="testShopifyStore()">Test on Shopify Store</button>
+            <div id="shopifyResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Integration Code Test</h3>
+            <button class="btn btn-primary" onclick="generateTestCode()">Generate Test Code</button>
+            <div id="codeResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Check size chart from localStorage
+        function checkSizeChart() {
+            const resultDiv = document.getElementById('sizeChartResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Checking size chart...';
+            
+            try {
+                // Check localStorage
+                const savedChart = localStorage.getItem('idealfit_size_chart');
+                const sizeChartData = localStorage.getItem('sizeChartData');
+                
+                let chartInfo = '';
+                
+                if (savedChart) {
+                    const parsed = JSON.parse(savedChart);
+                    chartInfo += `✅ Found idealfit_size_chart in localStorage\n`;
+                    chartInfo += `Size Count: ${parsed.sizeChart ? parsed.sizeChart.length : 0}\n`;
+                    chartInfo += `Unit: ${parsed.unit || 'inches'}\n`;
+                    chartInfo += `Timestamp: ${parsed.timestamp || 'Unknown'}\n\n`;
+                    
+                    if (parsed.sizeChart) {
+                        chartInfo += `Size Chart Data:\n`;
+                        chartInfo += `Size | Bust | Waist | Hip\n`;
+                        chartInfo += `-----|------|-------|-----\n`;
+                        parsed.sizeChart.forEach(size => {
+                            chartInfo += `${size.size} | ${size.bust} | ${size.waist} | ${size.hip}\n`;
+                        });
+                    }
+                } else {
+                    chartInfo += `❌ No idealfit_size_chart found in localStorage\n`;
+                }
+                
+                if (sizeChartData) {
+                    const parsed = JSON.parse(sizeChartData);
+                    chartInfo += `\n✅ Found sizeChartData in localStorage\n`;
+                    chartInfo += `Size Count: ${parsed.length}\n`;
+                } else {
+                    chartInfo += `\n❌ No sizeChartData found in localStorage\n`;
+                }
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = chartInfo;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error checking size chart: ${error.message}`;
+            }
+        }
+        
+        // Test size recommendation
+        function testSizeRecommendation() {
+            const resultDiv = document.getElementById('sizeChartResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Testing size recommendation...';
+            
+            try {
+                const savedChart = localStorage.getItem('idealfit_size_chart');
+                if (!savedChart) {
+                    throw new Error('No size chart found in localStorage');
+                }
+                
+                const parsed = JSON.parse(savedChart);
+                const sizeChart = parsed.sizeChart;
+                
+                if (!sizeChart || sizeChart.length === 0) {
+                    throw new Error('Size chart is empty');
+                }
+                
+                // Test with sample measurements
+                const testMeasurements = [
+                    { bust: 32, waist: 26, hip: 36, expected: 'S' },
+                    { bust: 34, waist: 28, hip: 38, expected: 'M' },
+                    { bust: 36, waist: 30, hip: 40, expected: 'L' }
+                ];
+                
+                let testResults = '🧪 Size Recommendation Test Results:\n\n';
+                
+                testMeasurements.forEach((test, index) => {
+                    const recommendation = getSizeRecommendation(test.bust, test.waist, test.hip, sizeChart);
+                    testResults += `Test ${index + 1}: Bust ${test.bust}", Waist ${test.waist}", Hip ${test.hip}"\n`;
+                    testResults += `Expected: ${test.expected}, Got: ${recommendation.size} (${recommendation.confidence}%)\n`;
+                    testResults += `Status: ${recommendation.size === test.expected ? '✅ PASS' : '❌ FAIL'}\n\n`;
+                });
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = testResults;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Size recommendation test failed: ${error.message}`;
+            }
+        }
+        
+        // Get size recommendation algorithm
+        function getSizeRecommendation(bust, waist, hip, sizeChart) {
+            // Comfort Fit Algorithm
+            for (const size of sizeChart) {
+                const sizeBust = parseFloat(size.bust);
+                const sizeWaist = parseFloat(size.waist);
+                const sizeHip = parseFloat(size.hip);
+                
+                // Check if all measurements fit comfortably (with 1-inch tolerance)
+                if (bust <= sizeBust + 1 && waist <= sizeWaist + 1 && hip <= sizeHip + 1) {
+                    return { size: size.size, confidence: 85 };
+                }
+            }
+            
+            // Find closest match
+            let bestMatch = null;
+            let minDifference = Infinity;
+            
+            for (const size of sizeChart) {
+                const sizeBust = parseFloat(size.bust);
+                const sizeWaist = parseFloat(size.waist);
+                const sizeHip = parseFloat(size.hip);
+                
+                const bustDiff = Math.abs(bust - sizeBust);
+                const waistDiff = Math.abs(waist - sizeWaist);
+                const hipDiff = Math.abs(hip - sizeHip);
+                
+                const totalDifference = bustDiff + waistDiff + hipDiff;
+                
+                if (totalDifference < minDifference) {
+                    minDifference = totalDifference;
+                    bestMatch = size.size;
+                }
+            }
+            
+            const confidence = Math.max(60, 100 - minDifference * 2);
+            return { size: bestMatch || 'M', confidence: Math.round(confidence) };
+        }
+        
+        // Test sync between dashboard and store
+        function testSync() {
+            const resultDiv = document.getElementById('syncResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Testing sync...';
+            
+            try {
+                const savedChart = localStorage.getItem('idealfit_size_chart');
+                const sizeChartData = localStorage.getItem('sizeChartData');
+                
+                let syncStatus = '🔄 Sync Test Results:\n\n';
+                
+                if (savedChart && sizeChartData) {
+                    const parsed1 = JSON.parse(savedChart);
+                    const parsed2 = JSON.parse(sizeChartData);
+                    
+                    const chart1 = parsed1.sizeChart || [];
+                    const chart2 = parsed2;
+                    
+                    syncStatus += `idealfit_size_chart: ${chart1.length} sizes\n`;
+                    syncStatus += `sizeChartData: ${chart2.length} sizes\n\n`;
+                    
+                    if (chart1.length === chart2.length) {
+                        syncStatus += `✅ Size counts match\n`;
+                        
+                        // Check if data matches
+                        let dataMatches = true;
+                        for (let i = 0; i < Math.min(chart1.length, chart2.length); i++) {
+                            if (chart1[i].size !== chart2[i].size ||
+                                chart1[i].bust !== chart2[i].bust ||
+                                chart1[i].waist !== chart2[i].waist ||
+                                chart1[i].hip !== chart2[i].hip) {
+                                dataMatches = false;
+                                break;
+                            }
+                        }
+                        
+                        if (dataMatches) {
+                            syncStatus += `✅ Data matches perfectly\n`;
+                            syncStatus += `✅ Sync is working correctly!\n`;
+                        } else {
+                            syncStatus += `❌ Data does not match\n`;
+                            syncStatus += `❌ Sync issue detected\n`;
+                        }
+                    } else {
+                        syncStatus += `❌ Size counts do not match\n`;
+                        syncStatus += `❌ Sync issue detected\n`;
+                    }
+                } else {
+                    syncStatus += `❌ Missing size chart data\n`;
+                    syncStatus += `❌ Sync not working\n`;
+                }
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = syncStatus;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Sync test failed: ${error.message}`;
+            }
+        }
+        
+        // Test Shopify store
+        function testShopifyStore() {
+            const resultDiv = document.getElementById('shopifyResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Testing Shopify store integration...';
+            
+            try {
+                const savedChart = localStorage.getItem('idealfit_size_chart');
+                
+                let storeStatus = '🛒 Shopify Store Test Results:\n\n';
+                
+                if (savedChart) {
+                    const parsed = JSON.parse(savedChart);
+                    const sizeChart = parsed.sizeChart;
+                    
+                    storeStatus += `✅ Size chart available: ${sizeChart.length} sizes\n`;
+                    storeStatus += `✅ Unit: ${parsed.unit}\n`;
+                    storeStatus += `✅ Last updated: ${parsed.timestamp}\n\n`;
+                    
+                    storeStatus += `📋 Next Steps:\n`;
+                    storeStatus += `1. Copy the integration code from merchant dashboard\n`;
+                    storeStatus += `2. Go to Shopify theme editor\n`;
+                    storeStatus += `3. Add the code to your product page template\n`;
+                    storeStatus += `4. Test on: https://idealfit-2.myshopify.com/products/blue-dress\n\n`;
+                    
+                    storeStatus += `🔗 Quick Links:\n`;
+                    storeStatus += `- Theme Editor: https://idealfit-2.myshopify.com/admin/themes\n`;
+                    storeStatus += `- Product Page: https://idealfit-2.myshopify.com/products/blue-dress\n`;
+                    
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = storeStatus;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ No size chart found. Please save your size chart in the merchant dashboard first.`;
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Shopify store test failed: ${error.message}`;
+            }
+        }
+        
+        // Generate test code
+        function generateTestCode() {
+            const resultDiv = document.getElementById('codeResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Generating test code...';
+            
+            try {
+                const savedChart = localStorage.getItem('idealfit_size_chart');
+                
+                if (!savedChart) {
+                    throw new Error('No size chart found. Please save your size chart in the merchant dashboard first.');
+                }
+                
+                const parsed = JSON.parse(savedChart);
+                const sizeChart = parsed.sizeChart;
+                
+                const testCode = `<!-- IdealFit Test Code -->
+<div id="idealfit-test">
+  <h3>📏 Test Size Recommendation</h3>
+  <p>Enter your measurements to get a size recommendation:</p>
+  
+  <div style="margin: 20px 0;">
+    <label>Bust (inches): </label>
+    <input type="number" id="test-bust" value="34" step="0.1" style="margin: 5px;">
+  </div>
+  
+  <div style="margin: 20px 0;">
+    <label>Waist (inches): </label>
+    <input type="number" id="test-waist" value="28" step="0.1" style="margin: 5px;">
+  </div>
+  
+  <div style="margin: 20px 0;">
+    <label>Hip (inches): </label>
+    <input type="number" id="test-hip" value="38" step="0.1" style="margin: 5px;">
+  </div>
+  
+  <button onclick="testRecommendation()" style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+    Get Size Recommendation
+  </button>
+  
+  <div id="test-result" style="margin-top: 20px; padding: 15px; border-radius: 5px; display: none;"></div>
+</div>
+
+<script>
+const sizeChart = ${JSON.stringify(sizeChart, null, 2)};
+
+function testRecommendation() {
+  const bust = parseFloat(document.getElementById('test-bust').value);
+  const waist = parseFloat(document.getElementById('test-waist').value);
+  const hip = parseFloat(document.getElementById('test-hip').value);
+  
+  if (!bust || !waist || !hip) {
+    alert('Please enter all measurements');
+    return;
+  }
+  
+  // Find recommended size
+  let recommendedSize = null;
+  let confidence = 0;
+  
+  for (const size of sizeChart) {
+    const sizeBust = parseFloat(size.bust);
+    const sizeWaist = parseFloat(size.waist);
+    const sizeHip = parseFloat(size.hip);
+    
+    if (bust <= sizeBust + 1 && waist <= sizeWaist + 1 && hip <= sizeHip + 1) {
+      recommendedSize = size.size;
+      confidence = 85;
+      break;
+    }
+  }
+  
+  if (!recommendedSize) {
+    recommendedSize = 'M';
+    confidence = 70;
+  }
+  
+  const resultDiv = document.getElementById('test-result');
+  resultDiv.style.display = 'block';
+  resultDiv.style.background = '#dcfce7';
+  resultDiv.style.color = '#166534';
+  resultDiv.innerHTML = \`
+    <h4>✅ Recommended Size: \${recommendedSize}</h4>
+    <p>Confidence: \${confidence}%</p>
+    <p>Your measurements: Bust \${bust}", Waist \${waist}", Hip \${hip}"</p>
+  \`;
+}
+</script>`;
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Test Code Generated Successfully!\n\nCopy this code and add it to your Shopify product page to test:\n\n${testCode}`;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Code generation failed: ${error.message}`;
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 IdealFit Size Chart Sync Test Page Loaded');
+        });
+    </script>
+</body>
+</html>

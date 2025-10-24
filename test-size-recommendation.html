@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IdealFit Size Recommendation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test-case { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .result { font-weight: bold; color: #2563eb; }
+        .pass { color: #16a34a; }
+        .fail { color: #dc2626; }
+        input { padding: 8px; margin: 5px; width: 100px; }
+        button { padding: 10px 20px; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+        #output { margin-top: 20px; padding: 15px; background: #fff; border: 2px solid #ddd; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🎯 IdealFit Size Recommendation Test</h1>
+    
+    <h2>Current Size Chart:</h2>
+    <table border="1" cellpadding="10" style="border-collapse: collapse;">
+        <tr>
+            <th>Size</th>
+            <th>Bust</th>
+            <th>Waist</th>
+            <th>Hip</th>
+        </tr>
+        <tr><td>XS</td><td>30"</td><td>25"</td><td>35"</td></tr>
+        <tr><td>S</td><td>32"</td><td>27"</td><td>37"</td></tr>
+        <tr><td>M</td><td>34"</td><td>29"</td><td>39"</td></tr>
+        <tr><td>L</td><td>36"</td><td>31"</td><td>41"</td></tr>
+        <tr><td>XL</td><td>38"</td><td>33"</td><td>43"</td></tr>
+        <tr style="background: #ffeb3b;"><td><strong>XXL</strong></td><td><strong>40"</strong></td><td><strong>35"</strong></td><td><strong>45"</strong></td></tr>
+    </table>
+
+    <h2>Test Cases:</h2>
+    
+    <div class="test-case">
+        <strong>Test 1:</strong> Bust 40, Waist 31, Hip 41<br>
+        Expected: <span class="result">XXL</span><br>
+        Actual: <span id="test1" class="result">-</span>
+    </div>
+
+    <div class="test-case">
+        <strong>Test 2:</strong> Bust 34, Waist 29, Hip 39<br>
+        Expected: <span class="result">M</span><br>
+        Actual: <span id="test2" class="result">-</span>
+    </div>
+
+    <div class="test-case">
+        <strong>Test 3:</strong> Bust 36, Waist 31, Hip 41<br>
+        Expected: <span class="result">L</span><br>
+        Actual: <span id="test3" class="result">-</span>
+    </div>
+
+    <div class="test-case">
+        <strong>Test 4:</strong> Bust 32, Waist 27, Hip 37<br>
+        Expected: <span class="result">S</span><br>
+        Actual: <span id="test4" class="result">-</span>
+    </div>
+
+    <h2>Custom Test:</h2>
+    <div style="background: #e0f2fe; padding: 15px; border-radius: 8px;">
+        <label>Bust: <input type="number" id="customBust" value="40"></label>
+        <label>Waist: <input type="number" id="customWaist" value="31"></label>
+        <label>Hip: <input type="number" id="customHip" value="41"></label>
+        <button onclick="testCustom()">Test</button>
+        <div id="customResult" style="margin-top: 10px; font-size: 18px; font-weight: bold;"></div>
+    </div>
+
+    <div id="output"></div>
+
+    <script>
+        // Size chart
+        const sizeChart = [
+            { size: 'XS', bust: 30, waist: 25, hip: 35 },
+            { size: 'S', bust: 32, waist: 27, hip: 37 },
+            { size: 'M', bust: 34, waist: 29, hip: 39 },
+            { size: 'L', bust: 36, waist: 31, hip: 41 },
+            { size: 'XL', bust: 38, waist: 33, hip: 43 },
+            { size: 'XXL', bust: 40, waist: 35, hip: 45 }
+        ];
+
+        // Recommendation function (same as in your theme)
+        function getRecommendedSize(bust, waist, hip) {
+            console.log('🔍 Finding size for measurements:', {bust, waist, hip});
+            console.log('📏 Size chart:', sizeChart);
+
+            // Find the smallest size where ALL measurements fit
+            for(const e of sizeChart){
+                if(e && typeof e.bust === 'number' && typeof e.waist === 'number' && typeof e.hip === 'number'){
+                    const fits = bust <= e.bust && waist <= e.waist && hip <= e.hip;
+                    console.log(`Checking ${e.size}: Bust ${bust}<=${e.bust}? ${bust <= e.bust}, Waist ${waist}<=${e.waist}? ${waist <= e.waist}, Hip ${hip}<=${e.hip}? ${hip <= e.hip} = ${fits ? '✅ FITS' : '❌'}`);
+                    
+                    if(fits){
+                        console.log(`✅ Recommended size: ${e.size}`);
+                        return e.size;
+                    }
+                }
+            }
+            
+            // If no size fits, recommend the largest size
+            const largestSize = sizeChart.length ? sizeChart[sizeChart.length - 1].size : "Custom";
+            console.log(`⚠️ No size fits, recommending largest: ${largestSize}`);
+            return largestSize;
+        }
+
+        // Run tests
+        function runTests() {
+            // Test 1: Your measurements
+            const result1 = getRecommendedSize(40, 31, 41);
+            document.getElementById('test1').textContent = result1;
+            document.getElementById('test1').className = result1 === 'XXL' ? 'result pass' : 'result fail';
+
+            // Test 2: M size
+            const result2 = getRecommendedSize(34, 29, 39);
+            document.getElementById('test2').textContent = result2;
+            document.getElementById('test2').className = result2 === 'M' ? 'result pass' : 'result fail';
+
+            // Test 3: L size
+            const result3 = getRecommendedSize(36, 31, 41);
+            document.getElementById('test3').textContent = result3;
+            document.getElementById('test3').className = result3 === 'L' ? 'result pass' : 'result fail';
+
+            // Test 4: S size
+            const result4 = getRecommendedSize(32, 27, 37);
+            document.getElementById('test4').textContent = result4;
+            document.getElementById('test4').className = result4 === 'S' ? 'result pass' : 'result fail';
+        }
+
+        function testCustom() {
+            const bust = parseFloat(document.getElementById('customBust').value);
+            const waist = parseFloat(document.getElementById('customWaist').value);
+            const hip = parseFloat(document.getElementById('customHip').value);
+            
+            const result = getRecommendedSize(bust, waist, hip);
+            document.getElementById('customResult').innerHTML = `✅ Recommended Size: <span style="color: #ff4c00;">${result}</span>`;
+        }
+
+        // Run tests on load
+        window.onload = function() {
+            console.log('🧪 Running size recommendation tests...');
+            runTests();
+            testCustom();
+        };
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

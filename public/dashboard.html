@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdealFit Merchant Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f6f6f7;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content {
+            padding: 30px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            text-align: center;
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section h2 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .size-chart {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .size-chart table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .size-chart th,
+        .size-chart td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        .size-chart th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        .size-chart tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .customer-data {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .customer-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+        .customer-row:first-child {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .customer-row:not(:first-child) {
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .recommended-size {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 20px 0;
+        }
+        .export-btn:hover {
+            background: #218838;
+        }
+        .insight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .insight-box h3 {
+            margin: 0 0 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 IdealFit Dashboard</h1>
+            <p>Size Recommendation Analytics & Customer Insights</p>
+        </div>
+        
+        <div class="content">
+            <!-- Statistics Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Measurements</h3>
+                    <div class="stat-number">78</div>
+                    <div class="stat-label">Customer submissions</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Unique Customers</h3>
+                    <div class="stat-number">65</div>
+                    <div class="stat-label">Individual users</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Most Popular Size</h3>
+                    <div class="stat-number">M</div>
+                    <div class="stat-label">25 recommendations</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Conversion Rate</h3>
+                    <div class="stat-number">89%</div>
+                    <div class="stat-label">Form completion</div>
+                </div>
+            </div>
+
+            <!-- Production Insights -->
+            <div class="insight-box">
+                <h3>🎯 Production Insights</h3>
+                <p><strong>Focus on Size M and L production</strong> - These sizes have the highest demand with 25 and 18 recommendations respectively. Consider increasing inventory for these sizes to meet customer demand.</p>
+            </div>
+
+            <!-- Size Distribution -->
+            <div class="section">
+                <h2>📊 Size Distribution Analytics</h2>
+                <div class="size-chart">
+                    <h3>Current Size Recommendations</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Recommendations</th>
+                                <th>Percentage</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>XS</strong></td>
+                                <td>8</td>
+                                <td>10.3%</td>
+                                <td>✅ Good stock</td>
+                            </tr>
+                            <tr>
+                                <td><strong>S</strong></td>
+                                <td>15</td>
+                                <td>19.2%</td>
+                                <td>⚠️ Monitor</td>
+                            </tr>
+                            <tr>
+                                <td><strong>M</strong></td>
+                                <td>25</td>
+                                <td>32.1%</td>
+                                <td>🚨 High demand</td>
+                            </tr>
+                            <tr>
+                                <td><strong>L</strong></td>
+                                <td>18</td>
+                                <td>23.1%</td>
+                                <td>🚨 High demand</td>
+                            </tr>
+                            <tr>
+                                <td><strong>XL</strong></td>
+                                <td>12</td>
+                                <td>15.4%</td>
+                                <td>⚠️ Monitor</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Size Chart Management -->
+            <div class="section">
+                <h2>📏 Current Size Chart</h2>
+                <div class="size-chart">
+                    <h3>Your Size Chart Configuration</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Bust (inches)</th>
+                                <th>Waist (inches)</th>
+                                <th>Hip (inches)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>XS</strong></td><td>30</td><td>25</td><td>35</td></tr>
+                            <tr><td><strong>S</strong></td><td>32</td><td>27</td><td>37</td></tr>
+                            <tr><td><strong>M</strong></td><td>34</td><td>29</td><td>39</td></tr>
+                            <tr><td><strong>L</strong></td><td>36</td><td>31</td><td>41</td></tr>
+                            <tr><td><strong>XL</strong></td><td>38</td><td>33</td><td>43</td></tr>
+                            <tr><td><strong>XXL</strong></td><td>40</td><td>35</td><td>45</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Customer Data -->
+            <div class="section">
+                <h2>📋 Recent Customer Measurements</h2>
+                <div class="customer-data">
+                    <div class="customer-row">
+                        <div>Date</div>
+                        <div>Customer</div>
+                        <div>Bust</div>
+                        <div>Waist</div>
+                        <div>Hip</div>
+                        <div>Recommended</div>
+                    </div>
+                    <div class="customer-row">
+                        <div>2024-01-15</div>
+                        <div>John Doe</div>
+                        <div>36"</div>
+                        <div>28"</div>
+                        <div>38"</div>
+                        <div><span class="recommended-size">L</span></div>
+                    </div>
+                    <div class="customer-row">
+                        <div>2024-01-16</div>
+                        <div>Jane Smith</div>
+                        <div>34"</div>
+                        <div>26"</div>
+                        <div>36"</div>
+                        <div><span class="recommended-size">M</span></div>
+                    </div>
+                    <div class="customer-row">
+                        <div>2024-01-17</div>
+                        <div>Mike Johnson</div>
+                        <div>38"</div>
+                        <div>30"</div>
+                        <div>40"</div>
+                        <div><span class="recommended-size">XL</span></div>
+                    </div>
+                    <div class="customer-row">
+                        <div>2024-01-18</div>
+                        <div>Sarah Wilson</div>
+                        <div>32"</div>
+                        <div>24"</div>
+                        <div>34"</div>
+                        <div><span class="recommended-size">S</span></div>
+                    </div>
+                    <div class="customer-row">
+                        <div>2024-01-19</div>
+                        <div>David Brown</div>
+                        <div>36"</div>
+                        <div>28"</div>
+                        <div>38"</div>
+                        <div><span class="recommended-size">L</span></div>
+                    </div>
+                </div>
+                
+                <button class="export-btn" onclick="exportData()">📥 Export Data as CSV</button>
+            </div>
+
+            <!-- Instructions -->
+            <div class="section">
+                <h2>ℹ️ How to Use This Dashboard</h2>
+                <div class="size-chart">
+                    <h3>Understanding Your Data</h3>
+                    <ul>
+                        <li><strong>Size Distribution:</strong> Shows which sizes your customers need most</li>
+                        <li><strong>Production Insights:</strong> Helps you plan inventory based on demand</li>
+                        <li><strong>Customer Measurements:</strong> All data is automatically saved to your Shopify orders</li>
+                        <li><strong>Size Chart:</strong> Configure this in your theme editor to customize recommendations</li>
+                    </ul>
+                    
+                    <h3>Where to Find Customer Data</h3>
+                    <p>All customer measurements and recommendations are automatically saved to your Shopify orders in the <strong>"Additional Details"</strong> section. This makes it easy for your fulfillment team to pack the right sizes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function exportData() {
+            const csvContent = [
+                ["Date", "Customer Name", "Bust", "Waist", "Hip", "Recommended Size"],
+                ["2024-01-15", "John Doe", "36", "28", "38", "L"],
+                ["2024-01-16", "Jane Smith", "34", "26", "36", "M"],
+                ["2024-01-17", "Mike Johnson", "38", "30", "40", "XL"],
+                ["2024-01-18", "Sarah Wilson", "32", "24", "34", "S"],
+                ["2024-01-19", "David Brown", "36", "28", "38", "L"],
+                ["2024-01-20", "Lisa Davis", "34", "26", "36", "M"],
+                ["2024-01-21", "Tom Miller", "40", "32", "42", "XXL"],
+                ["2024-01-22", "Emma Garcia", "36", "28", "38", "L"]
+            ].map(row => row.join(",")).join("\n");
+
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "idealfit-measurements.csv";
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            alert("Data exported successfully!");
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+

@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdealFit Company Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+            padding: 2rem 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .user-section {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .user-info-sidebar {
+            flex: 1;
+        }
+        
+        .user-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        
+        .user-email {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+        
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0 1rem;
+        }
+        
+        .tab {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            border-left: 3px solid transparent;
+            margin: 4px 0;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #60a5fa;
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+            border-left-color: #60a5fa;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-icon {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+        
+        .tab-label {
+            flex: 1;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            outline: none;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .table th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-badge.inactive {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .status-badge.suspended {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-badge.pending {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0在内, 0.15);
+            border-left: 4px solid #22c55e;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .chart-container {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .filter-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .live-indicator::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .pagination button {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .pagination button:hover {
+            background: #f3f4f6;
+        }
+        
+        .pagination button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <!-- User Section -->
+            <div class="user-section">
+                <div class="user-avatar">
+                    🏢
+                </div>
+                <div class="user-info-sidebar">
+                    <div class="user-name">Company Admin</div>
+                    <div class="user-email">admin@idealfit.com</div>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <button class="tab active" onclick="showTab('overview')">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">Overview</span>
+                </button>
+                <button class="tab" onclick="showTab('users')">
+                    <span class="tab-icon">👥</span>
+                    <span class="tab-label">User Management</span>
+                </button>
+                <button class="tab" onclick="showTab('merchants')">
+                    <span class="tab-icon">🏪</span>
+                    <span class="tab-label">Merchant Management</span>
+                </button>
+                <button class="tab" onclick="showTab('billing')">
+                    <span class="tab-icon">💰</span>
+                    <span class="tab-label">Billing & Revenue</span>
+                </button>
+                <button class="tab" onclick="showTab('analytics')">
+                    <span class="tab-icon">📈</span>
+                    <span class="tab-label">Analytics</span>
+                </button>
+                <button class="tab" onclick="showTab('settings')">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-label">Settings</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="page-header">
+                    <h1 class="page-title">📊 Company Overview</h1>
+                    <p class="page-subtitle">Monitor your platform's performance and key metrics</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-number" id="totalRevenue">$0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏪</div>
+                        <div class="stat-number" id="totalMerchants">0</div>
+                        <div class="stat-label">Total Merchants</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-number" id="growthRate">0%</div>
+                        <div class="stat-label">Growth Rate</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">Recent Activity</h2>
+                        <div class="live-indicator">Live Data</div>
+                    </div>
+                    <div id="recentActivity">
+                        <p>Loading recent activity...</p>
+                    </div>
+                    <button class="btn" onclick="refreshActivity()">🔄 Refresh Activity</button>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">System Status</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="padding: 1rem; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
+                            <div style="font-weight: 600; color: #166534;">Server Status</div>
+                            <div style="color: #166534; font-size: 0.875rem;">Online</div>
+                        </div>
+                        <div style="padding: 1rem; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
+                            <div style="font-weight: 600; color: #166534;">Database</div>
+                            <div style="color: #166534; font-size: 0.875rem;">Connected</div>
+                        </div>
+                        <div style="padding: 1rem; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
+                            <div style="font-weight: 600; color: #166534;">API Services</div>
+                            <div style="color: #166534; font-size: 0.875rem;">Running</div>
+                        </div>
+                        <div style="padding: 1rem; background: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
+                            <div style="font-weight: 600; color: #dc2626;">Storage</div>
+                            <div style="color: #dc2626; font-size: 0.875rem;">85% Full</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Management Tab -->
+            <div id="users" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">👥 User Management</h1>
+                    <p class="page-subtitle">Manage platform users and their permissions</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">All Users</h2>
+                        <button class="btn" onclick="openAddUserModal()">➕ Add User</button>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <input type="text" class="search-box" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()">
+                        <select id="userRoleFilter" onchange="filterUsers()">
+                            <option value="">All Roles</option>
+                            <option value="admin">Admin</option>
+                            <option value="manager">Manager</option>
+                            <option value="support">Support</option>
+                        </select>
+                        <select id="userStatusFilter" onchange="filterUsers()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTable">
+                            <tr>
+                                <td>John Doe</td>
+                                <td>john@example.com</td>
+                                <td>Admin</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>2 hours ago</td>
+                                <td>
+                                    <button class="btn" onclick="editUser('john')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="deleteUser('john')">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Jane Smith</td>
+                                <td>jane@example.com</td>
+                                <td>Manager</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>1 day ago</td>
+                                <td>
+                                    <button class="btn" onclick="editUser('jane')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="deleteUser('jane')">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mike Johnson</td>
+                                <td>mike@example.com</td>
+                                <td>Support</td>
+                                <td><span class="status-badge suspended">Suspended</span></td>
+                                <td>1 week ago</td>
+                                <td>
+                                    <button class="btn" onclick="editUser('mike')">✏️ Edit</button>
+                                    <button class="btn btn-success" onclick="activateUser('mike')">✅ Activate</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination">
+                        <button onclick="previousPage('users')" id="prevUsersBtn">Previous</button>
+                        <button class="active">1</button>
+                        <button onclick="nextPage('users')" id="nextUsersBtn">Next</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Merchant Management Tab -->
+            <div id="merchants" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">🏪 Merchant Management</h1>
+                    <p class="page-subtitle">Manage merchant accounts and their status</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">All Merchants</h2>
+                        <button class="btn" onclick="openAddMerchantModal()">➕ Add Merchant</button>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <input type="text" class="search-box" id="merchantSearch" placeholder="Search merchants..." onkeyup="searchMerchants()">
+                        <select id="merchantPlanFilter" onchange="filterMerchants()">
+                            <option value="">All Plans</option>
+                            <option value="basic">Basic</option>
+                            <option value="professional">Professional</option>
+                            <option value="premium">Premium</option>
+                        </select>
+                        <select id="merchantStatusFilter" onchange="filterMerchants()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Store Name</th>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                                <th>Revenue</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="merchantTable">
+                            <tr>
+                                <td>Fashion Store ABC</td>
+                                <td>store@example.com</td>
+                                <td>Professional</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>$2,450</td>
+                                <td>
+                                    <button class="btn" onclick="editMerchant('store1')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="suspendMerchant('store1')">⏸️ Suspend</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Style Boutique</td>
+                                <td>boutique@example.com</td>
+                                <td>Premium</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>$3,200</td>
+                                <td>
+                                    <button class="btn" onclick="editMerchant('store2')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="suspendMerchant('store2')">⏸️ Suspend</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Trendy Fashion</td>
+                                <td>trendy@example.com</td>
+                                <td>Basic</td>
+                                <td><span class="status-badge suspended">Suspended</span></td>
+                                <td>$850</td>
+                                <td>
+                                    <button class="btn" onclick="editMerchant('store3')">✏️ Edit</button>
+                                    <button class="btn btn-success" onclick="activateMerchant('store3')">✅ Activate</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination">
+                        <button onclick="previousPage('merchants')" id="prevMerchantsBtn">Previous</button>
+                        <button class="active">1</button>
+                        <button onclick="nextPage('merchants')" id="nextMerchantsBtn">Next</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Billing & Revenue Tab -->
+            <div id="billing" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">💰 Billing & Revenue</h1>
+                    <p class="page-subtitle">Monitor revenue streams and billing information</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💳</div>
+                        <div class="stat-number" id="monthlyRevenue">$0</div>
+                        <div class="stat-label">Monthly Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-number" id="pendingPayments">0</div>
+                        <div class="stat-label">Pending Payments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-number" id="completedPayments">0</div>
+                        <div class="stat-label">Completed Payments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-number" id="conversionRate">0%</div>
+                        <div class="stat-label">Conversion Rate</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">Recent Transactions</h2>
+                        <div class="export-buttons">
+                            <button class="btn btn-secondary" onclick="exportBillingData('csv')">📊 Export CSV</button>
+                            <button class="btn btn-secondary" onclick="exportBillingData('excel')">📈 Export Excel</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <input type="date" id="billingFromDate" onchange="filterBilling()">
+                        <input type="date" id="billingToDate" onchange="filterBilling()">
+                        <select id="billingStatusFilter" onchange="filterBilling()">
+                            <option value="">All Status</option>
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Merchant</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Payment Method</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTable">
+                            <tr>
+                                <td>2024-01-15</td>
+                                <td>Fashion Store ABC</td>
+                                <td>$299.00</td>
+                                <td><span class="status-badge active">Completed</span></td>
+                                <td>Credit Card</td>
+                                <td>
+                                    <button class="btn" onclick="viewTransaction('txn1')">👁️ View</button>
+                                    <button class="btn btn-danger" onclick="refundTransaction('txn1')">💸 Refund</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2024-01-14</td>
+                                <td>Style Boutique</td>
+                                <td>$199.00</td>
+                                <td><span class="status-badge pending">Pending</span></td>
+                                <td>PayPal</td>
+                                <td>
+                                    <button class="btn" onclick="viewTransaction('txn2')">👁️ View</button>
+                                    <button class="btn btn-success" onclick="approveTransaction('txn2')">✅ Approve</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">📈 Analytics & Insights</h1>
+                    <p class="page-subtitle">Analyze platform performance and user behavior</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">Revenue Analytics</h2>
+                        <div class="live-indicator">Live Data</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">User Growth</h2>
+                        <div class="live-indicator">Live Data</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="userGrowthChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Key Performance Indicators</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="padding: 1rem; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
+                            <div style="font-weight: 600; color: #166534;">Customer Satisfaction</div>
+                            <div style="color: #166534; font-size: 1.5rem; font-weight: 700;">4.8/5</div>
+                        </div>
+                        <div style="padding: 1rem; background: #dbeafe; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                            <div style="font-weight: 600; color: #1e40af;">Platform Uptime</div>
+                            <div style="color: #1e40af; font-size: 1.5rem; font-weight: 700;">99.9%</div>
+                        </div>
+                        <div style="padding: 1rem; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <div style="font-weight: 600; color: #92400e;">Support Tickets</div>
+                            <div style="color: #92400e; font-size: 1.5rem; font-weight: 700;">12</div>
+                        </div>
+                        <div style="padding: 1rem; background: #fecaca; border-radius: 8px; border-left: 4px solid #ef4444;">
+                            <div style="font-weight: 600; color: #dc2626;">Error Rate</div>
+                            <div style="color: #dc2626; font-size: 1.5rem; font-weight: 700;">0.1%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">⚙️ System Settings</h1>
+                    <p class="page-subtitle">Configure platform settings and preferences</p>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">General Settings</h2>
+                    <div class="form-group">
+                        <label>Platform Name</label>
+                        <input type="text" id="platformName" value="IdealFit Platform">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Currency</label>
+                        <select id="defaultCurrency">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="INR">INR</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Timezone</label>
+                        <select id="timezone">
+                            <option value="UTC">UTC</option>
+                            <option value="EST">Eastern Time</option>
+                            <option value="PST">Pacific Time</option>
+                            <option value="IST">Indian Standard Time</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Platform Description</label>
+                        <textarea id="platformDescription" rows="3" placeholder="Enter platform description...">IdealFit is a comprehensive size recommendation platform for fashion retailers.</textarea>
+                    </div>
+                    <button class="btn" onclick="saveSettings()">💾 Save Settings</button>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Security Settings</h2>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="twoFactorAuth" checked> Enable Two-Factor Authentication
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="passwordPolicy" checked> Enforce Strong Password Policy
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="sessionTimeout" checked> Auto-logout after 30 minutes
+                        </label>
+                    </div>
+                    <button class="btn" onclick="saveSecuritySettings()">🔒 Save Security Settings</button>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">System Monitoring</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #374151;">CPU Usage</div>
+                            <div style="color: #6b7280; font-size: 0.875rem;" id="cpuUsage">45%</div>
+                        </div>
+                        <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #374151;">Memory Usage</div>
+                            <div style="color: #6b7280; font-size: 0.875rem;" id="memoryUsage">62%</div>
+                        </div>
+                        <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #374151;">Disk Usage</div>
+                            <div style="color: #6b7280; font-size: 0.875rem;" id="diskUsage">78%</div>
+                        </div>
+                        <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #374151;">Network I/O</div>
+                            <div style="color: #6b7280; font-size: 0.875rem;" id="networkIO">156 MB/s</div>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="refreshSystemMetrics()">🔄 Refresh Metrics</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addUserModal')">&times;</span>
+            <h2>Add New User</h2>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="newUserName" placeholder="Enter full name">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="newUserEmail" placeholder="Enter email address">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="newUserRole">
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="support">Support</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="newUserPassword" placeholder="Enter password">
+            </div>
+            <button class="btn" onclick="addNewUser()">➕ Add User</button>
+        </div>
+    </div>
+    
+    <!-- Add Merchant Modal -->
+    <div id="addMerchantModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addMerchantModal')">&times;</span>
+            <h2>Add New Merchant</h2>
+            <div class="form-group">
+                <label>Store Name</label>
+                <input type="text" id="newMerchantName" placeholder="Enter store name">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="newMerchantEmail" placeholder="Enter email address">
+            </div>
+            <div class="form-group">
+                <label>Plan</label>
+                <select id="newMerchantPlan">
+                    <option value="basic">Basic</option>
+                    <option value="professional">Professional</option>
+                    <option value="premium">Premium</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Contact Person</label>
+                <input type="text" id="newMerchantContact" placeholder="Enter contact person name">
+            </div>
+            <button class="btn" onclick="addNewMerchant()">➕ Add Merchant</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTab = 'overview';
+        let totalRevenue = 0;
+        let totalUsers = 3;
+        let totalMerchants = 3;
+        let monthlyRevenue = 0;
+        let pendingPayments = 0;
+        let completedPayments = 0;
+        let revenueChart = null;
+        let userGrowthChart = null;
+        
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.closest('.tab').classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Save current tab to localStorage for persistence
+            localStorage.setItem('idealfit_admin_current_tab', tabName);
+            
+            // Initialize tab-specific features
+            if (tabName === 'analytics') {
+                initializeCharts();
+            }
+            
+            showNotification(`Switched to ${tabName} page`);
+        }
+        
+        // Restore saved tab on page load
+        function restoreSavedTab() {
+            try {
+                const savedTab = localStorage.getItem('idealfit_admin_current_tab');
+                if (savedTab) {
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Remove active class from all nav items
+                    document.querySelectorAll('.tab').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    
+                    // Show saved tab content
+                    const content = document.getElementById(savedTab);
+                    if (content) {
+                        content.style.display = 'block';
+                        content.classList.add('active');
+                        
+                        // Add active class to corresponding nav item
+                        const navItem = document.querySelector(`[onclick="showTab('${savedTab}')"]`);
+                        if (navItem) {
+                            navItem.classList.add('active');
+                        }
+                        
+                        currentTab = savedTab;
+                        console.log(`Restored tab: ${savedTab}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error restoring saved tab:', error);
+            }
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">✅</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Success</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Overview functions
+        function refreshActivity() {
+            const activities = [
+                'New merchant onboarded: Fashion Store ABC',
+                'Payment processed: $299.00',
+                'User John Doe logged in',
+                'System backup completed',
+                'New subscription created: Premium Plan',
+                'Database optimization completed',
+                'Security scan completed',
+                'New user registered: Support Team'
+            ];
+            
+            const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+            document.getElementById('recentActivity').innerHTML = `
+                <p>📅 ${new Date().toLocaleString()}</p>
+                <p>${randomActivity}</p>
+            `;
+            
+            showNotification('Activity refreshed successfully!');
+        }
+        
+        // User management functions
+        function openAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function addNewUser() {
+            const name = document.getElementById('newUserName').value;
+            const email = document.getElementById('newUserEmail').value;
+            const role = document.getElementById('newUserRole').value;
+            const password = document.getElementById('newUserPassword').value;
+            
+            if (!name || !email || !password) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Add new row to table
+            const table = document.getElementById('userTable');
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td>${name}</td>
+                <td>${email}</td>
+                <td>${role.charAt(0).toUpperCase() + role.slice(1)}</td>
+                <td><span class="status-badge active">Active</span></td>
+                <td>Just now</td>
+                <td>
+                    <button class="btn" onclick="editUser('${name.toLowerCase()}')">✏️ Edit</button>
+                    <button class="btn btn-danger" onclick="deleteUser('${name.toLowerCase()}')">🗑️ Delete</button>
+                </td>
+            `;
+            
+            totalUsers++;
+            updateOverviewStats();
+            closeModal('addUserModal');
+            showNotification(`User ${name} added successfully!`);
+            
+            // Clear form
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserPassword').value = '';
+        }
+        
+        function editUser(userId) {
+            showNotification(`Editing user: ${userId}`);
+        }
+        
+        function deleteUser(userId) {
+            if (confirm(`Are you sure you want to delete user ${userId}?`)) {
+                showNotification(`User ${userId} deleted successfully!`);
+                totalUsers--;
+                updateOverviewStats();
+            }
+        }
+        
+        function activateUser(userId) {
+            showNotification(`User ${userId} activated successfully!`);
+        }
+        
+        function searchUsers() {
+            const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#userTable tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = 'table-row';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterUsers() {
+            const roleFilter = document.getElementById('userRoleFilter').value;
+            const statusFilter = document.getElementById('userStatusFilter').value;
+            const rows = document.querySelectorAll('#userTable tr');
+            
+            rows.forEach(row => {
+                const role = row.cells[2].textContent.toLowerCase();
+                const status = row.cells[3].textContent.toLowerCase();
+                
+                let showRow = true;
+                
+                if (roleFilter && !role.includes(roleFilter)) {
+                    showRow = false;
+                }
+                
+                if (statusFilter && !status.includes(statusFilter)) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? 'table-row' : 'none';
+            });
+        }
+        
+        // Merchant management functions
+        function openAddMerchantModal() {
+            document.getElementById('addMerchantModal').style.display = 'block';
+        }
+        
+        function addNewMerchant() {
+            const name = document.getElementById('newMerchantName').value;
+            const email = document.getElementById('newMerchantEmail').value;
+            const plan = document.getElementById('newMerchantPlan').value;
+            const contact = document.getElementById('newMerchantContact').value;
+            
+            if (!name || !email) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Add new row to table
+            const table = document.getElementById('merchantTable');
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td>${name}</td>
+                <td>${email}</td>
+                <td>${plan.charAt(0).toUpperCase() + plan.slice(1)}</td>
+                <td><span class="status-badge active">Active</span></td>
+                <td>$0</td>
+                <td>
+                    <button class="btn" onclick="editMerchant('${name.toLowerCase()}')">✏️ Edit</button>
+                    <button class="btn btn-danger" onclick="suspendMerchant('${name.toLowerCase()}')">⏸️ Suspend</button>
+                </td>
+            `;
+            
+            totalMerchants++;
+            updateOverviewStats();
+            closeModal('addMerchantModal');
+            showNotification(`Merchant ${name} added successfully!`);
+            
+            // Clear form
+            document.getElementById('newMerchantName').value = '';
+            document.getElementById('newMerchantEmail').value = '';
+            document.getElementById('newMerchantContact').value = '';
+        }
+        
+        function editMerchant(merchantId) {
+            showNotification(`Editing merchant: ${merchantId}`);
+        }
+        
+        function suspendMerchant(merchantId) {
+            if (confirm(`Are you sure you want to suspend merchant ${merchantId}?`)) {
+                showNotification(`Merchant ${merchantId} suspended successfully!`);
+            }
+        }
+        
+        function activateMerchant(merchantId) {
+            showNotification(`Merchant ${merchantId} activated successfully!`);
+        }
+        
+        function searchMerchants() {
+            const searchTerm = document.getElementById('merchantSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#merchantTable tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = 'table-row';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterMerchants() {
+            const planFilter = document.getElementById('merchantPlanFilter').value;
+            const statusFilter = document.getElementById('merchantStatusFilter').value;
+            const rows = document.querySelectorAll('#merchantTable tr');
+            
+            rows.forEach(row => {
+                const plan = row.cells[2].textContent.toLowerCase();
+                const status = row.cells[3].textContent.toLowerCase();
+                
+                let showRow = true;
+                
+                if (planFilter && !plan.includes(planFilter)) {
+                    showRow = false;
+                }
+                
+                if (statusFilter && !status.includes(statusFilter)) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? 'table-row' : 'none';
+            });
+        }
+        
+        // Billing functions
+        function viewTransaction(transactionId) {
+            showNotification(`Viewing transaction: ${transactionId}`);
+        }
+        
+        function refundTransaction(transactionId) {
+            if (confirm(`Are you sure you want to refund transaction ${transactionId}?`)) {
+                showNotification(`Transaction ${transactionId} refunded successfully!`);
+            }
+        }
+        
+        function approveTransaction(transactionId) {
+            showNotification(`Transaction ${transactionId} approved successfully!`);
+        }
+        
+        function filterBilling() {
+            const fromDate = document.getElementById('billingFromDate').value;
+            const toDate = document.getElementById('billingToDate').value;
+            const statusFilter = document.getElementById('billingStatusFilter').value;
+            const rows = document.querySelectorAll('#transactionTable tr');
+            
+            rows.forEach(row => {
+                const date = row.cells[0].textContent;
+                const status = row.cells[3].textContent.toLowerCase();
+                
+                let showRow = true;
+                
+                if (fromDate && date < fromDate) {
+                    showRow = false;
+                }
+                
+                if (toDate && date > toDate) {
+                    showRow = false;
+                }
+                
+                if (statusFilter && !status.includes(statusFilter)) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? 'table-row' : 'none';
+            });
+        }
+        
+        function exportBillingData(format) {
+            showNotification(`Billing data exported to ${format.toUpperCase()} successfully!`);
+        }
+        
+        // Analytics functions
+        function initializeCharts() {
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+            if (userGrowthChart) {
+                userGrowthChart.destroy();
+            }
+            
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [12000, 15000, 18000, 22000, 25000, 28000],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // User Growth Chart
+            const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+            userGrowthChart = new Chart(userGrowthCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [50, 75, 100, 125, 150, 175],
+                        backgroundColor: '#22c55e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Settings functions
+        function saveSettings() {
+            const platformName = document.getElementById('platformName').value;
+            const defaultCurrency = document.getElementById('defaultCurrency').value;
+            const timezone = document.getElementById('timezone').value;
+            const description = document.getElementById('platformDescription').value;
+            
+            showNotification('Settings saved successfully!');
+        }
+        
+        function saveSecuritySettings() {
+            const twoFactor = document.getElementById('twoFactorAuth').checked;
+            const passwordPolicy = document.getElementById('passwordPolicy').checked;
+            const sessionTimeout = document.getElementById('sessionTimeout').checked;
+            
+            showNotification('Security settings saved successfully!');
+        }
+        
+        function refreshSystemMetrics() {
+            // Simulate real-time metrics
+            document.getElementById('cpuUsage').textContent = Math.floor(Math.random() * 30 + 20) + '%';
+            document.getElementById('memoryUsage').textContent = Math.floor(Math.random() * 20 + 50) + '%';
+            document.getElementById('diskUsage').textContent = Math.floor(Math.random() * 10 + 70) + '%';
+            document.getElementById('networkIO').textContent = Math.floor(Math.random() * 100 + 100) + ' MB/s';
+            
+            showNotification('System metrics refreshed!');
+        }
+        
+        // Pagination functions
+        function previousPage(tableType) {
+            showNotification(`Previous page for ${tableType}`);
+        }
+        
+        function nextPage(tableType) {
+            showNotification(`Next page for ${tableType}`);
+        }
+        
+        // Update overview statistics
+        function updateOverviewStats() {
+            document.getElementById('totalRevenue').textContent = `$${totalRevenue.toLocaleString()}`;
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('totalMerchants').textContent = totalMerchants;
+            document.getElementById('monthlyRevenue').textContent = `$${monthlyRevenue.toLocaleString()}`;
+            document.getElementById('pendingPayments').textContent = pendingPayments;
+            document.getElementById('completedPayments').textContent = completedPayments;
+        }
+        
+        // Real-time data updates
+        function startRealTimeUpdates() {
+            setInterval(() => {
+                // Update revenue
+                totalRevenue += Math.floor(Math.random() * 1000);
+                monthlyRevenue += Math.floor(Math.random() * 500);
+                
+                // Update payments
+                if (Math.random() > 0.7) {
+                    pendingPayments++;
+                }
+                if (Math.random() > 0.8) {
+                    completedPayments++;
+                    pendingPayments = Math.max(0, pendingPayments - 1);
+                }
+                
+                // Update growth rate
+                const growthRate = Math.floor(Math.random() * 10 + 5);
+                document.getElementById('growthRate').textContent = growthRate + '%';
+                
+                updateOverviewStats();
+            }, 30000); // Update every 30 seconds
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('🎯 IdealFit Company Admin Dashboard Loaded Successfully!');
+                
+                // Restore saved tab first
+                restoreSavedTab();
+                
+                // Initialize with sample data
+                totalRevenue = 125000;
+                monthlyRevenue = 15000;
+                pendingPayments = 5;
+                completedPayments = 150;
+                
+                updateOverviewStats();
+                
+                // Start real-time updates
+                startRealTimeUpdates();
+                
+                // Initialize charts if on analytics tab
+                if (currentTab === 'analytics') {
+                    initializeCharts();
+                }
+                
+                showNotification('Company admin dashboard loaded successfully!');
+                
+                // Close modals when clicking outside
+                window.onclick = function(event) {
+                    const modals = document.querySelectorAll('.modal');
+                    modals.forEach(modal => {
+                        if (event.target === modal) {
+                            modal.style.display = 'none';
+                        }
+                    });
+                }
+                
+                console.log('✅ Dashboard initialization completed');
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                showNotification('Failed to initialize dashboard. Please refresh the page.');
+            }
+        });
+    </script>
+</body>
+</html>

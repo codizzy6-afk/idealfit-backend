@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdealFit Company Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+            padding: 2rem 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-section {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .user-info-sidebar {
+            flex: 1;
+        }
+        
+        .user-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        
+        .user-email {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+        
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0 1rem;
+        }
+        
+        .tab {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            border-left: 3px solid transparent;
+            margin: 4px 0;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #60a5fa;
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+            border-left-color: #60a5fa;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-icon {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+        
+        .tab-label {
+            flex: 1;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            outline: none;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .table th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-badge.inactive {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .status-badge.suspended {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #22c55e;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <!-- User Section -->
+            <div class="user-section">
+                <div class="user-avatar">
+                    🏢
+                </div>
+                <div class="user-info-sidebar">
+                    <div class="user-name">Company Admin</div>
+                    <div class="user-email">admin@idealfit.com</div>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <button class="tab active" onclick="showTab('overview')">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">Overview</span>
+                </button>
+                <button class="tab" onclick="showTab('users')">
+                    <span class="tab-icon">👥</span>
+                    <span class="tab-label">User Management</span>
+                </button>
+                <button class="tab" onclick="showTab('merchants')">
+                    <span class="tab-icon">🏪</span>
+                    <span class="tab-label">Merchant Management</span>
+                </button>
+                <button class="tab" onclick="showTab('billing')">
+                    <span class="tab-icon">💰</span>
+                    <span class="tab-label">Billing & Revenue</span>
+                </button>
+                <button class="tab" onclick="showTab('analytics')">
+                    <span class="tab-icon">📈</span>
+                    <span class="tab-label">Analytics</span>
+                </button>
+                <button class="tab" onclick="showTab('settings')">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-label">Settings</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="page-header">
+                    <h1 class="page-title">📊 Company Overview</h1>
+                    <p class="page-subtitle">Monitor your platform's performance and key metrics</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-number" id="totalRevenue">$0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏪</div>
+                        <div class="stat-number" id="totalMerchants">0</div>
+                        <div class="stat-label">Total Merchants</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-number" id="growthRate">0%</div>
+                        <div class="stat-label">Growth Rate</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Recent Activity</h2>
+                    <div id="recentActivity">
+                        <p>Loading recent activity...</p>
+                    </div>
+                    <button class="btn" onclick="refreshActivity()">🔄 Refresh Activity</button>
+                </div>
+            </div>
+            
+            <!-- User Management Tab -->
+            <div id="users" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">👥 User Management</h1>
+                    <p class="page-subtitle">Manage platform users and their permissions</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">All Users</h2>
+                        <button class="btn" onclick="openAddUserModal()">➕ Add User</button>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTable">
+                            <tr>
+                                <td>John Doe</td>
+                                <td>john@example.com</td>
+                                <td>Admin</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>2 hours ago</td>
+                                <td>
+                                    <button class="btn" onclick="editUser('john')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="deleteUser('john')">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Jane Smith</td>
+                                <td>jane@example.com</td>
+                                <td>Manager</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>1 day ago</td>
+                                <td>
+                                    <button class="btn" onclick="editUser('jane')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="deleteUser('jane')">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Merchant Management Tab -->
+            <div id="merchants" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">🏪 Merchant Management</h1>
+                    <p class="page-subtitle">Manage merchant accounts and their status</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">All Merchants</h2>
+                        <button class="btn" onclick="openAddMerchantModal()">➕ Add Merchant</button>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Store Name</th>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                                <th>Revenue</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="merchantTable">
+                            <tr>
+                                <td>Fashion Store ABC</td>
+                                <td>store@example.com</td>
+                                <td>Professional</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>$2,450</td>
+                                <td>
+                                    <button class="btn" onclick="editMerchant('store1')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="suspendMerchant('store1')">⏸️ Suspend</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Style Boutique</td>
+                                <td>boutique@example.com</td>
+                                <td>Premium</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>$3,200</td>
+                                <td>
+                                    <button class="btn" onclick="editMerchant('store2')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="suspendMerchant('store2')">⏸️ Suspend</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Billing & Revenue Tab -->
+            <div id="billing" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">💰 Billing & Revenue</h1>
+                    <p class="page-subtitle">Monitor revenue streams and billing information</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💳</div>
+                        <div class="stat-number" id="monthlyRevenue">$0</div>
+                        <div class="stat-label">Monthly Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-number" id="pendingPayments">0</div>
+                        <div class="stat-label">Pending Payments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-number" id="completedPayments">0</div>
+                        <div class="stat-label">Completed Payments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-number" id="conversionRate">0%</div>
+                        <div class="stat-label">Conversion Rate</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Recent Transactions</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Merchant</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTable">
+                            <tr>
+                                <td>2024-01-15</td>
+                                <td>Fashion Store ABC</td>
+                                <td>$299.00</td>
+                                <td><span class="status-badge active">Completed</span></td>
+                                <td>
+                                    <button class="btn" onclick="viewTransaction('txn1')">👁️ View</button>
+                                    <button class="btn btn-danger" onclick="refundTransaction('txn1')">💸 Refund</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">📈 Analytics & Insights</h1>
+                    <p class="page-subtitle">Analyze platform performance and user behavior</p>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Platform Analytics</h2>
+                    <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 3rem; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 1rem;">📊</div>
+                        <h3 style="color: #4a5568; margin-bottom: 0.5rem;">Analytics Dashboard</h3>
+                        <p style="color: #718096;">Charts and analytics will be displayed here</p>
+                        <button class="btn" onclick="loadAnalytics()">📊 Load Analytics</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">⚙️ System Settings</h1>
+                    <p class="page-subtitle">Configure platform settings and preferences</p>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">General Settings</h2>
+                    <div class="form-group">
+                        <label>Platform Name</label>
+                        <input type="text" id="platformName" value="IdealFit Platform">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Currency</label>
+                        <select id="defaultCurrency">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="INR">INR</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Timezone</label>
+                        <select id="timezone">
+                            <option value="UTC">UTC</option>
+                            <option value="EST">Eastern Time</option>
+                            <option value="PST">Pacific Time</option>
+                            <option value="IST">Indian Standard Time</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="saveSettings()">💾 Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addUserModal')">&times;</span>
+            <h2>Add New User</h2>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="newUserName" placeholder="Enter full name">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="newUserEmail" placeholder="Enter email address">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="newUserRole">
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="support">Support</option>
+                </select>
+            </div>
+            <button class="btn" onclick="addNewUser()">➕ Add User</button>
+        </div>
+    </div>
+    
+    <!-- Add Merchant Modal -->
+    <div id="addMerchantModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addMerchantModal')">&times;</span>
+            <h2>Add New Merchant</h2>
+            <div class="form-group">
+                <label>Store Name</label>
+                <input type="text" id="newMerchantName" placeholder="Enter store name">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="newMerchantEmail" placeholder="Enter email address">
+            </div>
+            <div class="form-group">
+                <label>Plan</label>
+                <select id="newMerchantPlan">
+                    <option value="basic">Basic</option>
+                    <option value="professional">Professional</option>
+                    <option value="premium">Premium</option>
+                </select>
+            </div>
+            <button class="btn" onclick="addNewMerchant()">➕ Add Merchant</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTab = 'overview';
+        let totalRevenue = 0;
+        let totalUsers = 2;
+        let totalMerchants = 2;
+        let monthlyRevenue = 0;
+        let pendingPayments = 0;
+        let completedPayments = 0;
+        
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.closest('.tab').classList.add('active');
+            
+            currentTab = tabName;
+            showNotification(`Switched to ${tabName} page`);
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">✅</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Success</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Overview functions
+        function refreshActivity() {
+            const activities = [
+                'New merchant onboarded: Fashion Store ABC',
+                'Payment processed: $299.00',
+                'User John Doe logged in',
+                'System backup completed',
+                'New subscription created: Premium Plan'
+            ];
+            
+            const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+            document.getElementById('recentActivity').innerHTML = `
+                <p>📅 ${new Date().toLocaleString()}</p>
+                <p>${randomActivity}</p>
+            `;
+            
+            showNotification('Activity refreshed successfully!');
+        }
+        
+        // User management functions
+        function openAddUserModal() {
+            document.getElementById('addUserModal').style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function addNewUser() {
+            const name = document.getElementById('newUserName').value;
+            const email = document.getElementById('newUserEmail').value;
+            const role = document.getElementById('newUserRole').value;
+            
+            if (!name || !email) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Add new row to table
+            const table = document.getElementById('userTable');
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td>${name}</td>
+                <td>${email}</td>
+                <td>${role.charAt(0).toUpperCase() + role.slice(1)}</td>
+                <td><span class="status-badge active">Active</span></td>
+                <td>Just now</td>
+                <td>
+                    <button class="btn" onclick="editUser('${name.toLowerCase()}')">✏️ Edit</button>
+                    <button class="btn btn-danger" onclick="deleteUser('${name.toLowerCase()}')">🗑️ Delete</button>
+                </td>
+            `;
+            
+            totalUsers++;
+            updateOverviewStats();
+            closeModal('addUserModal');
+            showNotification(`User ${name} added successfully!`);
+            
+            // Clear form
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+        }
+        
+        function editUser(userId) {
+            showNotification(`Editing user: ${userId}`);
+        }
+        
+        function deleteUser(userId) {
+            if (confirm(`Are you sure you want to delete user ${userId}?`)) {
+                showNotification(`User ${userId} deleted successfully!`);
+                totalUsers--;
+                updateOverviewStats();
+            }
+        }
+        
+        // Merchant management functions
+        function openAddMerchantModal() {
+            document.getElementById('addMerchantModal').style.display = 'block';
+        }
+        
+        function addNewMerchant() {
+            const name = document.getElementById('newMerchantName').value;
+            const email = document.getElementById('newMerchantEmail').value;
+            const plan = document.getElementById('newMerchantPlan').value;
+            
+            if (!name || !email) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Add new row to table
+            const table = document.getElementById('merchantTable');
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td>${name}</td>
+                <td>${email}</td>
+                <td>${plan.charAt(0).toUpperCase() + plan.slice(1)}</td>
+                <td><span class="status-badge active">Active</span></td>
+                <td>$0</td>
+                <td>
+                    <button class="btn" onclick="editMerchant('${name.toLowerCase()}')">✏️ Edit</button>
+                    <button class="btn btn-danger" onclick="suspendMerchant('${name.toLowerCase()}')">⏸️ Suspend</button>
+                </td>
+            `;
+            
+            totalMerchants++;
+            updateOverviewStats();
+            closeModal('addMerchantModal');
+            showNotification(`Merchant ${name} added successfully!`);
+            
+            // Clear form
+            document.getElementById('newMerchantName').value = '';
+            document.getElementById('newMerchantEmail').value = '';
+        }
+        
+        function editMerchant(merchantId) {
+            showNotification(`Editing merchant: ${merchantId}`);
+        }
+        
+        function suspendMerchant(merchantId) {
+            if (confirm(`Are you sure you want to suspend merchant ${merchantId}?`)) {
+                showNotification(`Merchant ${merchantId} suspended successfully!`);
+            }
+        }
+        
+        // Billing functions
+        function viewTransaction(transactionId) {
+            showNotification(`Viewing transaction: ${transactionId}`);
+        }
+        
+        function refundTransaction(transactionId) {
+            if (confirm(`Are you sure you want to refund transaction ${transactionId}?`)) {
+                showNotification(`Transaction ${transactionId} refunded successfully!`);
+            }
+        }
+        
+        // Analytics functions
+        function loadAnalytics() {
+            showNotification('Analytics loaded successfully!');
+        }
+        
+        // Settings functions
+        function saveSettings() {
+            const platformName = document.getElementById('platformName').value;
+            const defaultCurrency = document.getElementById('defaultCurrency').value;
+            const timezone = document.getElementById('timezone').value;
+            
+            showNotification('Settings saved successfully!');
+        }
+        
+        // Update overview statistics
+        function updateOverviewStats() {
+            document.getElementById('totalRevenue').textContent = `$${totalRevenue.toLocaleString()}`;
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('totalMerchants').textContent = totalMerchants;
+            document.getElementById('monthlyRevenue').textContent = `$${monthlyRevenue.toLocaleString()}`;
+            document.getElementById('pendingPayments').textContent = pendingPayments;
+            document.getElementById('completedPayments').textContent = completedPayments;
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate data loading
+            totalRevenue = 125000;
+            monthlyRevenue = 15000;
+            pendingPayments = 5;
+            completedPayments = 150;
+            
+            updateOverviewStats();
+            showNotification('Company admin dashboard loaded successfully!');
+            
+            // Close modals when clicking outside
+            window.onclick = function(event) {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    if (event.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

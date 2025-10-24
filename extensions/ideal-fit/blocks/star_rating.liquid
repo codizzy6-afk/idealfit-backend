@@ -1,0 +1,585 @@
+<!-- Unit Toggle -->
+<div class="unit-toggle-container" style="margin-bottom: 15px; text-align: right;">
+  <div class="unit-toggle" style="display: inline-block; background: #f3f4f6; border-radius: 20px; padding: 4px;">
+    <button class="unit-btn active" data-unit="inches">IN</button>
+    <button class="unit-btn" data-unit="cm">CM</button>
+  </div>
+  <div class="unit-info" style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+    <span id="unit-detected">Auto-detected: Inches</span>
+  </div>
+</div>
+
+<!-- Measurement Form + Size Recommendation -->
+<div id="measurementForm" style="margin-bottom:15px; padding:15px; border:1px solid #ddd; border-radius:8px; font-family:sans-serif;" data-product-id="{{ product.id }}" data-customer-name="{% if customer %}{{ customer.first_name | escape }} {{ customer.last_name | escape }}{% endif %}">
+  <h4 style="margin-bottom:10px; color:#000000; font-weight:700; letter-spacing:1px;">KNOW YOUR SIZE</h4>
+  
+  <div style="margin-bottom: 10px;">
+    <input type="number" id="bustInput" placeholder="Bust" style="width:30%; margin-right:2%; padding:8px; border-radius:6px; border:1px solid #ddd;">
+    <input type="number" id="waistInput" placeholder="Waist" style="width:30%; margin-right:2%; padding:8px; border-radius:6px; border:1px solid #ddd;">
+    <input type="number" id="hipInput" placeholder="Hip" style="width:30%; padding:8px; border-radius:6px; border:1px solid #ddd;">
+  </div>
+  
+  <button id="saveMeasurements" style="margin-top:10px; padding:8px 15px; background:#000000; color:#fff; border:none; border-radius:6px; cursor:pointer;">📏 Get Size Recommendation</button>
+  <div id="measurementMessage" style="margin-top:8px;"></div>
+  
+  {% if block.settings.show_branding %}
+    <div style="margin-top:6px; font-size:12px; opacity:0.7; text-align:right;">powered by IdealFit</div>
+  {% endif %}
+</div>
+
+<style>
+#measurementForm input { font-size:14px; }
+#measurementForm button { font-size:14px; }
+
+/* Unit toggle styles */
+.unit-toggle-container {
+  margin-bottom: 15px;
+  text-align: right;
+}
+
+.unit-toggle {
+  display: inline-block;
+  background: #f3f4f6;
+  border-radius: 20px;
+  padding: 4px;
+}
+
+.unit-btn {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.unit-btn.active {
+  background: #111827;
+  color: white;
+}
+
+.unit-btn:hover:not(.active) {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Recommendation style */
+#measurementMessage .recommendedSize {
+  color: #ff4c00;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Measurements style */
+#measurementMessage .userMeasurements {
+  color: #000000;
+  margin-top: 4px;
+  font-size: 14px;
+}
+</style>
+
+<script>
+console.log('🔥🔥🔥 IDEALFIT THEME EXTENSION - WITH UNIT CONVERSION - ' + new Date().toISOString());
+
+// Global variables
+let currentUnit = 'inches';
+const INCHES_COUNTRIES = ['US', 'CA', 'GB', 'AU', 'NZ', 'IN']; // India uses inches for clothing
+
+// Unit conversion functions
+function inchesToCm(inches) {
+  return Math.round(inches * 2.54 * 10) / 10;
+}
+
+function cmToInches(cm) {
+  return Math.round(cm / 2.54 * 10) / 10;
+}
+
+function convertMeasurement(value, fromUnit, toUnit) {
+  if (fromUnit === toUnit) return value;
+  if (fromUnit === 'inches' && toUnit === 'cm') return inchesToCm(value);
+  if (fromUnit === 'cm' && toUnit === 'inches') return cmToInches(value);
+  return value;
+}
+
+// Country detection and unit setting
+function detectAndSetUnit() {
+  // Try to detect country from Shopify's global object
+  let country = 'US'; // Default
+  
+  if (typeof window.Shopify !== 'undefined' && window.Shopify.country) {
+    country = window.Shopify.country;
+  } else if (typeof window.ShopifyAnalytics !== 'undefined' && window.ShopifyAnalytics.meta) {
+    country = window.ShopifyAnalytics.meta.country || 'US';
+  }
+  
+  console.log('🌍 Detected country:', country);
+  
+  // Set primary unit based on country
+  if (INCHES_COUNTRIES.includes(country)) {
+    currentUnit = 'inches';
+    document.querySelector('[data-unit="inches"]').classList.add('active');
+    document.querySelector('[data-unit="cm"]').classList.remove('active');
+    document.getElementById('unit-detected').textContent = `Auto-detected: Inches (${country})`;
+  } else {
+    currentUnit = 'cm';
+    document.querySelector('[data-unit="cm"]').classList.add('active');
+    document.querySelector('[data-unit="inches"]').classList.remove('active');
+    document.getElementById('unit-detected').textContent = `Auto-detected: CM (${country})`;
+  }
+  
+  // Update placeholders
+  updatePlaceholders();
+}
+
+// Update input placeholders based on current unit
+function updatePlaceholders() {
+  const unit = currentUnit === 'inches' ? 'inches' : 'cm';
+  document.getElementById('bustInput').placeholder = `Bust (${unit})`;
+  document.getElementById('waistInput').placeholder = `Waist (${unit})`;
+  document.getElementById('hipInput').placeholder = `Hip (${unit})`;
+}
+
+// Unit toggle functionality
+function switchUnit(unit) {
+  if (unit === currentUnit) return;
+  
+  currentUnit = unit;
+  
+  // Update UI
+  document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector(`[data-unit="${unit}"]`).classList.add('active');
+  
+  // Update placeholders
+  updatePlaceholders();
+  
+  // Convert existing values if any
+  const bustInput = document.getElementById('bustInput');
+  const waistInput = document.getElementById('waistInput');
+  const hipInput = document.getElementById('hipInput');
+  
+  if (bustInput.value) {
+    const oldUnit = unit === 'inches' ? 'cm' : 'inches';
+    bustInput.value = convertMeasurement(parseFloat(bustInput.value), oldUnit, unit);
+  }
+  if (waistInput.value) {
+    const oldUnit = unit === 'inches' ? 'cm' : 'inches';
+    waistInput.value = convertMeasurement(parseFloat(waistInput.value), oldUnit, unit);
+  }
+  if (hipInput.value) {
+    const oldUnit = unit === 'inches' ? 'cm' : 'inches';
+    hipInput.value = convertMeasurement(parseFloat(hipInput.value), oldUnit, unit);
+  }
+  
+  // Recalculate recommendation if form has values
+  if (bustInput.value && waistInput.value && hipInput.value) {
+    showRecommendation();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  console.log('🎯 IDEALFIT: DOMContentLoaded - initializing with unit conversion...');
+
+  // Initialize unit detection
+  detectAndSetUnit();
+  
+  // Add unit toggle event listeners
+  document.querySelectorAll('.unit-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchUnit(btn.dataset.unit));
+  });
+
+  const bustInput = document.getElementById("bustInput");
+  const waistInput = document.getElementById("waistInput");
+  const hipInput = document.getElementById("hipInput");
+  const saveBtn = document.getElementById("saveMeasurements");
+  const messageDiv = document.getElementById("measurementMessage");
+  
+  console.log('🎯 IDEALFIT: Form elements found:', {bustInput, waistInput, hipInput, saveBtn, messageDiv});
+
+  // Try to load merchant's custom size chart, fallback to default
+  let sizeChart = [
+    { size: 'XS', bust: 32, waist: 24, hip: 35 },
+    { size: 'S', bust: 34, waist: 26, hip: 37 },
+    { size: 'M', bust: 36, waist: 28, hip: 39 },
+    { size: 'L', bust: 38, waist: 30, hip: 41 },
+    { size: 'XL', bust: 40, waist: 32, hip: 43 },
+    { size: 'XXL', bust: 42, waist: 34, hip: 45 },
+    { size: 'XXXL', bust: 44, waist: 36, hip: 47 }
+  ];
+
+  // Load merchant's custom size chart from local API
+  async function loadMerchantSizeChart() {
+    try {
+      console.log('🔄 IDEALFIT: Loading merchant size chart from local API...');
+      const apiBaseUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:3001/api' 
+          : '/api';
+      const response = await fetch(`${apiBaseUrl}/sizecharts?shop=idealfit-2.myshopify.com`);
+      const data = await response.json();
+      
+      if (data && data.success && data.data && data.data.length > 0) {
+        // Use the first size chart from the response
+        const chartData = data.data[0];
+        if (chartData.sizeChart && Array.isArray(chartData.sizeChart)) {
+          sizeChart = chartData.sizeChart;
+          console.log('✅ IDEALFIT: Loaded merchant size chart from local API:', sizeChart);
+        }
+      } else {
+        console.log('⚠️ IDEALFIT: No custom size chart found in local API, using default');
+      }
+    } catch (error) {
+      console.log('⚠️ IDEALFIT: Failed to load merchant size chart from local API, using default:', error);
+    }
+  }
+
+  // Load merchant size chart on page load
+  loadMerchantSizeChart();
+
+  console.log('🎯 IDEALFIT: Using size chart:', sizeChart);
+
+  // Prefill form from localStorage
+  function prefillForm(){
+    if(localStorage.getItem("userBust")) bustInput.value = localStorage.getItem("userBust");
+    if(localStorage.getItem("userWaist")) waistInput.value = localStorage.getItem("userWaist");
+    if(localStorage.getItem("userHip")) hipInput.value = localStorage.getItem("userHip");
+  }
+
+  prefillForm();
+
+  // Save / Update measurements
+  saveBtn.addEventListener("click", async function(){
+    console.log('🎯 IDEALFIT: Save button clicked with API integration!');
+    
+    const bust = bustInput.value;
+    const waist = waistInput.value;
+    const hip = hipInput.value;
+
+    console.log('🎯 IDEALFIT: Input values:', {bust, waist, hip, currentUnit});
+
+    if(!bust || !waist || !hip){
+      messageDiv.innerHTML = '<span style="color:red;">Please enter all measurements!</span>';
+      return;
+    }
+
+    localStorage.setItem("userBust", bust);
+    localStorage.setItem("userWaist", waist);
+    localStorage.setItem("userHip", hip);
+    localStorage.setItem("userUnit", currentUnit);
+    
+    console.log('🎯 IDEALFIT: Measurements saved to localStorage with unit:', currentUnit);
+
+    const rec = await getRecommendedSize();
+    console.log('🎯 IDEALFIT: Recommended size from API:', rec);
+    
+    await showRecommendation();
+
+    // Update cart with measurements and unit info
+    const cartData = {
+      attributes: {
+        '_measurement_bust': bust + (currentUnit === 'inches' ? '"' : 'cm'),
+        '_measurement_waist': waist + (currentUnit === 'inches' ? '"' : 'cm'),
+        '_measurement_hip': hip + (currentUnit === 'inches' ? '"' : 'cm'),
+        '_recommended_size': rec,
+        '_measurement_unit': currentUnit
+      }
+    };
+    
+    console.log('🎯 IDEALFIT: Updating cart with measurements:', cartData);
+    
+    fetch('/cart/update.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cartData)
+    }).then(() => {
+      console.log('✅ IDEALFIT: Cart updated successfully!');
+    }).catch(err => {
+      console.error('❌ IDEALFIT: Error updating cart', err);
+    });
+  });
+
+  // Recommend size using local API with fallback
+  async function getRecommendedSize(){
+    const bust = localStorage.getItem("userBust");
+    const waist = localStorage.getItem("userWaist");
+    const hip = localStorage.getItem("userHip");
+    
+    if(!bust || !waist || !hip) return "N/A";
+
+    console.log('🔍 Getting size recommendation from local API:', {bust, waist, hip, unit: currentUnit});
+
+    try {
+      // Use local API server
+      const apiBaseUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:3001/api' 
+          : '/api';
+      const response = await fetch(`${apiBaseUrl}/save-measurement`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bust: parseFloat(bust),
+          waist: parseFloat(waist),
+          hip: parseFloat(hip),
+          unit: currentUnit,
+          customerName: document.querySelector('[data-customer-name]')?.getAttribute('data-customer-name') || 'Anonymous',
+          productId: document.querySelector('[data-product-id]')?.getAttribute('data-product-id') || '12345',
+          shop: 'idealfit-2.myshopify.com'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Local API response:', data);
+      
+      return data.recommendedSize || "M"; // Default to M if no recommendation
+    } catch (error) {
+      console.error('❌ Local API error, using local calculation:', error);
+      // Fallback to local calculation if API fails
+      return getRecommendedSizeLocal();
+    }
+  }
+
+  // Local size recommendation (fallback)
+  function getRecommendedSizeLocal() {
+    const bust = parseFloat(localStorage.getItem("userBust"));
+    const waist = parseFloat(localStorage.getItem("userWaist"));
+    const hip = parseFloat(localStorage.getItem("userHip"));
+    
+    if (!bust || !waist || !hip) return "N/A";
+    
+    console.log('🔍 Using local size calculation:', {bust, waist, hip, unit: currentUnit});
+    
+    // Convert to inches for comparison
+    const bustInches = currentUnit === 'inches' ? bust : parseFloat(convertMeasurement(bust, 'cm', 'inches'));
+    const waistInches = currentUnit === 'inches' ? waist : parseFloat(convertMeasurement(waist, 'cm', 'inches'));
+    const hipInches = currentUnit === 'inches' ? hip : parseFloat(convertMeasurement(hip, 'cm', 'inches'));
+    
+    console.log('📏 Converted to inches for comparison:', {bustInches, waistInches, hipInches});
+    
+    // Find first size where all measurements fit (Option 3: Comfort Fit)
+    for (let i = 0; i < sizeChart.length; i++) {
+      const size = sizeChart[i];
+      const bustFits = bustInches <= size.bust;
+      const waistFits = waistInches <= size.waist;
+      const hipFits = hipInches <= size.hip;
+      
+      console.log(`🔍 Checking size ${size.size}:`, {
+        bust: `${bustInches} <= ${size.bust} = ${bustFits}`,
+        waist: `${waistInches} <= ${size.waist} = ${waistFits}`,
+        hip: `${hipInches} <= ${size.hip} = ${hipFits}`
+      });
+      
+      if (bustFits && waistFits && hipFits) {
+        console.log('✅ Found fitting size:', size.size);
+        return size.size;
+      }
+    }
+    
+    // If no size fits, return largest size
+    const largestSize = sizeChart[sizeChart.length - 1].size;
+    console.log('⚠️ No size fits, returning largest:', largestSize);
+    return largestSize;
+  }
+
+
+  // Display recommendation + measurements
+  async function showRecommendation(){
+    const rec = getRecommendedSizeLocal();
+    const bust = bustInput.value;
+    const waist = waistInput.value;
+    const hip = hipInput.value;
+    const unit = currentUnit === 'inches' ? '"' : 'cm';
+
+    console.log('🎯 IDEALFIT: Showing recommendation:', {rec, bust, waist, hip, unit});
+
+    if (rec === "N/A") {
+      messageDiv.innerHTML = `
+        <div class="recommendedSize" style="color: #dc2626;">⚠️ Recommended Size: ${rec}</div>
+        <div class="userMeasurements">Your Measurements: Bust ${bust}${unit}, Waist ${waist}${unit}, Hip ${hip}${unit}</div>
+        <div style="color: #dc2626; font-size: 13px; margin-top: 4px;">Your measurements exceed our available sizes. Please contact us for custom sizing options.</div>
+      `;
+    } else {
+      messageDiv.innerHTML = `
+        <div class="recommendedSize">✅ Recommended Size: ${rec}</div>
+        <div class="userMeasurements">Your Measurements: Bust ${bust}${unit}, Waist ${waist}${unit}, Hip ${hip}${unit}</div>
+        <div style="color: #059669; font-size: 13px; margin-top: 4px;">Based on our Comfort Fit algorithm - all measurements fit comfortably in this size.</div>
+      `;
+    }
+  }
+
+  showRecommendation();
+
+  // Buy Now interception with unit conversion
+  document.addEventListener('click', async function(e) {
+    const target = e.target.closest('button') || e.target.closest('a') || e.target;
+    
+    // EXCLUDE our own buttons to prevent conflicts
+    if (target.id === 'saveMeasurements' || 
+        target.classList.contains('unit-btn') ||
+        target.closest('#measurementForm')) {
+      return; // Don't interfere with our own form
+    }
+    
+    const bust = localStorage.getItem("userBust");
+    const waist = localStorage.getItem("userWaist");
+    const hip = localStorage.getItem("userHip");
+    const unit = localStorage.getItem("userUnit") || currentUnit;
+    
+    if (!bust || !waist || !hip) return;
+    
+    const rec = getRecommendedSizeLocal();
+    
+    const text = target.textContent?.toLowerCase() || '';
+    const name = target.name || '';
+    const classes = target.className || '';
+    
+    // EXCLUDE our specific button text
+    if (text.includes('get size recommendation') || text.includes('📏')) {
+      return; // Don't interfere with our recommendation button
+    }
+    
+    const isBuyNow = 
+      name === 'checkout' ||
+      text.includes('buy now') ||
+      text.includes('buy it now') ||
+      classes.includes('shopify-payment-button__button') ||
+      classes.includes('shopify-payment-button');
+    
+    if (isBuyNow) {
+      console.log('🎯 IDEALFIT: Buy Now detected - ensuring measurements are captured for both scenarios!');
+      console.log('📏 Current measurements:', {bust, waist, hip, unit, recommendedSize: rec});
+      
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      
+      const variantInput = document.querySelector('form[action*="/cart/add"] input[name="id"]') || 
+                          document.querySelector('select[name="id"]') ||
+                          document.querySelector('input[name="id"]');
+      
+      if (!variantInput) {
+        console.error('❌ IDEALFIT: Could not find variant ID');
+        return false;
+      }
+      
+      const variantId = variantInput.value;
+      console.log('🎯 IDEALFIT: Adding product', variantId, 'to cart with measurements');
+      
+      // Add product to cart WITH measurements (scenario 1 & 2)
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: variantId,
+          quantity: 1,
+          attributes: {
+            '_measurement_bust': bust,
+            '_measurement_waist': waist,
+            '_measurement_hip': hip,
+            '_measurement_unit': unit,
+            '_recommended_size': rec
+          }
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('✅ IDEALFIT: Product added to cart with measurements!', data);
+        
+        // Double ensure measurements are in cart (for both scenarios)
+        const cartUpdateData = {
+          attributes: {
+            '_measurement_bust': bust,
+            '_measurement_waist': waist,
+            '_measurement_hip': hip,
+            '_measurement_unit': unit,
+            '_recommended_size': rec
+          }
+        };
+        
+        console.log('🎯 IDEALFIT: Double-ensuring cart has measurements:', cartUpdateData);
+        
+        return fetch('/cart/update.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cartUpdateData)
+        });
+      })
+      .then(() => {
+        console.log('✅ IDEALFIT: Cart fully updated with measurements, redirecting to checkout...');
+        
+        // Also add measurements to form data for direct checkout (scenario 2)
+        addMeasurementsToCheckoutForm();
+        
+        window.location.href = '/checkout';
+      })
+      .catch(err => {
+        console.error('❌ IDEALFIT: Error during buy now flow', err);
+        alert('Error adding measurements. Please try again.');
+      });
+      
+      return false;
+    }
+  }, true);
+
+  // Function to add measurements to checkout form for direct checkout (scenario 2)
+  function addMeasurementsToCheckoutForm() {
+    const bust = localStorage.getItem("userBust");
+    const waist = localStorage.getItem("userWaist");
+    const hip = localStorage.getItem("userHip");
+    const unit = localStorage.getItem("userUnit") || currentUnit;
+    
+    if (bust && waist && hip) {
+      console.log('📝 Adding measurements to checkout form for direct checkout (scenario 2)');
+      
+      // Create hidden inputs for measurements in checkout
+      const checkoutForm = document.querySelector('form[action*="checkout"]') || 
+                          document.querySelector('form[action*="cart"]') ||
+                          document.querySelector('form');
+      
+      if (checkoutForm) {
+        // Remove existing measurement inputs
+        const existingInputs = checkoutForm.querySelectorAll('input[name*="_measurement"]');
+        existingInputs.forEach(input => input.remove());
+        
+        // Add new measurement inputs
+        const measurements = [
+          { name: '_measurement_bust', value: bust },
+          { name: '_measurement_waist', value: waist },
+          { name: '_measurement_hip', value: hip },
+          { name: '_measurement_unit', value: unit },
+          { name: '_recommended_size', value: getRecommendedSizeLocal() }
+        ];
+        
+        measurements.forEach(measurement => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = measurement.name;
+          input.value = measurement.value;
+          checkoutForm.appendChild(input);
+        });
+        
+        console.log('✅ Added measurement inputs to checkout form:', measurements);
+      }
+    }
+  }
+});
+</script>
+
+{% schema %}
+{
+  "name": "IdealFit Size Recommender",
+  "target": "section",
+  "settings": [
+    { "type": "color", "id": "primary_color", "label": "Primary color", "default": "#111827" },
+    { "type": "color", "id": "accent_color", "label": "Accent color (size)", "default": "#EA580C" },
+    { "type": "checkbox", "id": "show_branding", "label": "Show 'powered by IdealFit'", "default": true },
+    { "type": "paragraph", "content": "🌍 Global Unit Support: Automatically detects country and sets inches/cm. Manual toggle available. 📊 Size chart uses Option 3: Comfort Fit algorithm for accurate recommendations." }
+  ]
+}
+{% endschema %}

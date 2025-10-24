@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdealFit Merchant Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+            padding: 2rem 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-section {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .user-info-sidebar {
+            flex: 1;
+        }
+        
+        .user-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        
+        .user-email {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+        
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0 1rem;
+        }
+        
+        .tab {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            border-left: 3px solid transparent;
+            margin: 4px 0;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #60a5fa;
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+            border-left-color: #60a5fa;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-icon {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+        
+        .tab-label {
+            flex: 1;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            outline: none;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .table th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .size-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .size-badge.size-s {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .size-badge.size-m {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .size-badge.size-l {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .size-badge.size-xl {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #22c55e;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .chart-container {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <!-- User Section -->
+            <div class="user-section">
+                <div class="user-avatar">
+                    🏪
+                </div>
+                <div class="user-info-sidebar">
+                    <div class="user-name">Merchant Store</div>
+                    <div class="user-email">store@example.com</div>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <button class="tab active" onclick="showTab('analytics')">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">Analytics</span>
+                </button>
+                <button class="tab" onclick="showTab('customers')">
+                    <span class="tab-icon">👥</span>
+                    <span class="tab-label">Customer Database</span>
+                </button>
+                <button class="tab" onclick="showTab('sizechart')">
+                    <span class="tab-icon">📏</span>
+                    <span class="tab-label">Size Chart</span>
+                </button>
+                <button class="tab" onclick="showTab('billing')">
+                    <span class="tab-icon">💰</span>
+                    <span class="tab-label">Billing</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content active">
+                <div class="page-header">
+                    <h1 class="page-title">📊 Analytics & Size Comparison</h1>
+                    <p class="page-subtitle">Understand your customer measurements and optimize production</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-number" id="totalOrders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👤</div>
+                        <div class="stat-number" id="uniqueCustomers">0</div>
+                        <div class="stat-label">Unique Customers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📏</div>
+                        <div class="stat-number" id="mostPopularSize">-</div>
+                        <div class="stat-label">Most Popular Size</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-number" id="returnReduction">0%</div>
+                        <div class="stat-label">Est. Return Reduction</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Size Distribution</h2>
+                    <div class="chart-container">
+                        <div style="font-size: 1.5rem; margin-bottom: 1rem;">📊</div>
+                        <h3 style="color: #4a5568; margin-bottom: 0.5rem;">Size Recommendations Distribution</h3>
+                        <p style="color: #718096;">Chart visualization will be displayed here</p>
+                        <button class="btn" onclick="loadChart()">📊 Load Chart</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Size Comparison & Production Insights</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Recommendations</th>
+                                <th>Percentage</th>
+                                <th>Avg Bust</th>
+                                <th>Avg Waist</th>
+                                <th>Avg Hip</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody id="insightsTable">
+                            <tr>
+                                <td><strong>L</strong></td>
+                                <td>15</td>
+                                <td>35.2%</td>
+                                <td>37.0"</td>
+                                <td>30.0"</td>
+                                <td>35.0"</td>
+                                <td><span class="size-badge size-l">HIGH</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>M</strong></td>
+                                <td>12</td>
+                                <td>28.1%</td>
+                                <td>35.0"</td>
+                                <td>25.0"</td>
+                                <td>35.0"</td>
+                                <td><span class="size-badge size-m">HIGH</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>S</strong></td>
+                                <td>8</td>
+                                <td>18.8%</td>
+                                <td>33.0"</td>
+                                <td>20.0"</td>
+                                <td>31.0"</td>
+                                <td><span class="size-badge size-s">MEDIUM</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Customer Database Tab -->
+            <div id="customers" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">👥 Customer Measurement Database</h1>
+                    <p class="page-subtitle">View, filter, and export all customer measurement data</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">Customer Measurements</h2>
+                        <div style="color: #6b7280; font-size: 0.875rem;">
+                            Showing <span id="customerCount">3</span> customers
+                        </div>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer Name</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
+                                <th>Bust</th>
+                                <th>Waist</th>
+                                <th>Hip</th>
+                                <th>Recommended Size</th>
+                                <th>Order ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTable">
+                            <tr>
+                                <td>2024-01-15</td>
+                                <td><strong>Sarah Johnson</strong></td>
+                                <td>sarah@email.com</td>
+                                <td>+1-555-0123</td>
+                                <td>37"</td>
+                                <td>30"</td>
+                                <td>35"</td>
+                                <td><span class="size-badge size-l">L</span></td>
+                                <td>6156246286380</td>
+                            </tr>
+                            <tr>
+                                <td>2024-01-14</td>
+                                <td><strong>Emily Davis</strong></td>
+                                <td>emily@email.com</td>
+                                <td>+1-555-0456</td>
+                                <td>35"</td>
+                                <td>25"</td>
+                                <td>35"</td>
+                                <td><span class="size-badge size-m">M</span></td>
+                                <td>6156246286381</td>
+                            </tr>
+                            <tr>
+                                <td>2024-01-13</td>
+                                <td><strong>Michael Brown</strong></td>
+                                <td>michael@email.com</td>
+                                <td>+1-555-0789</td>
+                                <td>33"</td>
+                                <td>20"</td>
+                                <td>31"</td>
+                                <td><span class="size-badge size-s">S</span></td>
+                                <td>6156246286382</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 1rem;">
+                        <button class="btn" onclick="exportCustomerData()">📊 Export to Excel</button>
+                        <button class="btn btn-secondary" onclick="refreshCustomers()">🔄 Refresh Data</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Size Chart Tab -->
+            <div id="sizechart" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">📏 Size Chart Management</h1>
+                    <p class="page-subtitle">Manage your size chart measurements and standards</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">Size Chart</h2>
+                        <button class="btn" onclick="addSizeRow()">➕ Add Size</button>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Bust (inches)</th>
+                                <th>Waist (inches)</th>
+                                <th>Hip (inches)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sizeChartTable">
+                            <tr>
+                                <td><input type="text" value="S" style="width: 60px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="33" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="20" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="31" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td>
+                                    <button class="btn" onclick="saveSizeRow(this)">💾 Save</button>
+                                    <button class="btn btn-secondary" onclick="deleteSizeRow(this)">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="M" style="width: 60px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="35" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="25" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="35" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td>
+                                    <button class="btn" onclick="saveSizeRow(this)">💾 Save</button>
+                                    <button class="btn btn-secondary" onclick="deleteSizeRow(this)">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" value="L" style="width: 60px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="37" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="30" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td><input type="number" value="35" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                                <td>
+                                    <button class="btn" onclick="saveSizeRow(this)">💾 Save</button>
+                                    <button class="btn btn-secondary" onclick="deleteSizeRow(this)">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Billing Tab -->
+            <div id="billing" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">💰 Billing & Payments</h1>
+                    <p class="page-subtitle">Manage your subscription and payment information</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💳</div>
+                        <div class="stat-number" id="currentPlan">Professional</div>
+                        <div class="stat-label">Current Plan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-number" id="nextBilling">Jan 15</div>
+                        <div class="stat-label">Next Billing</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-number" id="monthlyCost">$99</div>
+                        <div class="stat-label">Monthly Cost</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-number" id="usage">75%</div>
+                        <div class="stat-label">Plan Usage</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Payment History</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Payment Method</th>
+                                <th>Invoice</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentTable">
+                            <tr>
+                                <td>2024-01-15</td>
+                                <td>$99.00</td>
+                                <td><span class="size-badge size-m">Paid</span></td>
+                                <td>Credit Card</td>
+                                <td><button class="btn" onclick="downloadInvoice('inv001')">📄 Download</button></td>
+                            </tr>
+                            <tr>
+                                <td>2023-12-15</td>
+                                <td>$99.00</td>
+                                <td><span class="size-badge size-m">Paid</span></td>
+                                <td>Credit Card</td>
+                                <td><button class="btn" onclick="downloadInvoice('inv002')">📄 Download</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Plan Management</h2>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn" onclick="upgradePlan()">⬆️ Upgrade Plan</button>
+                        <button class="btn btn-secondary" onclick="changePaymentMethod()">💳 Change Payment Method</button>
+                        <button class="btn btn-secondary" onclick="viewUsage()">📊 View Usage</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTab = 'analytics';
+        let totalOrders = 0;
+        let uniqueCustomers = 0;
+        let customerCount = 3;
+        
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.closest('.tab').classList.add('active');
+            
+            currentTab = tabName;
+            showNotification(`Switched to ${tabName} page`);
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">✅</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Success</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Analytics functions
+        function loadChart() {
+            showNotification('Chart loaded successfully!');
+        }
+        
+        // Customer functions
+        function exportCustomerData() {
+            showNotification('Customer data exported successfully!');
+        }
+        
+        function refreshCustomers() {
+            customerCount += Math.floor(Math.random() * 3);
+            document.getElementById('customerCount').textContent = customerCount;
+            showNotification('Customer data refreshed!');
+        }
+        
+        // Size chart functions
+        function addSizeRow() {
+            const table = document.getElementById('sizeChartTable');
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" value="XL" style="width: 60px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                <td><input type="number" value="39" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                <td><input type="number" value="32" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                <td><input type="number" value="37" step="0.1" style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;"></td>
+                <td>
+                    <button class="btn" onclick="saveSizeRow(this)">💾 Save</button>
+                    <button class="btn btn-secondary" onclick="deleteSizeRow(this)">🗑️ Delete</button>
+                </td>
+            `;
+            showNotification('New size row added!');
+        }
+        
+        function saveSizeRow(button) {
+            showNotification('Size row saved successfully!');
+        }
+        
+        function deleteSizeRow(button) {
+            if (confirm('Are you sure you want to delete this size row?')) {
+                button.closest('tr').remove();
+                showNotification('Size row deleted successfully!');
+            }
+        }
+        
+        // Billing functions
+        function downloadInvoice(invoiceId) {
+            showNotification(`Invoice ${invoiceId} downloaded successfully!`);
+        }
+        
+        function upgradePlan() {
+            showNotification('Plan upgrade initiated!');
+        }
+        
+        function changePaymentMethod() {
+            showNotification('Payment method change initiated!');
+        }
+        
+        function viewUsage() {
+            showNotification('Usage details loaded!');
+        }
+        
+        // Update analytics
+        function updateAnalytics() {
+            totalOrders += Math.floor(Math.random() * 5) + 1;
+            uniqueCustomers += Math.floor(Math.random() * 3) + 1;
+            
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('uniqueCustomers').textContent = uniqueCustomers;
+            document.getElementById('mostPopularSize').textContent = ['S', 'M', 'L', 'XL'][Math.floor(Math.random() * 4)];
+            document.getElementById('returnReduction').textContent = Math.floor(Math.random() * 20) + 25 + '%';
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize with sample data
+            totalOrders = 45;
+            uniqueCustomers = 32;
+            
+            updateAnalytics();
+            showNotification('Merchant dashboard loaded successfully!');
+            
+            // Auto-update analytics every 30 seconds
+            setInterval(updateAnalytics, 30000);
+        });
+    </script>
+</body>
+</html>

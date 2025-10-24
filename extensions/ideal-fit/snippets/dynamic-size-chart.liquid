@@ -1,0 +1,23 @@
+<!-- Dynamic Size Chart Snippet -->
+<!-- Updated size chart with correct measurements -->
+<!-- To update: Edit this array in your Merchant Dashboard and copy the generated code here -->
+
+<script>
+console.log('📏 IDEALFIT: Loading updated size chart...');
+
+// Set the global size chart BEFORE the form loads
+// This size chart is synced from your Merchant Dashboard
+window.IDEALFIT_SIZE_CHART = [
+  { size: 'XS', bust: 30, waist: 25, hip: 35 },
+  { size: 'S', bust: 32, waist: 27, hip: 37 },
+  { size: 'M', bust: 34, waist: 29, hip: 39 },
+  { size: 'L', bust: 36, waist: 31, hip: 41 },
+  { size: 'XL', bust: 38, waist: 33, hip: 43 },
+  { size: 'XXL', bust: 40, waist: 35, hip: 45 },
+  { size: 'XXXL', bust: 42, waist: 37, hip: 47 },
+  { size: 'XXXXL', bust: 44, waist: 39, hip: 49 }
+];
+
+console.log('✅ IDEALFIT: Size chart loaded:', window.IDEALFIT_SIZE_CHART);
+console.log(`📊 Total sizes available: ${window.IDEALFIT_SIZE_CHART.length}`);
+</script>

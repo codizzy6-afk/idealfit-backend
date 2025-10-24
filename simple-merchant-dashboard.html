@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Merchant Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .notification {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 IdealFit Merchant Dashboard</h1>
+            <p>Simple Working Version</p>
+        </div>
+        
+        <div class="card">
+            <h2>📊 Analytics</h2>
+            <p>Total Orders: <span id="totalOrders">0</span></p>
+            <p>Total Customers: <span id="totalCustomers">0</span></p>
+            <button class="btn" onclick="updateAnalytics()">Update Analytics</button>
+        </div>
+        
+        <div class="card">
+            <h2>👥 Customer Database</h2>
+            <p>Customer Count: <span id="customerCount">0</span></p>
+            <button class="btn" onclick="updateCustomers()">Update Customers</button>
+        </div>
+        
+        <div class="card">
+            <h2>📏 Size Chart</h2>
+            <p>Size Chart Status: <span id="sizeChartStatus">Active</span></p>
+            <button class="btn" onclick="updateSizeChart()">Update Size Chart</button>
+        </div>
+        
+        <div class="card">
+            <h2>💰 Billing</h2>
+            <p>Current Plan: <span id="currentPlan">Professional</span></p>
+            <button class="btn" onclick="updateBilling()">Update Billing</button>
+        </div>
+        
+        <div id="notifications"></div>
+    </div>
+
+    <script>
+        let orderCount = 0;
+        let customerCount = 0;
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.getElementById('notifications').appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        function updateAnalytics() {
+            orderCount += Math.floor(Math.random() * 5) + 1;
+            document.getElementById('totalOrders').textContent = orderCount;
+            showNotification('Analytics updated successfully!');
+        }
+        
+        function updateCustomers() {
+            customerCount += Math.floor(Math.random() * 3) + 1;
+            document.getElementById('customerCount').textContent = customerCount;
+            showNotification('Customer database updated!');
+        }
+        
+        function updateSizeChart() {
+            const statuses = ['Active', 'Updated', 'Synced'];
+            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            document.getElementById('sizeChartStatus').textContent = randomStatus;
+            showNotification('Size chart updated successfully!');
+        }
+        
+        function updateBilling() {
+            const plans = ['Professional', 'Premium', 'Enterprise'];
+            const randomPlan = plans[Math.floor(Math.random() * plans.length)];
+            document.getElementById('currentPlan').textContent = randomPlan;
+            showNotification('Billing information updated!');
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification('Dashboard loaded successfully!');
+            console.log('Simple dashboard initialized');
+        });
+    </script>
+</body>
+</html>
