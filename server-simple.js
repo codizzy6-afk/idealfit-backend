@@ -412,6 +412,231 @@ app.get('/api/shopify-rest-orders', async (req, res) => {
   }
 });
 
+// Get Shopify analytics via REST API
+app.get('/api/shopify-rest-analytics', async (req, res) => {
+  try {
+    const { period = '30d' } = req.query;
+    
+    // Calculate date range
+    const now = new Date();
+    let startDate = new Date();
+    
+    switch (period) {
+      case "7d":
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case "30d":
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case "90d":
+        startDate.setDate(now.getDate() - 90);
+        break;
+      case "1y":
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        startDate.setDate(now.getDate() - 30);
+    }
+    
+    const startDateISO = startDate.toISOString();
+    
+    // Fetch orders for the period
+    const ordersEndpoint = `orders.json?created_at_min=${startDateISO}&limit=250`;
+    const ordersData = await shopifyApiCall(ordersEndpoint);
+    
+    // Fetch customers
+    const customersEndpoint = `customers.json?limit=250`;
+    const customersData = await shopifyApiCall(customersEndpoint);
+    
+    // Fetch products (with error handling)
+    let productsData = { products: [] };
+    try {
+      const productsEndpoint = `products.json?limit=250`;
+      productsData = await shopifyApiCall(productsEndpoint);
+    } catch (error) {
+      console.log('Products API not accessible, using empty products data');
+    }
+    
+    // Process orders data
+    const orders = ordersData.orders;
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.total_price), 0);
+    
+    // Process customers data
+    const customers = customersData.customers;
+    const uniqueCustomers = customers.length;
+    
+    // Calculate customer statistics
+    const customerStats = customers.map(customer => ({
+      id: customer.id.toString(),
+      name: `${customer.first_name || `Customer ${customer.id}`} ${customer.last_name || ''}`.trim(),
+      email: customer.email || `customer${customer.id}@shopify.com`,
+      totalOrders: customer.orders_count || 0,
+      totalSpent: parseFloat(customer.total_spent || 0),
+      averageOrderValue: customer.orders_count > 0 ? parseFloat((customer.total_spent / customer.orders_count).toFixed(2)) : 0
+    }));
+    
+    // Process products data
+    const products = productsData.products;
+    const totalProducts = products.length;
+    const totalInventory = products.reduce((sum, product) => {
+      return sum + product.variants.reduce((variantSum, variant) => variantSum + (variant.inventory_quantity || 0), 0);
+    }, 0);
+    
+    // Calculate size distribution from orders using measurement data
+    const sizeDistribution = {};
+    const measurementData = {};
+    
+    orders.forEach(order => {
+      // Extract measurement data from note_attributes
+      if (order.note_attributes) {
+        let bust = null, waist = null, hip = null, recommendedSize = null;
+        
+        order.note_attributes.forEach(attr => {
+          if (attr.name === '_measurement_bust') bust = parseFloat(attr.value);
+          if (attr.name === '_measurement_waist') waist = parseFloat(attr.value);
+          if (attr.name === '_measurement_hip') hip = parseFloat(attr.value);
+          if (attr.name === '_recommended_size') recommendedSize = attr.value;
+        });
+        
+        if (recommendedSize) {
+          sizeDistribution[recommendedSize] = (sizeDistribution[recommendedSize] || 0) + 1;
+          
+          // Store measurement data for averaging
+          if (!measurementData[recommendedSize]) {
+            measurementData[recommendedSize] = { bust: [], waist: [], hip: [] };
+          }
+          
+          if (bust) measurementData[recommendedSize].bust.push(bust);
+          if (waist) measurementData[recommendedSize].waist.push(waist);
+          if (hip) measurementData[recommendedSize].hip.push(hip);
+        }
+      }
+    });
+    
+    // Convert size distribution to array format with real measurement averages
+    const sizeDistributionArray = Object.keys(sizeDistribution).map(size => {
+      const measurements = measurementData[size] || { bust: [], waist: [], hip: [] };
+      const avgBust = measurements.bust.length > 0 ? 
+        (measurements.bust.reduce((sum, val) => sum + val, 0) / measurements.bust.length).toFixed(1) : '0.0';
+      const avgWaist = measurements.waist.length > 0 ? 
+        (measurements.waist.reduce((sum, val) => sum + val, 0) / measurements.waist.length).toFixed(1) : '0.0';
+      const avgHip = measurements.hip.length > 0 ? 
+        (measurements.hip.reduce((sum, val) => sum + val, 0) / measurements.hip.length).toFixed(1) : '0.0';
+      
+      return {
+        size,
+        recommendations: sizeDistribution[size],
+        percentage: totalOrders > 0 ? ((sizeDistribution[size] / totalOrders) * 100).toFixed(1) : '0.0',
+        avgBust,
+        avgWaist,
+        avgHip,
+        priority: sizeDistribution[size] > 2 ? 'HIGH' : 'MEDIUM'
+      };
+    }).sort((a, b) => b.recommendations - a.recommendations);
+    
+    // Calculate status distribution
+    const statusDistribution = {};
+    orders.forEach(order => {
+      statusDistribution[order.fulfillment_status] = (statusDistribution[order.fulfillment_status] || 0) + 1;
+    });
+    
+    // Calculate recent activity (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentOrders = orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate >= sevenDaysAgo;
+    });
+    
+    const recentRevenue = recentOrders.reduce((sum, order) => sum + parseFloat(order.total_price), 0);
+    
+    // Top customers by total spent
+    const topCustomers = customerStats
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, 5);
+    
+    // Top products by inventory
+    const topProducts = products
+      .sort((a, b) => {
+        const aInventory = a.variants.reduce((sum, variant) => sum + (variant.inventory_quantity || 0), 0);
+        const bInventory = b.variants.reduce((sum, variant) => sum + (variant.inventory_quantity || 0), 0);
+        return bInventory - aInventory;
+      })
+      .slice(0, 5)
+      .map(product => ({
+        id: product.id.toString(),
+        title: product.title,
+        productType: product.product_type,
+        vendor: product.vendor,
+        totalInventory: product.variants.reduce((sum, variant) => sum + (variant.inventory_quantity || 0), 0)
+      }));
+    
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalOrders,
+          totalRevenue: parseFloat(totalRevenue.toFixed(2)),
+          uniqueCustomers,
+          averageOrderValue: totalOrders > 0 ? parseFloat((totalRevenue / totalOrders).toFixed(2)) : 0,
+          totalProducts,
+          totalInventory
+        },
+        sizeDistribution: sizeDistributionArray,
+        sizeDistributionObject: sizeDistribution,
+        statusDistribution,
+        recentActivity: {
+          orders: recentOrders.length,
+          revenue: parseFloat(recentRevenue.toFixed(2))
+        },
+        topCustomers,
+        topProducts,
+        period,
+        dateRange: {
+          start: startDateISO,
+          end: now.toISOString()
+        }
+      },
+      fallback: false,
+      message: 'Data fetched from Shopify REST API'
+    });
+    
+  } catch (error) {
+    console.error('Error fetching Shopify analytics via REST API:', error);
+    // Return fallback data
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalOrders: 0,
+          totalRevenue: 0,
+          uniqueCustomers: 0,
+          averageOrderValue: 0,
+          totalProducts: 0,
+          totalInventory: 0
+        },
+        sizeDistribution: [],
+        sizeDistributionObject: {},
+        statusDistribution: {},
+        recentActivity: {
+          orders: 0,
+          revenue: 0
+        },
+        topCustomers: [],
+        topProducts: [],
+        period: req.query.period || '30d',
+        dateRange: {
+          start: new Date().toISOString(),
+          end: new Date().toISOString()
+        }
+      },
+      fallback: true,
+      message: 'Using fallback data due to API error'
+    });
+  }
+});
+
 // Serve static files
 app.use(express.static('.'));
 
