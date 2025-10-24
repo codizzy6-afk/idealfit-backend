@@ -239,7 +239,7 @@ app.get('/api/shopify-rest-orders', async (req, res) => {
 // Serve static files
 app.use(express.static('.'));
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`🎯 IdealFit API Server running on port ${PORT}`);
   console.log(`📊 Available endpoints:`);
