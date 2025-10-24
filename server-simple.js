@@ -61,6 +61,142 @@ app.get('/auth/status', (req, res) => {
   });
 });
 
+// In-memory storage for size charts
+let sizeCharts = [
+  {
+    id: 1,
+    shop: 'idealfit-2.myshopify.com',
+    sizeChart: [
+      { size: 'XS', bust: 30, waist: 25, hip: 35 },
+      { size: 'S', bust: 32, waist: 27, hip: 37 },
+      { size: 'M', bust: 34, waist: 29, hip: 39 },
+      { size: 'L', bust: 36, waist: 31, hip: 41 },
+      { size: 'XL', bust: 38, waist: 33, hip: 43 },
+      { size: 'XXL', bust: 40, waist: 35, hip: 45 }
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+// Get size charts
+app.get('/api/sizecharts', (req, res) => {
+  const { shop } = req.query;
+  
+  let charts = sizeCharts;
+  if (shop) {
+    charts = sizeCharts.filter(chart => chart.shop === shop);
+  }
+  
+  res.json({
+    success: true,
+    data: charts,
+    count: charts.length
+  });
+});
+
+// Create/Update size chart
+app.post('/api/sizecharts', (req, res) => {
+  const { shop, sizeChart } = req.body;
+  
+  if (!shop || !sizeChart) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing shop or sizeChart data'
+    });
+  }
+  
+  // Check if size chart already exists for this shop
+  const existingIndex = sizeCharts.findIndex(chart => chart.shop === shop);
+  
+  if (existingIndex >= 0) {
+    // Update existing
+    sizeCharts[existingIndex] = {
+      ...sizeCharts[existingIndex],
+      sizeChart,
+      updatedAt: new Date().toISOString()
+    };
+  } else {
+    // Create new
+    const newChart = {
+      id: sizeCharts.length + 1,
+      shop,
+      sizeChart,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    sizeCharts.push(newChart);
+  }
+  
+  res.json({
+    success: true,
+    message: 'Size chart saved successfully',
+    data: sizeCharts.find(chart => chart.shop === shop)
+  });
+});
+
+// Save customer measurement
+app.post('/api/save-measurement', (req, res) => {
+  const { bust, waist, hip, unit = 'inches', customerName, productId, shop } = req.body;
+  
+  if (!bust || !waist || !hip) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing measurements'
+    });
+  }
+  
+  // Get size chart for the shop
+  const shopChart = sizeCharts.find(chart => chart.shop === shop);
+  const sizeChart = shopChart ? shopChart.sizeChart : [
+    { size: 'XS', bust: 30, waist: 25, hip: 35 },
+    { size: 'S', bust: 32, waist: 27, hip: 37 },
+    { size: 'M', bust: 34, waist: 29, hip: 39 },
+    { size: 'L', bust: 36, waist: 31, hip: 41 },
+    { size: 'XL', bust: 38, waist: 33, hip: 43 },
+    { size: 'XXL', bust: 40, waist: 35, hip: 45 }
+  ];
+  
+  // Convert measurements to inches for comparison
+  const inchesToCm = (inches) => inches * 2.54;
+  const cmToInches = (cm) => cm / 2.54;
+  
+  const bustInches = unit === 'cm' ? cmToInches(bust) : bust;
+  const waistInches = unit === 'cm' ? cmToInches(waist) : waist;
+  const hipInches = unit === 'cm' ? cmToInches(hip) : hip;
+  
+  // Find recommended size
+  let recommendedSize = 'XXL'; // Default to largest
+  for (const size of sizeChart) {
+    if (bustInches <= size.bust && waistInches <= size.waist && hipInches <= size.hip) {
+      recommendedSize = size.size;
+      break;
+    }
+  }
+  
+  // In a real application, save to database
+  console.log('📏 Measurement saved:', {
+    customerName,
+    productId,
+    shop,
+    measurements: { bust: bustInches, waist: waistInches, hip: hipInches },
+    unit: 'inches',
+    recommendedSize
+  });
+  
+  res.json({
+    success: true,
+    recommendedSize,
+    measurements: {
+      bust: bustInches,
+      waist: waistInches,
+      hip: hipInches,
+      unit: 'inches'
+    },
+    message: 'Measurement saved successfully'
+  });
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
@@ -71,6 +207,9 @@ app.get('/', (req, res) => {
       'GET /api/test - Health check',
       'GET /auth/callback - Shopify OAuth callback',
       'GET /auth/status - OAuth status check',
+      'GET /api/sizecharts - Get size charts',
+      'POST /api/sizecharts - Save size chart',
+      'POST /api/save-measurement - Save customer measurement',
       'GET /api/shopify-rest-customers - Shopify customers',
       'GET /api/shopify-rest-orders - Shopify orders',
       'GET /api/shopify-rest-analytics - Shopify analytics'
