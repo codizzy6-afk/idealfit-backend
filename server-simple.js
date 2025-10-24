@@ -26,6 +26,41 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// Shopify OAuth callback endpoint
+app.get('/auth/callback', (req, res) => {
+  const { code, state, shop } = req.query;
+  
+  console.log('OAuth callback received:', { code, state, shop });
+  
+  if (!code) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing authorization code',
+      message: 'Authorization code is required'
+    });
+  }
+  
+  res.json({
+    success: true,
+    code: code,
+    state: state,
+    shop: shop,
+    message: 'OAuth callback received successfully. Use this code to exchange for access token.'
+  });
+});
+
+// Shopify OAuth status endpoint
+app.get('/auth/status', (req, res) => {
+  const accessToken = process.env.SHOPIFY_ACCESS_TOKEN;
+  
+  res.json({
+    success: true,
+    hasToken: !!accessToken,
+    tokenConfigured: accessToken ? 'Yes' : 'No',
+    message: accessToken ? 'Access token is configured' : 'Access token not configured'
+  });
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
@@ -34,6 +69,8 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     endpoints: [
       'GET /api/test - Health check',
+      'GET /auth/callback - Shopify OAuth callback',
+      'GET /auth/status - OAuth status check',
       'GET /api/shopify-rest-customers - Shopify customers',
       'GET /api/shopify-rest-orders - Shopify orders',
       'GET /api/shopify-rest-analytics - Shopify analytics'
