@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ideal-fit-app
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SHOPIFY_ACCESS_TOKEN
+        generateValue: true
+      - key: SHOPIFY_STORE_DOMAIN
+        value: idealfit-2.myshopify.com
+    healthCheckPath: /api/test
