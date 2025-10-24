@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function(){
       console.log('🔄 IDEALFIT: Loading merchant size chart from local API...');
       const apiBaseUrl = window.location.hostname === 'localhost' 
           ? 'http://localhost:3001/api' 
-          : '/api';
+          : 'https://ideal-fit-app1.onrender.com/api';
       const response = await fetch(`${apiBaseUrl}/sizecharts?shop=idealfit-2.myshopify.com`);
       const data = await response.json();
       
@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", function(){
       // Use local API server
       const apiBaseUrl = window.location.hostname === 'localhost' 
           ? 'http://localhost:3001/api' 
-          : '/api';
+          : 'https://ideal-fit-app1.onrender.com/api';
       const response = await fetch(`${apiBaseUrl}/save-measurement`, {
         method: 'POST',
         headers: {

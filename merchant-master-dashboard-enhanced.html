@@ -3129,7 +3129,7 @@
             constructor() {
                 this.apiBaseUrl = window.location.hostname === 'localhost' 
                     ? 'http://localhost:3001/api' 
-                    : '/api';
+                    : 'https://ideal-fit-app1.onrender.com/api';
                 this.refreshInterval = 30000; // 30 seconds
                 this.autoRefreshEnabled = true;
                 this.refreshTimer = null;
@@ -3767,7 +3767,7 @@
                     console.log('🔄 Loading size chart from API...');
                     const apiBaseUrl = window.location.hostname === 'localhost' 
                         ? 'http://localhost:3001/api' 
-                        : '/api';
+                        : 'https://ideal-fit-app1.onrender.com/api';
                     const response = await fetch(`${apiBaseUrl}/sizecharts?shop=idealfit-2.myshopify.com`);
                     const data = await response.json();
                     
@@ -3961,7 +3961,7 @@
                     // Save to API server
                     const apiBaseUrl = window.location.hostname === 'localhost' 
                         ? 'http://localhost:3001/api' 
-                        : '/api';
+                        : 'https://ideal-fit-app1.onrender.com/api';
                     const response = await fetch(`${apiBaseUrl}/sizecharts`, {
                         method: 'POST',
                         headers: {
@@ -5443,7 +5443,7 @@
                 // Try Shopify REST API first
                 const apiBaseUrl = window.location.hostname === 'localhost' 
                     ? 'http://localhost:3001/api' 
-                    : '/api';
+                    : 'https://ideal-fit-app1.onrender.com/api';
                 const response = await fetch(`${apiBaseUrl}/shopify-rest-customers?limit=50`);
                 if (response.ok) {
                     const data = await response.json();
