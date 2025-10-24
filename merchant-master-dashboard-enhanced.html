@@ -5455,7 +5455,7 @@
                 const apiBaseUrl = window.location.hostname === 'localhost' 
                     ? 'http://localhost:3001/api' 
                     : 'https://ideal-fit-app1.onrender.com/api';
-                const response = await fetch(`${apiBaseUrl}/shopify-rest-customers?limit=50`);
+                const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=50`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
@@ -5464,7 +5464,7 @@
                         } else {
                             console.log('✅ Customer data loaded from Shopify REST API');
                         }
-                        updateCustomerTableWithShopifyData(data.data);
+                        updateCustomerTableWithOrdersData(data.data);
                         return;
                     }
                 }
@@ -5489,54 +5489,59 @@
             }
         }
         
-        // Update customer table with Shopify data
-        function updateCustomerTableWithShopifyData(customers) {
+        // Update customer table with orders data (which contains measurements)
+        function updateCustomerTableWithOrdersData(orders) {
             const tbody = document.querySelector('.customer-table tbody');
             if (!tbody) return;
             
             tbody.innerHTML = '';
             
-            customers.forEach(customer => {
+            orders.forEach(order => {
                 const row = document.createElement('tr');
                 
                 // Format date
-                const orderDate = customer.statistics.lastOrderDate || customer.createdAt;
+                const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
                 
-                // Get customer name
-                const customerName = `${customer.firstName} ${customer.lastName}`.trim();
+                // Get customer info
+                const customer = order.customer;
+                const customerName = customer ? `${customer.firstName} ${customer.lastName}`.trim() : 'Unknown Customer';
+                const email = customer ? customer.email : 'N/A';
+                const phone = customer ? customer.phone : 'N/A';
                 
                 // Get address info
-                const address = customer.defaultAddress;
-                const address1 = address ? address.address1 : '';
-                const city = address ? address.city : '';
-                const province = address ? address.province : '';
-                const country = address ? address.country : '';
+                const address = customer ? customer.address : null;
+                const address1 = address ? address.address1 || '' : '';
+                const city = address ? address.city || '' : '';
+                const province = address ? address.province || '' : '';
+                const country = address ? address.country || '' : '';
                 
-                // For now, use default measurements since Shopify doesn't store size measurements
-                const measurements = {
-                    bust: '34',
-                    waist: '28',
-                    hip: '36',
-                    recommendedSize: 'M'
-                };
+                // Get measurements
+                const measurements = order.measurements || {};
+                const bust = measurements.bust ? `${measurements.bust}"` : 'N/A';
+                const waist = measurements.waist ? `${measurements.waist}"` : 'N/A';
+                const hip = measurements.hip ? `${measurements.hip}"` : 'N/A';
+                const recommendedSize = measurements.recommendedSize || 'N/A';
                 
                 // Get size badge class
-                const sizeClass = `size-${measurements.recommendedSize.toLowerCase()}`;
+                const sizeClass = recommendedSize !== 'N/A' ? `size-${recommendedSize.toLowerCase()}` : '';
+                const sizeBadge = recommendedSize !== 'N/A' ? 
+                    `<span class="size-badge ${sizeClass}">${recommendedSize}</span>` : 
+                    'N/A';
                 
                 row.innerHTML = `
                     <td>${orderDate}</td>
                     <td><strong>${customerName}</strong></td>
-                    <td>${customer.email}</td>
-                    <td>${customer.phone || ''}</td>
+                    <td>${email}</td>
+                    <td>${phone}</td>
                     <td>${address1}</td>
                     <td>${city}</td>
                     <td>${province}</td>
                     <td>${country}</td>
-                    <td>${measurements.bust}"</td>
-                    <td>${measurements.waist}"</td>
-                    <td>${measurements.hip}"</td>
-                    <td><span class="size-badge ${sizeClass}">${measurements.recommendedSize}</span></td>
-                    <td>${customer.id}</td>
+                    <td>${bust}</td>
+                    <td>${waist}</td>
+                    <td>${hip}</td>
+                    <td>${sizeBadge}</td>
+                    <td>${order.orderNumber}</td>
                 `;
                 
                 tbody.appendChild(row);
@@ -5545,7 +5550,7 @@
             // Update count display
             const countElement = document.querySelector('.customer-table').parentElement.querySelector('div[style*="color: #6b7280"]');
             if (countElement) {
-                countElement.textContent = `Showing ${customers.length} of ${customers.length} customers`;
+                countElement.textContent = `Showing ${orders.length} of ${orders.length} customers`;
             }
         }
         
