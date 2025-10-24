@@ -1,5 +1,5 @@
 import express from 'express';
-import { generateOAuthURL, exchangeCodeForToken, SHOPIFY_OAUTH_CONFIG } from './shopify-oauth.js';
+// import { generateOAuthURL, exchangeCodeForToken, SHOPIFY_OAUTH_CONFIG } from './shopify-oauth.js';
 const app = express();
 
 app.use(express.json());

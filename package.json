@@ -2,11 +2,11 @@
   "name": "ideal-fit-shopify-app",
   "version": "1.0.0",
   "description": "IdealFit Size Recommendation Shopify App",
-  "main": "server.js",
+  "main": "server-simple.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server-simple.js",
+    "dev": "node server-simple.js"
   },
   "dependencies": {
     "express": "^4.18.2",
