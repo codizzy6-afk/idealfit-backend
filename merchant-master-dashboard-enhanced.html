@@ -3123,6 +3123,10 @@
     </div>
 
     <script>
+        // Global variables
+        let dynamicAnalytics;
+        let dashboardState;
+        
         // Dynamic Analytics System
         class DynamicAnalytics {
             constructor() {
@@ -4564,7 +4568,7 @@
         }
 
         // Initialize dashboard state
-        const dashboardState = new DashboardState();
+        dashboardState = new DashboardState();
 
         // Tab navigation
         function showTab(tabName) {
