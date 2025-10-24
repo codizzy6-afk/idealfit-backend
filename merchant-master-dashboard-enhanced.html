@@ -3127,6 +3127,55 @@
         let dynamicAnalytics;
         let dashboardState;
         
+        // Tab navigation function (global scope)
+        function showTab(tabName) {
+            try {
+                // Hide all tab contents
+                const contents = document.querySelectorAll('.tab-content');
+                contents.forEach(content => content.style.display = 'none');
+                
+                // Remove active class from all nav items
+                const navItems = document.querySelectorAll('.tab');
+                navItems.forEach(item => item.classList.remove('active'));
+                
+                // Add active class to clicked item
+                const clickedTab = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+                if (clickedTab) {
+                    clickedTab.classList.add('active');
+                }
+                
+                // Show selected content
+                const content = document.getElementById(tabName);
+                if (content) {
+                    content.style.display = 'block';
+                    if (dashboardState) {
+                        dashboardState.currentTab = tabName;
+                    }
+                    
+                    // Save current tab to localStorage for persistence
+                    localStorage.setItem('idealfit_current_tab', tabName);
+                }
+            } catch (error) {
+                console.error('Error switching tabs:', error);
+                if (typeof showError === 'function') {
+                    showError('Failed to switch tabs. Please try again.');
+                }
+            }
+        }
+        
+        // Unit toggle function for size chart (global scope)
+        function setUnit(unit) {
+            try {
+                if (window.sizeChartManager) {
+                    window.sizeChartManager.setUnit(unit);
+                } else {
+                    console.error('Size chart manager not initialized');
+                }
+            } catch (error) {
+                console.error('Error setting unit:', error);
+            }
+        }
+        
         // Dynamic Analytics System
         class DynamicAnalytics {
             constructor() {
@@ -4570,53 +4619,6 @@
         // Initialize dashboard state
         dashboardState = new DashboardState();
 
-        // Tab navigation
-        function showTab(tabName) {
-            try {
-                // Hide all tab contents
-                const contents = document.querySelectorAll('.tab-content');
-                contents.forEach(content => content.style.display = 'none');
-                
-                // Remove active class from all nav items
-                const navItems = document.querySelectorAll('.tab');
-                navItems.forEach(item => item.classList.remove('active'));
-                
-                // Add active class to clicked item
-                const clickedTab = document.querySelector(`[onclick="showTab('${tabName}')"]`);
-                if (clickedTab) {
-                    clickedTab.classList.add('active');
-                }
-                
-                // Show selected content
-                const content = document.getElementById(tabName);
-                if (content) {
-                    content.style.display = 'block';
-                    dashboardState.currentTab = tabName;
-                    
-                    // Save current tab to localStorage for persistence
-                    localStorage.setItem('idealfit_current_tab', tabName);
-                }
-            } catch (error) {
-                console.error('Error switching tabs:', error);
-                showError('Failed to switch tabs. Please try again.');
-            }
-        }
-        
-        // Unit toggle function for size chart
-        function setUnit(unit) {
-            try {
-                if (window.sizeChartManager) {
-                    window.sizeChartManager.setUnit(unit);
-                } else {
-                    console.error('Size chart manager not initialized');
-                    showError('Size chart manager not available. Please refresh the page.');
-                }
-            } catch (error) {
-                console.error('Error setting unit:', error);
-                showError('Failed to change unit. Please try again.');
-            }
-        }
-        
         // Restore saved tab on page load
         function restoreSavedTab() {
             try {
