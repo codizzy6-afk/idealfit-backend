@@ -2,7 +2,7 @@
 
 client_id = "df65d05c59fdde03db6cad23f63bb6e7"
 name = "IdealFit - Size Recommendation"
-application_url = "https://foods-gabriel-view-abs.trycloudflare.com"
+application_url = "https://ideal-fit-app1.onrender.com"
 embedded = true
 
 [build]
@@ -26,4 +26,4 @@ optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ "https://foods-gabriel-view-abs.trycloudflare.com/auth/callback" ]
+redirect_urls = [ "https://ideal-fit-app1.onrender.com/auth/callback" ]
