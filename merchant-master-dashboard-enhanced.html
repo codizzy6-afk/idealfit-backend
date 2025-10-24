@@ -5476,7 +5476,8 @@
                     const localData = await localResponse.json();
                     if (localData.success) {
                         console.log('✅ Customer data loaded from local API:', localData.data);
-                        updateCustomerTable(localData.data);
+                        // Use orders data for fallback too since customers don't have measurements
+                        updateCustomerTableWithOrdersData([]);
                         return;
                     }
                 }
@@ -5554,46 +5555,6 @@
             }
         }
         
-        // Update customer table with API data
-        function updateCustomerTable(customers) {
-            const tbody = document.querySelector('.customer-table tbody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
-            
-            customers.forEach(customer => {
-                const row = document.createElement('tr');
-                
-                // Format date
-                const orderDate = customer.lastOrderDate || customer.createdAt;
-                
-                // Get size badge class
-                const sizeClass = `size-${customer.measurements.recommendedSize.toLowerCase()}`;
-                
-                row.innerHTML = `
-                    <td>${orderDate}</td>
-                    <td><strong>${customer.name}</strong></td>
-                    <td>${customer.email}</td>
-                    <td>${customer.phone}</td>
-                    <td>${customer.address}</td>
-                    <td>${customer.city}</td>
-                    <td>${customer.state}</td>
-                    <td>${customer.country}</td>
-                    <td>${customer.measurements.bust}"</td>
-                    <td>${customer.measurements.waist}"</td>
-                    <td>${customer.measurements.hip}"</td>
-                    <td><span class="size-badge ${sizeClass}">${customer.measurements.recommendedSize}</span></td>
-                    <td>${customer.id}</td>
-                `;
-                
-                tbody.appendChild(row);
-            });
-            
-            // Update count display
-            const countElement = document.querySelector('.customer-table').parentElement.querySelector('div[style*="color: #6b7280"]');
-            if (countElement) {
-                countElement.textContent = `Showing ${customers.length} of ${customers.length} customers`;
-            }
         }
 
         function filterCustomerTable(fromDate, toDate, month, year, size) {
