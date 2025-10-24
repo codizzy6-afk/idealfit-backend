@@ -4249,6 +4249,18 @@
                 }, 30000); // Refresh every 30 seconds
             }
 
+            showNotification(type, title, message) {
+                try {
+                    if (window.showEnhancedNotification) {
+                        window.showEnhancedNotification(type, title, message);
+                    } else {
+                        console.log(`${type.toUpperCase()}: ${title} - ${message}`);
+                    }
+                } catch (error) {
+                    console.log(`${type.toUpperCase()}: ${title} - ${message}`);
+                }
+            }
+
             stopAutoRefresh() {
                 if (this.refreshInterval) {
                     clearInterval(this.refreshInterval);
