@@ -72,14 +72,21 @@ function loadSizeCharts() {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const data = fs.readFileSync(DATA_FILE, 'utf8');
-      return JSON.parse(data);
+      const charts = JSON.parse(data);
+      console.log('📥 Loaded size charts from file:', charts.length);
+      if (charts.length > 0 && charts[0].sizeChart) {
+        console.log('📏 Size chart has', charts[0].sizeChart.length, 'sizes');
+      }
+      return charts;
+    } else {
+      console.log('⚠️ Size chart file not found, using default');
     }
   } catch (error) {
-    console.error('Error loading size charts from file:', error);
+    console.error('❌ Error loading size charts from file:', error);
   }
   
-  // Default size chart
-  return [
+  // Default size chart with 3XL and 4XL included
+  const defaultChart = [
     {
       id: 1,
       shop: 'idealfit-2.myshopify.com',
@@ -89,21 +96,43 @@ function loadSizeCharts() {
         { size: 'M', bust: 34, waist: 29, hip: 39 },
         { size: 'L', bust: 36, waist: 31, hip: 41 },
         { size: 'XL', bust: 38, waist: 33, hip: 43 },
-        { size: 'XXL', bust: 40, waist: 35, hip: 45 }
+        { size: 'XXL', bust: 40, waist: 35, hip: 45 },
+        { size: '3XL', bust: 42, waist: 37, hip: 47 },
+        { size: '4XL', bust: 44, waist: 39, hip: 49 }
       ],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
   ];
+  
+  // Save the default chart to file
+  saveSizeCharts(defaultChart);
+  
+  return defaultChart;
 }
 
 // Save size charts to file
 function saveSizeCharts(charts) {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(charts, null, 2));
-    console.log('✅ Size charts saved to file');
+    // Create directory if it doesn't exist
+    const dir = path.dirname(DATA_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    // Write to file with proper error handling
+    fs.writeFileSync(DATA_FILE, JSON.stringify(charts, null, 2), 'utf8');
+    console.log('✅ Size charts saved to file:', DATA_FILE);
+    console.log('📊 Saved', charts.length, 'charts');
+    
+    // Verify the file was written correctly
+    if (fs.existsSync(DATA_FILE)) {
+      const savedData = fs.readFileSync(DATA_FILE, 'utf8');
+      console.log('✅ File verified, size:', savedData.length, 'bytes');
+    }
   } catch (error) {
-    console.error('Error saving size charts to file:', error);
+    console.error('❌ Error saving size charts to file:', error);
+    throw error;
   }
 }
 

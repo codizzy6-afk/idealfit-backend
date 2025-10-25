@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "shop": "idealfit-2.myshopify.com",
+    "sizeChart": [
+      { "size": "XS", "bust": 30, "waist": 25, "hip": 35 },
+      { "size": "S", "bust": 32, "waist": 27, "hip": 37 },
+      { "size": "M", "bust": 34, "waist": 29, "hip": 39 },
+      { "size": "L", "bust": 36, "waist": 31, "hip": 41 },
+      { "size": "XL", "bust": 38, "waist": 33, "hip": 43 },
+      { "size": "XXL", "bust": 40, "waist": 35, "hip": 45 },
+      { "size": "3XL", "bust": 42, "waist": 37, "hip": 47 },
+      { "size": "4XL", "bust": 44, "waist": 39, "hip": 49 }
+    ],
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+]
