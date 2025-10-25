@@ -1133,9 +1133,10 @@
             
             sorted.forEach(item => {
                 const percentage = total > 0 ? ((item.count / total) * 100).toFixed(1) : 0;
-                const avgBust = item.avgBust ? item.avgBust.toFixed(1) + '"' : 'N/A';
-                const avgWaist = item.avgWaist ? item.avgWaist.toFixed(1) + '"' : 'N/A';
-                const avgHip = item.avgHip ? item.avgHip.toFixed(1) + '"' : 'N/A';
+                // Parse as numbers and handle both string and number values
+                const avgBust = item.avgBust ? parseFloat(item.avgBust).toFixed(1) + '"' : 'N/A';
+                const avgWaist = item.avgWaist ? parseFloat(item.avgWaist).toFixed(1) + '"' : 'N/A';
+                const avgHip = item.avgHip ? parseFloat(item.avgHip).toFixed(1) + '"' : 'N/A';
                 
                 // Determine production priority based on count
                 let priority, priorityClass;
