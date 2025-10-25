@@ -114,9 +114,21 @@ console.log('📦 Loaded size charts from file:', sizeCharts.length);
 app.get('/api/sizecharts', (req, res) => {
   const { shop } = req.query;
   
+  console.log('📥 Size chart GET request for shop:', shop);
+  console.log('📥 Current sizeCharts in memory:', sizeCharts.length, 'charts');
+  
+  // Reload from file to ensure we have the latest data
+  sizeCharts = loadSizeCharts();
+  console.log('📥 Reloaded sizeCharts from file:', sizeCharts.length, 'charts');
+  
   let charts = sizeCharts;
   if (shop) {
     charts = sizeCharts.filter(chart => chart.shop === shop);
+    console.log('📥 Filtered charts for shop:', charts.length, 'charts');
+  }
+  
+  if (charts.length > 0 && charts[0].sizeChart) {
+    console.log('📥 Returning size chart with', charts[0].sizeChart.length, 'sizes');
   }
   
   res.json({
@@ -130,7 +142,11 @@ app.get('/api/sizecharts', (req, res) => {
 app.post('/api/sizecharts', (req, res) => {
   const { shop, sizeChart } = req.body;
   
+  console.log('📊 Received size chart save request for shop:', shop);
+  console.log('📊 Size chart data:', JSON.stringify(sizeChart, null, 2));
+  
   if (!shop || !sizeChart) {
+    console.error('❌ Missing shop or sizeChart data');
     return res.status(400).json({
       success: false,
       error: 'Missing shop or sizeChart data'
@@ -147,6 +163,7 @@ app.post('/api/sizecharts', (req, res) => {
       sizeChart,
       updatedAt: new Date().toISOString()
     };
+    console.log('✅ Updated existing size chart');
   } else {
     // Create new
     const newChart = {
@@ -157,15 +174,22 @@ app.post('/api/sizecharts', (req, res) => {
       updatedAt: new Date().toISOString()
     };
     sizeCharts.push(newChart);
+    console.log('✅ Created new size chart');
   }
   
   // Save to file for persistence
+  console.log('💾 Saving size charts to file...');
   saveSizeCharts(sizeCharts);
+  console.log('✅ Size charts saved to file');
+  
+  // Verify the saved data
+  const savedChart = sizeCharts.find(chart => chart.shop === shop);
+  console.log('📋 Saved chart:', JSON.stringify(savedChart, null, 2));
   
   res.json({
     success: true,
     message: 'Size chart saved successfully',
-    data: sizeCharts.find(chart => chart.shop === shop)
+    data: savedChart
   });
 });
 
