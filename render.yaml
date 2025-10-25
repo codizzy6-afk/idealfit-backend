@@ -3,14 +3,14 @@ services:
     name: ideal-fit-app1
     env: node
     plan: free
-    # Trigger deployment
-    buildCommand: cd ideal-fit && echo "=== BUILD COMMAND START ===" && pwd && ls -la && npm install && mkdir -p data && npm run setup && npm run build && echo "=== BUILD COMPLETE ===" && ls -la && find . -name "build" -type d
-    startCommand: cd ideal-fit && node build/server/index.js
+    rootDir: ideal-fit
+    buildCommand: echo "=== BUILD COMMAND START ===" && pwd && ls -la && npm install && mkdir -p data && npm run setup && npm run build && echo "=== BUILD COMPLETE ===" && ls -la && find . -name "build" -type d
+    startCommand: node build/server/index.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:./ideal-fit/data/prod.sqlite
+        value: file:./data/prod.sqlite
       - key: SHOPIFY_API_KEY
         value: df65d05c59fdde03db6cad23f63bb6e7
       - key: SCOPES
