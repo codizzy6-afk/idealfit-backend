@@ -874,38 +874,15 @@
                     </div>
                 </div>
 
-                <div class="card" style="background: #f0f9ff; border-left: 4px solid #3b82f6;">
-                    <h3 style="margin-top: 0;">📋 Billing Tier Information</h3>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #dbeafe;">
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #3b82f6;">Tier</th>
-                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #3b82f6;">Order Range</th>
-                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #3b82f6;">Rate per Order</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #e5e7eb;">
-                                <td style="padding: 12px;"><strong>Starter</strong></td>
-                                <td style="padding: 12px; text-align: center;">1 - 500 orders</td>
-                                <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">$0.12</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #e5e7eb;">
-                                <td style="padding: 12px;"><strong>Professional</strong></td>
-                                <td style="padding: 12px; text-align: center;">501 - 1500 orders</td>
-                                <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">$0.09</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px;"><strong>Enterprise</strong></td>
-                                <td style="padding: 12px; text-align: center;">1501+ orders</td>
-                                <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">$0.06</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
-                        💡 <strong>Note:</strong> Billing is calculated automatically at the end of each month based on your total order count. The tier is determined by the total number of orders in the current month.
-                    </p>
-                </div>
+                                 <div class="card" style="background: #f0f9ff; border-left: 4px solid #3b82f6;">
+                     <h3 style="margin-top: 0;">📋 Billing Tier Information</h3>
+                     <div id="billingTierTable">
+                         <!-- Dynamic content will be loaded here -->
+                     </div>
+                     <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                         💡 <strong>Note:</strong> Billing is calculated automatically at the end of each month based on your total order count. The tier is determined by the total number of orders in the current month. Currency is automatically detected based on your location.
+                     </p>
+                 </div>
             </div>
         </div>
     </div>
@@ -1901,59 +1878,115 @@
             }
         }
         
-        // Billing Management Functions
-        async function loadBillingData() {
-            try {
-                // Fetch orders data to calculate billing
-                const apiBaseUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3001/api' 
-                    : 'https://ideal-fit-app1.onrender.com/api';
-                
-                const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=250`);
-                const data = await response.json();
-                
-                if (data.success && data.data && data.data.length > 0) {
-                    const orders = data.data;
+                 // Billing Management Functions
+         // Currency detection
+         function detectCurrency() {
+             try {
+                 // Get user's timezone
+                 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                 
+                 // India-specific timezones
+                 if (timezone === 'Asia/Kolkata' || timezone === 'Asia/Calcutta') {
+                     return 'INR';
+                 }
+                 
+                 // Get user's language/locale
+                 const locale = navigator.language || navigator.userLanguage;
+                 
+                 // Check if India in locale string
+                 if (locale.includes('IN') || locale.includes('hi-IN') || locale.includes('en-IN')) {
+                     return 'INR';
+                 }
+                 
+                 // Default to USD
+                 return 'USD';
+             } catch (error) {
+                 console.error('Error detecting currency:', error);
+                 return 'USD';
+             }
+         }
+         
+         // Get currency rates (static for now, could be dynamic)
+         function getCurrencyRates(baseCurrency) {
+             // Exchange rates (can be updated dynamically from an API)
+             const rates = {
+                 'INR': {
+                     starter: 10,    // ₹10 per order (approx $0.12)
+                     professional: 7.5, // ₹7.5 per order (approx $0.09)
+                     enterprise: 5,   // ₹5 per order (approx $0.06)
+                     symbol: '₹'
+                 },
+                 'USD': {
+                     starter: 0.12,
+                     professional: 0.09,
+                     enterprise: 0.06,
+                     symbol: '$'
+                 }
+             };
+             
+             return rates[baseCurrency] || rates['USD'];
+         }
+         
+         async function loadBillingData() {
+             try {
+                 // Detect user's currency
+                 const currency = detectCurrency();
+                 const currencyInfo = getCurrencyRates(currency);
+                 const currencySymbol = currencyInfo.symbol;
+                 
+                 // Fetch orders data to calculate billing
+                 const apiBaseUrl = window.location.hostname === 'localhost' 
+                     ? 'http://localhost:3001/api' 
+                     : 'https://ideal-fit-app1.onrender.com/api';
+                 
+                 const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=250`);
+                 const data = await response.json();
+                 
+                 if (data.success && data.data && data.data.length > 0) {
+                     const orders = data.data;
+                     
+                     // Get current month orders
+                     const now = new Date();
+                     const currentMonth = now.getMonth();
+                     const currentYear = now.getFullYear();
+                     
+                     const currentMonthOrders = orders.filter(order => {
+                         const orderDate = new Date(order.createdAt);
+                         return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+                     });
+                     
+                     // Calculate billing tier and rates based on currency
+                     const orderCount = currentMonthOrders.length;
+                     let plan, rate, totalCost;
+                     
+                     if (orderCount <= 500) {
+                         plan = 'Starter';
+                         rate = currencyInfo.starter;
+                     } else if (orderCount <= 1500) {
+                         plan = 'Professional';
+                         rate = currencyInfo.professional;
+                     } else {
+                         plan = 'Enterprise';
+                         rate = currencyInfo.enterprise;
+                     }
+                     
+                     totalCost = orderCount * rate;
+                     
+                     // Update stat cards
+                     updateStatCard('currentPlan', plan);
+                     updateStatCard('currentRate', currencySymbol + rate.toFixed(currency === 'INR' ? 0 : 2));
+                     updateStatCard('ordersThisMonth', orderCount);
+                     
+                     // Calculate next billing date (end of current month)
+                     const nextBillingDate = new Date(currentYear, currentMonth + 1, 0);
+                     updateStatCard('nextBillingDate', nextBillingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
                     
-                    // Get current month orders
-                    const now = new Date();
-                    const currentMonth = now.getMonth();
-                    const currentYear = now.getFullYear();
-                    
-                    const currentMonthOrders = orders.filter(order => {
-                        const orderDate = new Date(order.createdAt);
-                        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
-                    });
-                    
-                    // Calculate billing tier and rates
-                    const orderCount = currentMonthOrders.length;
-                    let plan, rate, totalCost;
-                    
-                    if (orderCount <= 500) {
-                        plan = 'Starter';
-                        rate = 0.12;
-                    } else if (orderCount <= 1500) {
-                        plan = 'Professional';
-                        rate = 0.09;
-                    } else {
-                        plan = 'Enterprise';
-                        rate = 0.06;
-                    }
-                    
-                    totalCost = orderCount * rate;
-                    
-                    // Update stat cards
-                    updateStatCard('currentPlan', plan);
-                    updateStatCard('currentRate', '$' + rate.toFixed(2));
-                    updateStatCard('ordersThisMonth', orderCount);
-                    
-                    // Calculate next billing date (end of current month)
-                    const nextBillingDate = new Date(currentYear, currentMonth + 1, 0);
-                    updateStatCard('nextBillingDate', nextBillingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-                    
-                                         // Update billing breakdown
+                                                                                  // Update billing breakdown
                      const breakdownEl = document.getElementById('billingBreakdown');
                      if (breakdownEl) {
+                         const rateDisplay = rate.toFixed(currency === 'INR' ? 0 : 2);
+                         const totalDisplay = totalCost.toFixed(currency === 'INR' ? 0 : 2);
+                         
                          breakdownEl.innerHTML = `
                              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
                                  <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
@@ -1962,34 +1995,45 @@
                                  </div>
                                  <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981;">
                                      <div style="font-size: 0.875rem; color: #6b7280;">Current Rate</div>
-                                     <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">$${rate.toFixed(2)}/order</div>
+                                     <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">${currencySymbol}${rateDisplay}/order</div>
                                  </div>
                                  <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
                                      <div style="font-size: 0.875rem; color: #6b7280;">Estimated Monthly Cost</div>
-                                     <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">$${totalCost.toFixed(2)}</div>
+                                     <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">${currencySymbol}${totalDisplay}</div>
                                  </div>
                              </div>
                              <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
-                                 💡 <strong>Current Tier:</strong> ${plan} Plan - Based on ${orderCount} orders this month
+                                 💡 <strong>Current Tier:</strong> ${plan} Plan - Based on ${orderCount} orders this month<br>
+                                 💵 <strong>Currency:</strong> ${currency} (${currencySymbol === '₹' ? 'Indian Rupee' : 'US Dollar'})
                              </p>
                          `;
-                         
-                         // Show payment section if there are orders
-                         const paymentSection = document.getElementById('makePaymentSection');
-                         if (paymentSection && orderCount > 0) {
-                             paymentSection.style.display = 'block';
-                         }
-                     }
+                          
+                          // Show payment section if there are orders
+                          const paymentSection = document.getElementById('makePaymentSection');
+                          if (paymentSection && orderCount > 0) {
+                              paymentSection.style.display = 'block';
+                          }
+                      }
                     
-                    // Generate billing history (last 3 months)
-                    generateBillingHistory(orders);
-                    
+                                                              // Generate billing history (last 3 months)
+                     generateBillingHistory(orders, currency, currencyInfo, currencySymbol);
+                     
+                     // Update billing tier table
+                     updateBillingTierTable(currency, currencyInfo, currencySymbol);
+                     
                 } else {
                     // No orders found
+                    const currency = detectCurrency();
+                    const currencyInfo = getCurrencyRates(currency);
+                    const currencySymbol = currencyInfo.symbol;
+                    
                     updateStatCard('currentPlan', 'Starter');
-                    updateStatCard('currentRate', '$0.12');
+                    updateStatCard('currentRate', currencySymbol + currencyInfo.starter.toFixed(currency === 'INR' ? 0 : 2));
                     updateStatCard('ordersThisMonth', 0);
                     updateStatCard('nextBillingDate', 'End of Month');
+                    
+                    // Update billing tier table
+                    updateBillingTierTable(currency, currencyInfo, currencySymbol);
                 }
                 
             } catch (error) {
@@ -1997,67 +2041,113 @@
             }
         }
         
-        // Generate billing history for last 3 months
-        function generateBillingHistory(allOrders) {
-            const historyEl = document.getElementById('billingHistory');
-            if (!historyEl) return;
+        // Update billing tier table
+        function updateBillingTierTable(currency, currencyInfo, currencySymbol) {
+            const tierTableEl = document.getElementById('billingTierTable');
+            if (!tierTableEl) return;
             
-            const now = new Date();
-            let historyHTML = '<div style="margin-top: 1rem;">';
+            const starterRate = currencyInfo.starter.toFixed(currency === 'INR' ? 0 : 2);
+            const professionalRate = currencyInfo.professional.toFixed(currency === 'INR' ? 0 : 2);
+            const enterpriseRate = currencyInfo.enterprise.toFixed(currency === 'INR' ? 0 : 2);
             
-            // Generate history for last 3 months
-            for (let i = 0; i < 3; i++) {
-                const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                const month = monthDate.getMonth();
-                const year = monthDate.getFullYear();
-                
-                // Filter orders for this month
-                const monthOrders = allOrders.filter(order => {
-                    const orderDate = new Date(order.createdAt);
-                    return orderDate.getMonth() === month && orderDate.getFullYear() === year;
-                });
-                
-                // Calculate billing for this month
-                const orderCount = monthOrders.length;
-                let plan, rate, totalCost;
-                
-                if (orderCount <= 500) {
-                    plan = 'Starter';
-                    rate = 0.12;
-                } else if (orderCount <= 1500) {
-                    plan = 'Professional';
-                    rate = 0.09;
-                } else {
-                    plan = 'Enterprise';
-                    rate = 0.06;
-                }
-                
-                totalCost = orderCount * rate;
-                
-                historyHTML += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #e5e7eb;">
-                        <div>
-                            <div style="font-weight: 600; color: #1f2937;">${monthName}</div>
-                            <div style="font-size: 0.875rem; color: #6b7280;">
-                                ${orderCount} orders • ${plan} Plan • $${rate.toFixed(2)}/order
-                            </div>
-                        </div>
-                        <div style="font-size: 1.25rem; font-weight: 700; color: #059669;">
-                            $${totalCost.toFixed(2)}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            historyHTML += '</div>';
-            
-            if (historyHTML === '<div style="margin-top: 1rem;"></div>') {
-                historyHTML = '<p style="color: #6b7280;">No billing history available yet.</p>';
-            }
-            
-            historyEl.innerHTML = historyHTML;
+            tierTableEl.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #dbeafe;">
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #3b82f6;">Tier</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #3b82f6;">Order Range</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #3b82f6;">Rate per Order</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 12px;"><strong>Starter</strong></td>
+                            <td style="padding: 12px; text-align: center;">1 - 500 orders</td>
+                            <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">${currencySymbol}${starterRate}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 12px;"><strong>Professional</strong></td>
+                            <td style="padding: 12px; text-align: center;">501 - 1500 orders</td>
+                            <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">${currencySymbol}${professionalRate}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px;"><strong>Enterprise</strong></td>
+                            <td style="padding: 12px; text-align: center;">1501+ orders</td>
+                            <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">${currencySymbol}${enterpriseRate}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
         }
+        
+                 // Generate billing history for last 3 months
+         function generateBillingHistory(allOrders, currency = 'USD', currencyInfo = null, currencySymbol = '$') {
+             const historyEl = document.getElementById('billingHistory');
+             if (!historyEl) return;
+             
+             // Get currency info if not provided
+             if (!currencyInfo) {
+                 currencyInfo = getCurrencyRates(currency);
+             }
+             
+             const now = new Date();
+             let historyHTML = '<div style="margin-top: 1rem;">';
+             
+             // Generate history for last 3 months
+             for (let i = 0; i < 3; i++) {
+                 const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                 const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                 const month = monthDate.getMonth();
+                 const year = monthDate.getFullYear();
+                 
+                 // Filter orders for this month
+                 const monthOrders = allOrders.filter(order => {
+                     const orderDate = new Date(order.createdAt);
+                     return orderDate.getMonth() === month && orderDate.getFullYear() === year;
+                 });
+                 
+                 // Calculate billing for this month
+                 const orderCount = monthOrders.length;
+                 let plan, rate, totalCost;
+                 
+                 if (orderCount <= 500) {
+                     plan = 'Starter';
+                     rate = currencyInfo.starter;
+                 } else if (orderCount <= 1500) {
+                     plan = 'Professional';
+                     rate = currencyInfo.professional;
+                 } else {
+                     plan = 'Enterprise';
+                     rate = currencyInfo.enterprise;
+                 }
+                 
+                 totalCost = orderCount * rate;
+                 const rateDisplay = rate.toFixed(currency === 'INR' ? 0 : 2);
+                 const totalDisplay = totalCost.toFixed(currency === 'INR' ? 0 : 2);
+                 
+                 historyHTML += `
+                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                         <div>
+                             <div style="font-weight: 600; color: #1f2937;">${monthName}</div>
+                             <div style="font-size: 0.875rem; color: #6b7280;">
+                                 ${orderCount} orders • ${plan} Plan • ${currencySymbol}${rateDisplay}/order
+                             </div>
+                         </div>
+                         <div style="font-size: 1.25rem; font-weight: 700; color: #059669;">
+                             ${currencySymbol}${totalDisplay}
+                         </div>
+                     </div>
+                 `;
+             }
+             
+             historyHTML += '</div>';
+             
+             if (historyHTML === '<div style="margin-top: 1rem;"></div>') {
+                 historyHTML = '<p style="color: #6b7280;">No billing history available yet.</p>';
+             }
+             
+             historyEl.innerHTML = historyHTML;
+         }
         
                  // Initiate payment based on gateway
          async function initiatePayment(gateway) {
