@@ -5,7 +5,7 @@ services:
     plan: free
     # Trigger deployment
     buildCommand: cd ideal-fit && npm install && mkdir -p data && npm run setup && npm run build
-    startCommand: cd ideal-fit && node node_modules/@react-router/serve/dist/cli.js build/server/index.js
+    startCommand: cd ideal-fit && pwd && ls -la build/server/ && node node_modules/@react-router/serve/dist/cli.js $(pwd)/build/server/index.js
     envVars:
       - key: NODE_ENV
         value: production
