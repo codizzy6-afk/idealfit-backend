@@ -4,13 +4,13 @@ services:
     env: node
     plan: free
     rootDir: ideal-fit
-    buildCommand: npm install && npm run setup && npm run build
+    buildCommand: npm install && mkdir -p data && npm run setup && npm run build
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        generateValue: true
+        value: file:./data/prod.sqlite
       - key: SHOPIFY_API_KEY
         sync: false
       - key: SHOPIFY_API_SECRET
