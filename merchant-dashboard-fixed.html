@@ -373,44 +373,76 @@
             background: #4b5563;
         }
         
-        /* Analytics specific styles */
-        .size-bar {
-            background: #e5e7eb;
-            border-radius: 8px;
-            margin: 8px 0;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .size-bar-fill {
-            height: 32px;
+        /* Analytics specific styles - Bar Chart */
+        .bar-chart-container {
             display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 350px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+            gap: 12px;
+        }
+        
+        .bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            padding: 0 12px;
-            color: white;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: width 0.3s ease;
+            height: 100%;
+        }
+        
+        .bar-container {
+            width: 100%;
+            max-width: 80px;
+            height: calc(100% - 60px);
+            background: #e5e7eb;
+            border-radius: 8px 8px 0 0;
             position: relative;
-            z-index: 2;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
         
-        .size-bar-label {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 3;
-            font-weight: 600;
+        .bar-fill {
+            background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%);
+            width: 100%;
+            transition: height 0.5s ease;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            min-height: 20px;
         }
         
-        .size-bar-count {
+        .bar-value {
             position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 3;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
             font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .bar-label {
+            margin-top: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+        
+        .bar-count {
+            margin-top: 4px;
+            color: #6b7280;
+            font-size: 0.75rem;
+            text-align: center;
         }
         
         .insight-card {
@@ -888,7 +920,7 @@
             }).format(amount);
         }
         
-        // Update size distribution chart
+        // Update size distribution chart - Bar Chart
         function updateSizeDistribution(sizeData) {
             const container = document.getElementById('sizeDistributionChart');
             if (!container) return;
@@ -898,24 +930,39 @@
             const maxCount = sorted.length > 0 ? sorted[0].count : 1;
             const totalOrders = getTotalOrders(sizeData);
             
-            let html = '<div style="margin-bottom: 1rem;">';
+            let html = '<div class="bar-chart-container">';
             sorted.forEach(item => {
                 const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
                 const color = getSizeColor(item.size);
                 const orderPercent = totalOrders > 0 ? ((item.count / totalOrders) * 100).toFixed(1) : 0;
                 
                 html += `
-                    <div class="size-bar">
-                        <div class="size-bar-fill" style="background: ${color}; width: ${percentage}%;">
-                            <span class="size-bar-label">Size ${item.size}</span>
-                            <span class="size-bar-count">${item.count} orders (${orderPercent}%)</span>
+                    <div class="bar-wrapper">
+                        <div class="bar-container">
+                            <div class="bar-fill" style="height: ${percentage}%; background: linear-gradient(180deg, ${color} 0%, ${adjustColor(color, -20)} 100%);">
+                                <span class="bar-value">${item.count}</span>
+                            </div>
                         </div>
+                        <div class="bar-label">Size ${item.size}</div>
+                        <div class="bar-count">${orderPercent}%</div>
                     </div>
                 `;
             });
             html += '</div>';
             
             container.innerHTML = html;
+        }
+        
+        // Helper function to adjust color brightness
+        function adjustColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
         }
         
         // Get color for size
