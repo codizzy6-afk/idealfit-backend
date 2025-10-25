@@ -886,10 +886,10 @@
                     const country = address.country || 'N/A';
                     
                     const measurements = order.measurements || {};
-                    // Remove quotes from measurements - store as numbers with units
-                    const bust = measurements.bust ? `${measurements.bust} inches` : 'N/A';
-                    const waist = measurements.waist ? `${measurements.waist} inches` : 'N/A';
-                    const hip = measurements.hip ? `${measurements.hip} inches` : 'N/A';
+                    // Export raw numbers without quotes or units
+                    const bust = measurements.bust ? measurements.bust : 'N/A';
+                    const waist = measurements.waist ? measurements.waist : 'N/A';
+                    const hip = measurements.hip ? measurements.hip : 'N/A';
                     const recommendedSize = measurements.recommendedSize || 'N/A';
                     
                     // Get order number - check multiple fields
