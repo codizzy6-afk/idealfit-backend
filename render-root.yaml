@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: ideal-fit-app1
+    env: node
+    plan: free
+    # Trigger deployment
+    rootDir: ideal-fit
+    buildCommand: echo "=== BUILD COMMAND START ===" && pwd && ls -la && npm install && mkdir -p data && npm run setup && npm run build && echo "=== BUILD COMPLETE ===" && ls -la && find . -name "build" -type d
+    startCommand: pwd && ls -la && ls -la build/server/ && node node_modules/@react-router/serve/dist/cli.js build/server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:./data/prod.sqlite
+      - key: SHOPIFY_API_KEY
+        sync: false
+      - key: SHOPIFY_API_SECRET
+        sync: false
+      - key: SCOPES
+        value: write_products,read_products,read_orders,read_customers
+      - key: SHOPIFY_APP_URL
+        value: https://ideal-fit-app1.onrender.com
+    healthCheckPath: /
