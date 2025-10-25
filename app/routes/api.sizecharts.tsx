@@ -20,20 +20,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     });
 
-    // Parse and format data
+    // Parse and format data to match dashboard expectations
     const formattedCharts = sizeCharts.map(chart => ({
       id: chart.id,
       shop: chart.shop,
       title: chart.title,
-      data: JSON.parse(chart.chartData),
+      sizeChart: JSON.parse(chart.chartData), // Dashboard expects 'sizeChart' key
       createdAt: chart.createdAt.toISOString(),
       updatedAt: chart.updatedAt.toISOString()
     }));
 
-    return new Response(JSON.stringify({
-      success: true,
-      data: formattedCharts
-    }), {
+    return new Response(JSON.stringify(formattedCharts), {
       status: 200,
       headers: {
         "Content-Type": "application/json",

@@ -6,14 +6,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const data = await request.json();
     console.log('📏 Received size chart data:', data);
 
-    const { 
-      title, 
-      chartData, 
-      shop 
-    } = data;
+    // Dashboard sends { sizeChart: [...] } so handle both formats
+    const sizeChartData = data.sizeChart || data.chartData || data;
+    const title = data.title || 'Default Size Chart';
+    const shop = data.shop || 'idealfit-2.myshopify.com';
 
     // Validate required fields
-    if (!chartData || !Array.isArray(chartData)) {
+    if (!sizeChartData || !Array.isArray(sizeChartData)) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Invalid chart data'
@@ -26,9 +25,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Save to database
     const sizeChart = await db.sizeChart.create({
       data: {
-        shop: shop || 'idealfit-2.myshopify.com',
-        title: title || 'Default Size Chart',
-        chartData: JSON.stringify(chartData)
+        shop: shop,
+        title: title,
+        chartData: JSON.stringify(sizeChartData)
       }
     });
 
