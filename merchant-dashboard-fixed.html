@@ -831,6 +831,26 @@
                 <div class="card">
                     <h3>Billing Breakdown</h3>
                     <p id="billingBreakdown" style="color: #6b7280;">Loading billing information...</p>
+                    
+                    <!-- Make Payment Section -->
+                    <div id="makePaymentSection" style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; display: none;">
+                        <h3 style="margin-bottom: 1rem; color: #1f2937;">💳 Payment Options</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <button onclick="initiatePayment('razorpay')" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem 2rem; font-size: 1rem;">
+                                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">💳</div>
+                                <div>Pay with Razorpay</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">Secure & Fast</div>
+                            </button>
+                            <button onclick="initiatePayment('stripe')" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 1rem 2rem; font-size: 1rem;">
+                                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">💳</div>
+                                <div>Pay with Stripe</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">Global Payments</div>
+                            </button>
+                        </div>
+                        <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem; text-align: center;">
+                            🔒 All payments are secured with 256-bit SSL encryption
+                        </p>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -1850,29 +1870,35 @@
                     const nextBillingDate = new Date(currentYear, currentMonth + 1, 0);
                     updateStatCard('nextBillingDate', nextBillingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
                     
-                    // Update billing breakdown
-                    const breakdownEl = document.getElementById('billingBreakdown');
-                    if (breakdownEl) {
-                        breakdownEl.innerHTML = `
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                                <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                                    <div style="font-size: 0.875rem; color: #6b7280;">Orders This Month</div>
-                                    <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">${orderCount}</div>
-                                </div>
-                                <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981;">
-                                    <div style="font-size: 0.875rem; color: #6b7280;">Current Rate</div>
-                                    <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">$${rate.toFixed(2)}/order</div>
-                                </div>
-                                <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                                    <div style="font-size: 0.875rem; color: #6b7280;">Estimated Monthly Cost</div>
-                                    <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">$${totalCost.toFixed(2)}</div>
-                                </div>
-                            </div>
-                            <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
-                                💡 <strong>Current Tier:</strong> ${plan} Plan - Based on ${orderCount} orders this month
-                            </p>
-                        `;
-                    }
+                                         // Update billing breakdown
+                     const breakdownEl = document.getElementById('billingBreakdown');
+                     if (breakdownEl) {
+                         breakdownEl.innerHTML = `
+                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                 <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                     <div style="font-size: 0.875rem; color: #6b7280;">Orders This Month</div>
+                                     <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">${orderCount}</div>
+                                 </div>
+                                 <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981;">
+                                     <div style="font-size: 0.875rem; color: #6b7280;">Current Rate</div>
+                                     <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">$${rate.toFixed(2)}/order</div>
+                                 </div>
+                                 <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                     <div style="font-size: 0.875rem; color: #6b7280;">Estimated Monthly Cost</div>
+                                     <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">$${totalCost.toFixed(2)}</div>
+                                 </div>
+                             </div>
+                             <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                                 💡 <strong>Current Tier:</strong> ${plan} Plan - Based on ${orderCount} orders this month
+                             </p>
+                         `;
+                         
+                         // Show payment section if there are orders
+                         const paymentSection = document.getElementById('makePaymentSection');
+                         if (paymentSection && orderCount > 0) {
+                             paymentSection.style.display = 'block';
+                         }
+                     }
                     
                     // Generate billing history (last 3 months)
                     generateBillingHistory(orders);
@@ -1952,24 +1978,97 @@
             historyEl.innerHTML = historyHTML;
         }
         
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎯 IdealFit Merchant Dashboard Loaded Successfully!');
-            
-            // Populate year dropdown
-            populateYearDropdown();
-            
-            // Restore saved tab
-            restoreSavedTab();
-            
-            // Load billing data if on billing tab
-            if (localStorage.getItem('idealfit_current_tab') === 'billing') {
-                loadBillingData();
-            }
-            
-            console.log('showTab function defined:', typeof showTab);
-            console.log('dashboardState defined:', typeof dashboardState);
-        });
+                 // Initiate payment based on gateway
+         async function initiatePayment(gateway) {
+             try {
+                 // Get the current estimated cost from the page
+                 const breakdownEl = document.getElementById('billingBreakdown');
+                 if (!breakdownEl) {
+                     alert('⚠️ Please wait for billing information to load');
+                     return;
+                 }
+                 
+                 // Extract amount from the page (for demo purposes)
+                 const costMatch = breakdownEl.textContent.match(/\$(\d+\.\d+)/);
+                 const amount = costMatch ? parseFloat(costMatch[1]) : 0;
+                 
+                 if (amount === 0) {
+                     alert('⚠️ No payment amount found. Please refresh the billing data.');
+                     return;
+                 }
+                 
+                 if (gateway === 'razorpay') {
+                     // Razorpay payment
+                     const options = {
+                         key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Razorpay Key ID
+                         amount: amount * 100, // Amount in paise (multiply by 100)
+                         currency: 'USD',
+                         name: 'IdealFit',
+                         description: `Monthly subscription - ${amount} orders`,
+                         handler: function(response) {
+                             // Handle success
+                             console.log('Payment successful:', response);
+                             alert('✅ Payment successful! Transaction ID: ' + response.razorpay_payment_id);
+                             // Reload billing data
+                             loadBillingData();
+                         },
+                         prefill: {
+                             email: 'store@example.com',
+                             contact: '+919876543210'
+                         },
+                         theme: {
+                             color: '#667eea'
+                         },
+                         modal: {
+                             ondismiss: function() {
+                                 console.log('Payment cancelled by user');
+                             }
+                         }
+                     };
+                     
+                     // Note: This is a placeholder. In production, you'd load Razorpay checkout script
+                     // and initialize it with the options above.
+                     alert(`🔄 Initiating Razorpay payment for $${amount}\n\nThis is a demo. In production, this would open the Razorpay payment gateway.`);
+                     
+                 } else if (gateway === 'stripe') {
+                     // Stripe payment
+                     const options = {
+                         amount: amount * 100, // Amount in cents
+                         currency: 'usd',
+                         description: `IdealFit Monthly Subscription - ${amount} orders`,
+                         source: 'card' // or other payment methods
+                     };
+                     
+                     // Note: This is a placeholder. In production, you'd create a Stripe Checkout session
+                     // or use Stripe Elements to handle the payment
+                     alert(`🔄 Initiating Stripe payment for $${amount}\n\nThis is a demo. In production, this would open the Stripe payment gateway.`);
+                     
+                 }
+                 
+             } catch (error) {
+                 console.error('Error initiating payment:', error);
+                 alert('❌ Error initiating payment. Please try again.');
+             }
+         }
+         
+         // Initialize dashboard
+         document.addEventListener('DOMContentLoaded', function() {
+             console.log('🎯 IdealFit Merchant Dashboard Loaded Successfully!');
+             
+             // Populate year dropdown
+             populateYearDropdown();
+             
+             // Restore saved tab
+             restoreSavedTab();
+             
+             // Load billing data if on billing tab
+             if (localStorage.getItem('idealfit_current_tab') === 'billing') {
+                 loadBillingData();
+             }
+             
+             console.log('showTab function defined:', typeof showTab);
+             console.log('dashboardState defined:', typeof dashboardState);
+         });
     </script>
 </body>
 </html>
