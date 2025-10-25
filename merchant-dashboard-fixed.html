@@ -449,9 +449,43 @@
             transition: transform 0.3s ease;
         }
         
-        .animated-number.updating {
-            transform: scale(1.1);
-        }
+                 .animated-number.updating {
+             transform: scale(1.1);
+         }
+         
+         /* Size Chart Editable Table */
+         .editable-input {
+             width: 100%;
+             padding: 6px 8px;
+             border: 1px solid #d1d5db;
+             border-radius: 4px;
+             font-size: 0.875rem;
+             transition: all 0.2s ease;
+         }
+         
+         .editable-input:focus {
+             outline: none;
+             border-color: #3b82f6;
+             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+         }
+         
+         .delete-btn {
+             background: #ef4444;
+             color: white;
+             border: none;
+             padding: 6px 12px;
+             border-radius: 6px;
+             cursor: pointer;
+             font-size: 0.875rem;
+             font-weight: 600;
+             transition: all 0.3s ease;
+         }
+         
+         .delete-btn:hover {
+             background: #dc2626;
+             transform: translateY(-2px);
+             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+         }
     </style>
 </head>
 <body>
@@ -616,66 +650,48 @@
 
             <!-- Size Chart Tab -->
             <div id="sizechart" class="tab-content">
-                <div class="page-header">
-                    <div class="page-title">
-                        📏 Size Chart Management
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="page-title">
+                            📏 Size Chart Management
+                        </div>
+                        <div class="page-subtitle">
+                            Configure size measurements for your products
+                        </div>
                     </div>
-                    <div class="page-subtitle">
-                        Configure size measurements for your products
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="loadSizeChart()" class="btn btn-primary">🔄 Refresh</button>
+                        <button onclick="addNewSizeRow()" class="btn btn-success">➕ Add Size</button>
+                        <button onclick="saveSizeChart()" class="btn btn-primary">💾 Save Chart</button>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3>Size Chart</h3>
-                    <p>Current size chart configuration:</p>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-                        <thead>
-                            <tr style="background: #f8fafc;">
-                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Size</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Bust (inches)</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Waist (inches)</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Hip (inches)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">XS</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">30</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">25</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">35</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">S</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">32</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">27</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">37</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">M</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">34</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">29</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">39</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">L</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">36</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">31</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">41</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">XL</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">38</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">33</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">43</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">XXL</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">40</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">35</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">45</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Editable Size Chart</h3>
+                        <span id="sizeChartStatus" style="color: #6b7280; font-size: 0.875rem;">Ready to edit</span>
+                    </div>
+                    
+                    <div id="sizeChartContainer" style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                            <thead>
+                                <tr style="background: #f8fafc;">
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Size</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Bust (inches)</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Waist (inches)</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Hip (inches)</th>
+                                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sizeChartBody">
+                                <!-- Dynamic rows will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                        💡 Tip: Click on any field to edit it. Changes will be saved when you click "Save Chart".
+                    </p>
                 </div>
             </div>
 
@@ -765,6 +781,8 @@
                         loadAnalyticsData();
                     } else if (tabName === 'customers') {
                         loadCustomerData();
+                    } else if (tabName === 'sizechart') {
+                        loadSizeChart();
                     }
                 }
                 
@@ -1321,6 +1339,174 @@
                     statusEl.textContent = '❌ Error loading customer data';
                     statusEl.style.color = '#ef4444';
                 }
+            }
+        }
+        
+        // Size Chart Management Functions
+        let sizeChartData = [];
+        
+        // Load size chart from API
+        async function loadSizeChart() {
+            try {
+                const statusEl = document.getElementById('sizeChartStatus');
+                if (statusEl) statusEl.textContent = '🔄 Loading...';
+                
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3001/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
+                
+                const response = await fetch(`${apiBaseUrl}/sizecharts?shop=idealfit-2.myshopify.com`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const chart = data.data[0].sizeChart;
+                    sizeChartData = chart;
+                    renderSizeChart();
+                    
+                    if (statusEl) statusEl.textContent = '✅ Size chart loaded';
+                } else {
+                    // Default size chart if none exists
+                    sizeChartData = [
+                        { size: 'XS', bust: 30, waist: 25, hip: 35 },
+                        { size: 'S', bust: 32, waist: 27, hip: 37 },
+                        { size: 'M', bust: 34, waist: 29, hip: 39 },
+                        { size: 'L', bust: 36, waist: 31, hip: 41 },
+                        { size: 'XL', bust: 38, waist: 33, hip: 43 },
+                        { size: 'XXL', bust: 40, waist: 35, hip: 45 }
+                    ];
+                    renderSizeChart();
+                    
+                    if (statusEl) statusEl.textContent = '📝 Default size chart loaded';
+                }
+            } catch (error) {
+                console.error('Error loading size chart:', error);
+                const statusEl = document.getElementById('sizeChartStatus');
+                if (statusEl) statusEl.textContent = '❌ Error loading size chart';
+            }
+        }
+        
+        // Render size chart table
+        function renderSizeChart() {
+            const tbody = document.getElementById('sizeChartBody');
+            if (!tbody) return;
+            
+            let html = '';
+            
+            sizeChartData.forEach((row, index) => {
+                html += `
+                    <tr>
+                        <td style="padding: 8px;">
+                            <input type="text" class="editable-input" data-index="${index}" data-field="size" value="${row.size}" placeholder="Size">
+                        </td>
+                        <td style="padding: 8px;">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="bust" value="${row.bust}" placeholder="Bust" step="0.5" min="0">
+                        </td>
+                        <td style="padding: 8px;">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="waist" value="${row.waist}" placeholder="Waist" step="0.5" min="0">
+                        </td>
+                        <td style="padding: 8px;">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="hip" value="${row.hip}" placeholder="Hip" step="0.5" min="0">
+                        </td>
+                        <td style="padding: 8px; text-align: center;">
+                            <button class="delete-btn" onclick="deleteSizeRow(${index})">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        // Add new size row
+        function addNewSizeRow() {
+            sizeChartData.push({
+                size: 'NEW',
+                bust: 0,
+                waist: 0,
+                hip: 0
+            });
+            renderSizeChart();
+            
+            const statusEl = document.getElementById('sizeChartStatus');
+            if (statusEl) statusEl.textContent = '➕ New row added';
+        }
+        
+        // Delete size row
+        function deleteSizeRow(index) {
+            if (sizeChartData.length <= 1) {
+                alert('⚠️ You need at least one size in your chart!');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this size?')) {
+                sizeChartData.splice(index, 1);
+                renderSizeChart();
+                
+                const statusEl = document.getElementById('sizeChartStatus');
+                if (statusEl) statusEl.textContent = '🗑️ Size deleted';
+            }
+        }
+        
+        // Save size chart to API
+        async function saveSizeChart() {
+            try {
+                const statusEl = document.getElementById('sizeChartStatus');
+                if (statusEl) statusEl.textContent = '💾 Saving...';
+                
+                // Collect all input values
+                const inputs = document.querySelectorAll('#sizeChartBody .editable-input');
+                inputs.forEach(input => {
+                    const index = parseInt(input.dataset.index);
+                    const field = input.dataset.field;
+                    const value = field === 'size' ? input.value.trim() : parseFloat(input.value);
+                    
+                    if (sizeChartData[index]) {
+                        sizeChartData[index][field] = value;
+                    }
+                });
+                
+                // Validate data
+                for (let row of sizeChartData) {
+                    if (!row.size || row.size.trim() === '') {
+                        alert('⚠️ All sizes must have a size name!');
+                        if (statusEl) statusEl.textContent = '❌ Validation failed';
+                        return;
+                    }
+                    if (!row.bust || !row.waist || !row.hip) {
+                        alert('⚠️ All measurements must be filled in!');
+                        if (statusEl) statusEl.textContent = '❌ Validation failed';
+                        return;
+                    }
+                }
+                
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3001/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
+                
+                const response = await fetch(`${apiBaseUrl}/sizecharts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        shop: 'idealfit-2.myshopify.com',
+                        sizeChart: sizeChartData
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (statusEl) statusEl.textContent = '✅ Size chart saved successfully!';
+                    alert('✅ Size chart saved successfully!');
+                } else {
+                    throw new Error('Save failed');
+                }
+            } catch (error) {
+                console.error('Error saving size chart:', error);
+                const statusEl = document.getElementById('sizeChartStatus');
+                if (statusEl) statusEl.textContent = '❌ Error saving size chart';
+                alert('❌ Error saving size chart. Please try again.');
             }
         }
         
