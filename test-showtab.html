@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test showTab Function</title>
+</head>
+<body>
+    <h1>Test showTab Function</h1>
+    
+    <button onclick="showTab('analytics')">Test Analytics Tab</button>
+    <button onclick="showTab('customers')">Test Customers Tab</button>
+    
+    <div id="analytics" style="display: none;">Analytics Content</div>
+    <div id="customers" style="display: none;">Customers Content</div>
+    
+    <script>
+        // Global variables
+        let dashboardState;
+        
+        // Tab navigation function (global scope)
+        function showTab(tabName) {
+            try {
+                console.log('showTab called with:', tabName);
+                
+                // Hide all tab contents
+                const contents = document.querySelectorAll('[id="analytics"], [id="customers"]');
+                contents.forEach(content => content.style.display = 'none');
+                
+                // Show selected content
+                const content = document.getElementById(tabName);
+                if (content) {
+                    content.style.display = 'block';
+                    console.log('Tab switched to:', tabName);
+                }
+            } catch (error) {
+                console.error('Error switching tabs:', error);
+            }
+        }
+        
+        // Initialize dashboard state
+        dashboardState = { currentTab: 'analytics' };
+        
+        console.log('showTab function defined:', typeof showTab);
+        console.log('dashboardState defined:', typeof dashboardState);
+    </script>
+</body>
+</html>
