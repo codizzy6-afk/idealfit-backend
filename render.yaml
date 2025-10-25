@@ -3,6 +3,7 @@ services:
     name: ideal-fit-app1
     env: node
     plan: free
+    rootDir: ideal-fit
     # Trigger deployment
     buildCommand: echo "=== BUILD COMMAND START ===" && pwd && ls -la && npm install && mkdir -p data && echo "=== BUILD COMPLETE ===" && ls -la && find . -name "build" -type d
     startCommand: pwd && ls -la && ls -la build/server/ && node node_modules/@react-router/serve/dist/cli.js build/server/index.js
