@@ -601,6 +601,16 @@
                     <span class="tab-icon">💰</span>
                     <span class="tab-label">Billing</span>
                 </button>
+                <button class="tab" onclick="showTab('settings')">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-label">Settings</span>
+                </button>
+            </div>
+            
+            <div style="position: absolute; bottom: 1rem; left: 0; right: 0; padding: 0 1rem;">
+                <button onclick="logout()" style="width: 100%; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                    🚪 Logout
+                </button>
             </div>
         </div>
 
@@ -883,6 +893,60 @@
                          💡 <strong>Note:</strong> Billing is calculated automatically at the end of each month based on your total order count. The tier is determined by the total number of orders in the current month. Currency is automatically detected based on your location.
                      </p>
                  </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="page-header">
+                    <div class="page-title">⚙️ Settings</div>
+                    <div class="page-subtitle">Manage your account and preferences</div>
+                </div>
+
+                <div class="card">
+                    <h3>Change Username & Password</h3>
+                    <form id="changeCredentialsForm" onsubmit="changeCredentials(event); return false;" style="margin-top: 1.5rem;">
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" placeholder="Enter current password" required style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; width: 100%;">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="newUsername">New Username</label>
+                            <input type="text" id="newUsername" placeholder="Enter new username" required style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; width: 100%;">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" placeholder="Enter new password" required style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; width: 100%;">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" placeholder="Confirm new password" required style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; width: 100%;">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                        <div id="credentialsMessage" style="margin-top: 1rem;"></div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Account Information</h3>
+                    <div style="margin-top: 1.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Username:</strong> <span id="displayUsername">admin</span>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Store Name:</strong> Merchant Store
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Email:</strong> store@example.com
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Account Status:</strong> <span style="color: #10b981; font-weight: 600;">● Active</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2222,9 +2286,130 @@
              }
          }
          
+         // Authentication check
+         function checkAuth() {
+             const isLoggedIn = localStorage.getItem('idealfit_logged_in');
+             if (isLoggedIn !== 'true') {
+                 window.location.href = 'login.html';
+             } else {
+                 // Update displayed username
+                 const username = localStorage.getItem('idealfit_username') || 'admin';
+                 const usernameElement = document.getElementById('displayUsername');
+                 if (usernameElement) {
+                     usernameElement.textContent = username;
+                 }
+                 // Update sidebar username
+                 const sidebarUsername = document.querySelector('.user-name');
+                 if (sidebarUsername && username !== 'guest') {
+                     sidebarUsername.textContent = username;
+                 }
+             }
+         }
+         
+         // Logout function
+         function logout() {
+             if (confirm('Are you sure you want to logout?')) {
+                 localStorage.removeItem('idealfit_logged_in');
+                 localStorage.removeItem('idealfit_username');
+                 localStorage.removeItem('idealfit_credentials');
+                 window.location.href = 'login.html';
+             }
+         }
+         
+         // Change credentials function
+         function changeCredentials(event) {
+             event.preventDefault();
+             
+             const currentPassword = document.getElementById('currentPassword').value;
+             const newUsername = document.getElementById('newUsername').value;
+             const newPassword = document.getElementById('newPassword').value;
+             const confirmPassword = document.getElementById('confirmPassword').value;
+             
+             // Get stored credentials
+             const storedCredentials = JSON.parse(localStorage.getItem('idealfit_credentials') || '{"username":"admin","password":"admin123"}');
+             
+             // Validate current password
+             if (currentPassword !== storedCredentials.password) {
+                 showMessage('Current password is incorrect.', 'error');
+                 return;
+             }
+             
+             // Validate password match
+             if (newPassword !== confirmPassword) {
+                 showMessage('New passwords do not match.', 'error');
+                 return;
+             }
+             
+             // Validate password length
+             if (newPassword.length < 6) {
+                 showMessage('Password must be at least 6 characters long.', 'error');
+                 return;
+             }
+             
+             // Validate username
+             if (newUsername.length < 3) {
+                 showMessage('Username must be at least 3 characters long.', 'error');
+                 return;
+             }
+             
+             // Save new credentials
+             const newCredentials = {
+                 username: newUsername,
+                 password: newPassword
+             };
+             localStorage.setItem('idealfit_credentials', JSON.stringify(newCredentials));
+             localStorage.setItem('idealfit_username', newUsername);
+             
+             // Update display
+             document.getElementById('displayUsername').textContent = newUsername;
+             const sidebarUsername = document.querySelector('.user-name');
+             if (sidebarUsername) {
+                 sidebarUsername.textContent = newUsername;
+             }
+             
+             // Clear form
+             document.getElementById('changeCredentialsForm').reset();
+             
+             showMessage('Credentials updated successfully!', 'success');
+             
+             alert('✅ Your credentials have been updated successfully!');
+         }
+         
+         function showMessage(message, type) {
+             const messageDiv = document.getElementById('credentialsMessage');
+             messageDiv.textContent = message;
+             messageDiv.style.padding = '0.75rem';
+             messageDiv.style.borderRadius = '8px';
+             messageDiv.style.marginTop = '1rem';
+             messageDiv.style.display = 'block';
+             
+             if (type === 'error') {
+                 messageDiv.style.background = '#fee2e2';
+                 messageDiv.style.color = '#991b1b';
+             } else {
+                 messageDiv.style.background = '#d1fae5';
+                 messageDiv.style.color = '#065f46';
+             }
+             
+             setTimeout(() => {
+                 messageDiv.style.display = 'none';
+             }, 5000);
+         }
+         
          // Initialize dashboard
          document.addEventListener('DOMContentLoaded', function() {
              console.log('🎯 IdealFit Merchant Dashboard Loaded Successfully!');
+             
+             // Check authentication
+             checkAuth();
+             
+             // Initialize credentials if not exists
+             if (!localStorage.getItem('idealfit_credentials')) {
+                 localStorage.setItem('idealfit_credentials', JSON.stringify({
+                     username: 'admin',
+                     password: 'admin123'
+                 }));
+             }
              
              // Populate year dropdown
              populateYearDropdown();
