@@ -1,5 +1,9 @@
 import { useState } from "react";
 
+export async function loader() {
+  return { timestamp: Date.now() };
+}
+
 export default function DashboardPreview() {
   const [activeTab, setActiveTab] = useState('analytics');
 

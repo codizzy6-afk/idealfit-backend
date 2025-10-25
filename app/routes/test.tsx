@@ -1,3 +1,7 @@
+export async function loader() {
+  return { timestamp: Date.now() };
+}
+
 export default function TestPage() {
   return (
     <div style={{ 
