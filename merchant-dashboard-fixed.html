@@ -791,46 +791,86 @@
 
             <!-- Billing Tab -->
             <div id="billing" class="tab-content">
-                <div class="page-header">
-                    <div class="page-title">
-                        💰 Billing & Subscription
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="page-title">
+                            💰 Billing & Subscription
+                        </div>
+                        <div class="page-subtitle">
+                            Manage your subscription and billing preferences
+                        </div>
                     </div>
-                    <div class="page-subtitle">
-                        Manage your subscription and billing preferences
-                    </div>
+                    <button onclick="loadBillingData()" class="btn btn-primary">
+                        🔄 Refresh Billing
+                    </button>
                 </div>
 
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">💳</div>
-                        <div class="stat-number">Starter</div>
+                        <div class="stat-number" id="currentPlan">Loading...</div>
                         <div class="stat-label">Current Plan</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">📅</div>
-                        <div class="stat-number">Dec 15</div>
+                        <div class="stat-number" id="nextBillingDate">Loading...</div>
                         <div class="stat-label">Next Billing</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">💰</div>
-                        <div class="stat-number">$29.99</div>
-                        <div class="stat-label">Monthly Cost</div>
+                        <div class="stat-number" id="currentRate">Loading...</div>
+                        <div class="stat-label">Rate per Order</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">📦</div>
-                        <div class="stat-number">42</div>
+                        <div class="stat-number" id="ordersThisMonth">Loading...</div>
                         <div class="stat-label">Orders This Month</div>
                     </div>
                 </div>
 
                 <div class="card">
+                    <h3>Billing Breakdown</h3>
+                    <p id="billingBreakdown" style="color: #6b7280;">Loading billing information...</p>
+                </div>
+
+                <div class="card">
                     <h3>Billing History</h3>
-                    <p>Recent billing transactions:</p>
-                    <ul>
-                        <li>November 15, 2024 - $29.99 (Starter Plan)</li>
-                        <li>October 15, 2024 - $29.99 (Starter Plan)</li>
-                        <li>September 15, 2024 - $29.99 (Starter Plan)</li>
-                    </ul>
+                    <div id="billingHistory">
+                        <p style="color: #6b7280;">Loading billing history...</p>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #f0f9ff; border-left: 4px solid #3b82f6;">
+                    <h3 style="margin-top: 0;">📋 Billing Tier Information</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #dbeafe;">
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #3b82f6;">Tier</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #3b82f6;">Order Range</th>
+                                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #3b82f6;">Rate per Order</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 12px;"><strong>Starter</strong></td>
+                                <td style="padding: 12px; text-align: center;">1 - 500 orders</td>
+                                <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">$0.12</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 12px;"><strong>Professional</strong></td>
+                                <td style="padding: 12px; text-align: center;">501 - 1500 orders</td>
+                                <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">$0.09</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px;"><strong>Enterprise</strong></td>
+                                <td style="padding: 12px; text-align: center;">1501+ orders</td>
+                                <td style="padding: 12px; text-align: center; color: #059669; font-weight: 600;">$0.06</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                        💡 <strong>Note:</strong> Billing is calculated automatically at the end of each month based on your total order count. The tier is determined by the total number of orders in the current month.
+                    </p>
                 </div>
             </div>
         </div>
@@ -889,6 +929,8 @@
                         loadCustomerData();
                     } else if (tabName === 'sizechart') {
                         loadSizeChart();
+                    } else if (tabName === 'billing') {
+                        loadBillingData();
                     }
                 }
                 
@@ -1758,6 +1800,158 @@
             }
         }
         
+        // Billing Management Functions
+        async function loadBillingData() {
+            try {
+                // Fetch orders data to calculate billing
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3001/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
+                
+                const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=250`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const orders = data.data;
+                    
+                    // Get current month orders
+                    const now = new Date();
+                    const currentMonth = now.getMonth();
+                    const currentYear = now.getFullYear();
+                    
+                    const currentMonthOrders = orders.filter(order => {
+                        const orderDate = new Date(order.createdAt);
+                        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+                    });
+                    
+                    // Calculate billing tier and rates
+                    const orderCount = currentMonthOrders.length;
+                    let plan, rate, totalCost;
+                    
+                    if (orderCount <= 500) {
+                        plan = 'Starter';
+                        rate = 0.12;
+                    } else if (orderCount <= 1500) {
+                        plan = 'Professional';
+                        rate = 0.09;
+                    } else {
+                        plan = 'Enterprise';
+                        rate = 0.06;
+                    }
+                    
+                    totalCost = orderCount * rate;
+                    
+                    // Update stat cards
+                    updateStatCard('currentPlan', plan);
+                    updateStatCard('currentRate', '$' + rate.toFixed(2));
+                    updateStatCard('ordersThisMonth', orderCount);
+                    
+                    // Calculate next billing date (end of current month)
+                    const nextBillingDate = new Date(currentYear, currentMonth + 1, 0);
+                    updateStatCard('nextBillingDate', nextBillingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                    
+                    // Update billing breakdown
+                    const breakdownEl = document.getElementById('billingBreakdown');
+                    if (breakdownEl) {
+                        breakdownEl.innerHTML = `
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Orders This Month</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">${orderCount}</div>
+                                </div>
+                                <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981;">
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Current Rate</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">$${rate.toFixed(2)}/order</div>
+                                </div>
+                                <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Estimated Monthly Cost</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">$${totalCost.toFixed(2)}</div>
+                                </div>
+                            </div>
+                            <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                                💡 <strong>Current Tier:</strong> ${plan} Plan - Based on ${orderCount} orders this month
+                            </p>
+                        `;
+                    }
+                    
+                    // Generate billing history (last 3 months)
+                    generateBillingHistory(orders);
+                    
+                } else {
+                    // No orders found
+                    updateStatCard('currentPlan', 'Starter');
+                    updateStatCard('currentRate', '$0.12');
+                    updateStatCard('ordersThisMonth', 0);
+                    updateStatCard('nextBillingDate', 'End of Month');
+                }
+                
+            } catch (error) {
+                console.error('Error loading billing data:', error);
+            }
+        }
+        
+        // Generate billing history for last 3 months
+        function generateBillingHistory(allOrders) {
+            const historyEl = document.getElementById('billingHistory');
+            if (!historyEl) return;
+            
+            const now = new Date();
+            let historyHTML = '<div style="margin-top: 1rem;">';
+            
+            // Generate history for last 3 months
+            for (let i = 0; i < 3; i++) {
+                const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                const month = monthDate.getMonth();
+                const year = monthDate.getFullYear();
+                
+                // Filter orders for this month
+                const monthOrders = allOrders.filter(order => {
+                    const orderDate = new Date(order.createdAt);
+                    return orderDate.getMonth() === month && orderDate.getFullYear() === year;
+                });
+                
+                // Calculate billing for this month
+                const orderCount = monthOrders.length;
+                let plan, rate, totalCost;
+                
+                if (orderCount <= 500) {
+                    plan = 'Starter';
+                    rate = 0.12;
+                } else if (orderCount <= 1500) {
+                    plan = 'Professional';
+                    rate = 0.09;
+                } else {
+                    plan = 'Enterprise';
+                    rate = 0.06;
+                }
+                
+                totalCost = orderCount * rate;
+                
+                historyHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #e5e7eb;">
+                        <div>
+                            <div style="font-weight: 600; color: #1f2937;">${monthName}</div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">
+                                ${orderCount} orders • ${plan} Plan • $${rate.toFixed(2)}/order
+                            </div>
+                        </div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: #059669;">
+                            $${totalCost.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            historyHTML += '</div>';
+            
+            if (historyHTML === '<div style="margin-top: 1rem;"></div>') {
+                historyHTML = '<p style="color: #6b7280;">No billing history available yet.</p>';
+            }
+            
+            historyEl.innerHTML = historyHTML;
+        }
+        
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 IdealFit Merchant Dashboard Loaded Successfully!');
@@ -1767,6 +1961,11 @@
             
             // Restore saved tab
             restoreSavedTab();
+            
+            // Load billing data if on billing tab
+            if (localStorage.getItem('idealfit_current_tab') === 'billing') {
+                loadBillingData();
+            }
             
             console.log('showTab function defined:', typeof showTab);
             console.log('dashboardState defined:', typeof dashboardState);
