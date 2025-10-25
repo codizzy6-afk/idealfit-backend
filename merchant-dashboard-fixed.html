@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdealFit - Merchant Dashboard (Fixed)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+            padding: 2rem 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .user-section {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .user-info-sidebar {
+            flex: 1;
+        }
+        
+        .user-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        
+        .user-email {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+        
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0 1rem;
+        }
+        
+        .tab {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            border-left: 3px solid transparent;
+            margin: 4px 0;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #60a5fa;
+            color: white;
+            transform: translateX(4px);
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+            border-left-color: #60a5fa;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-icon {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+        
+        .tab-label {
+            flex: 1;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="user-section">
+                <div class="user-avatar">👤</div>
+                <div class="user-info-sidebar">
+                    <div class="user-name">Merchant Store</div>
+                    <div class="user-email">store@example.com</div>
+                </div>
+            </div>
+
+            <div class="sidebar-nav">
+                <button class="tab active" onclick="showTab('analytics')">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">Analytics</span>
+                </button>
+                <button class="tab" onclick="showTab('customers')">
+                    <span class="tab-icon">👥</span>
+                    <span class="tab-label">Customer Database</span>
+                </button>
+                <button class="tab" onclick="showTab('sizechart')">
+                    <span class="tab-icon">📏</span>
+                    <span class="tab-label">Size Chart</span>
+                </button>
+                <button class="tab" onclick="showTab('billing')">
+                    <span class="tab-icon">💰</span>
+                    <span class="tab-label">Billing</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content active">
+                <div class="page-header">
+                    <div class="page-title">
+                        📊 Analytics Dashboard
+                    </div>
+                    <div class="page-subtitle">
+                        Real-time insights and performance metrics
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-number" id="totalOrders">42</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-number" id="totalRevenue">$4,200</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-number" id="totalCustomers">25</div>
+                        <div class="stat-label">Total Customers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📏</div>
+                        <div class="stat-number" id="avgOrderValue">$100</div>
+                        <div class="stat-label">Avg Order Value</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Size Distribution</h3>
+                    <p>Most popular sizes based on customer measurements:</p>
+                    <ul>
+                        <li>Size M: 15 orders (35.7%)</li>
+                        <li>Size L: 12 orders (28.6%)</li>
+                        <li>Size XL: 8 orders (19.0%)</li>
+                        <li>Size S: 5 orders (11.9%)</li>
+                        <li>Size XXL: 2 orders (4.8%)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Customer Database Tab -->
+            <div id="customers" class="tab-content">
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="page-title">
+                            👥 Customer Database
+                        </div>
+                        <div class="page-subtitle">
+                            Customer measurements and order history
+                        </div>
+                    </div>
+                    <button onclick="loadCustomerData()" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                        🔄 Refresh Data
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h3>Customer Measurements</h3>
+                    <p id="customerDataStatus" style="color: #6b7280; margin-bottom: 1rem;">Loading customer data...</p>
+                    <div id="customerDataContainer">
+                        <!-- Dynamic customer data will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Size Chart Tab -->
+            <div id="sizechart" class="tab-content">
+                <div class="page-header">
+                    <div class="page-title">
+                        📏 Size Chart Management
+                    </div>
+                    <div class="page-subtitle">
+                        Configure size measurements for your products
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Size Chart</h3>
+                    <p>Current size chart configuration:</p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Size</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Bust (inches)</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Waist (inches)</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Hip (inches)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">XS</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">30</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">25</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">35</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">S</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">32</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">27</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">37</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">M</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">34</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">29</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">39</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">L</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">36</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">31</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">41</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">XL</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">38</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">33</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">43</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">XXL</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">40</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">35</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">45</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Billing Tab -->
+            <div id="billing" class="tab-content">
+                <div class="page-header">
+                    <div class="page-title">
+                        💰 Billing & Subscription
+                    </div>
+                    <div class="page-subtitle">
+                        Manage your subscription and billing preferences
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💳</div>
+                        <div class="stat-number">Starter</div>
+                        <div class="stat-label">Current Plan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-number">Dec 15</div>
+                        <div class="stat-label">Next Billing</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-number">$29.99</div>
+                        <div class="stat-label">Monthly Cost</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-number">42</div>
+                        <div class="stat-label">Orders This Month</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Billing History</h3>
+                    <p>Recent billing transactions:</p>
+                    <ul>
+                        <li>November 15, 2024 - $29.99 (Starter Plan)</li>
+                        <li>October 15, 2024 - $29.99 (Starter Plan)</li>
+                        <li>September 15, 2024 - $29.99 (Starter Plan)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let dashboardState;
+        
+        // Tab navigation function (global scope)
+        function showTab(tabName) {
+            try {
+                console.log('showTab called with:', tabName);
+                
+                // Hide all tab contents
+                const contents = document.querySelectorAll('.tab-content');
+                contents.forEach(content => content.style.display = 'none');
+                
+                // Remove active class from all nav items
+                const navItems = document.querySelectorAll('.tab');
+                navItems.forEach(item => item.classList.remove('active'));
+                
+                // Add active class to clicked item
+                const clickedTab = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+                if (clickedTab) {
+                    clickedTab.classList.add('active');
+                }
+                
+                // Show selected content
+                const content = document.getElementById(tabName);
+                if (content) {
+                    content.style.display = 'block';
+                    if (dashboardState) {
+                        dashboardState.currentTab = tabName;
+                    }
+                    
+                    // Save current tab to localStorage for persistence
+                    localStorage.setItem('idealfit_current_tab', tabName);
+                    
+                    // Load data based on tab
+                    if (tabName === 'customers') {
+                        loadCustomerData();
+                    }
+                }
+                
+                console.log('Tab switched to:', tabName);
+            } catch (error) {
+                console.error('Error switching tabs:', error);
+            }
+        }
+        
+        // Initialize dashboard state
+        dashboardState = { currentTab: 'analytics' };
+        
+        // Load customer data from API
+        async function loadCustomerData() {
+            try {
+                const statusEl = document.getElementById('customerDataStatus');
+                const containerEl = document.getElementById('customerDataContainer');
+                
+                if (statusEl) statusEl.textContent = '🔄 Loading customer data from Shopify...';
+                
+                // Fetch data from API
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3001/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
+                
+                const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=50`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const orders = data.data;
+                    
+                    // Build table HTML
+                    let tableHTML = `
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                            <thead>
+                                <tr style="background: #f8fafc;">
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Date</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Customer</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Email</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Bust</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Waist</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Hip</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Size</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Order</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    orders.forEach(order => {
+                        const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+                        const customer = order.customer || {};
+                        const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Unknown Customer';
+                        const email = customer.email || 'N/A';
+                        
+                        const measurements = order.measurements || {};
+                        const bust = measurements.bust ? `${measurements.bust}"` : 'N/A';
+                        const waist = measurements.waist ? `${measurements.waist}"` : 'N/A';
+                        const hip = measurements.hip ? `${measurements.hip}"` : 'N/A';
+                        const recommendedSize = measurements.recommendedSize || 'N/A';
+                        
+                        tableHTML += `
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${orderDate}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${customerName}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${email}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${bust}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${waist}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${hip}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${recommendedSize}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${order.orderNumber || order.orderName}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += `
+                            </tbody>
+                        </table>
+                        <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                            Showing ${orders.length} orders with customer measurements
+                        </p>
+                    `;
+                    
+                    if (containerEl) {
+                        containerEl.innerHTML = tableHTML;
+                    }
+                    if (statusEl) {
+                        statusEl.textContent = `✅ Loaded ${orders.length} orders from Shopify`;
+                        statusEl.style.color = '#10b981';
+                    }
+                    
+                } else {
+                    if (statusEl) {
+                        statusEl.textContent = '⚠️ No customer data found';
+                        statusEl.style.color = '#f59e0b';
+                    }
+                    if (containerEl) {
+                        containerEl.innerHTML = '<p style="color: #6b7280;">No orders found with customer measurements.</p>';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error loading customer data:', error);
+                const statusEl = document.getElementById('customerDataStatus');
+                if (statusEl) {
+                    statusEl.textContent = '❌ Error loading customer data';
+                    statusEl.style.color = '#ef4444';
+                }
+            }
+        }
+        
+        // Restore saved tab on page load
+        function restoreSavedTab() {
+            try {
+                const savedTab = localStorage.getItem('idealfit_current_tab');
+                if (savedTab) {
+                    showTab(savedTab);
+                    
+                    // Load data for the saved tab
+                    if (savedTab === 'customers') {
+                        loadCustomerData();
+                    }
+                }
+            } catch (error) {
+                console.error('Error restoring saved tab:', error);
+            }
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 IdealFit Merchant Dashboard Loaded Successfully!');
+            
+            // Restore saved tab
+            restoreSavedTab();
+            
+            console.log('showTab function defined:', typeof showTab);
+            console.log('dashboardState defined:', typeof dashboardState);
+        });
+    </script>
+</body>
+</html>
