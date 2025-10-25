@@ -886,10 +886,14 @@
                     const country = address.country || 'N/A';
                     
                     const measurements = order.measurements || {};
-                    const bust = measurements.bust ? `${measurements.bust}"` : 'N/A';
-                    const waist = measurements.waist ? `${measurements.waist}"` : 'N/A';
-                    const hip = measurements.hip ? `${measurements.hip}"` : 'N/A';
+                    // Remove quotes from measurements - store as numbers with units
+                    const bust = measurements.bust ? `${measurements.bust} inches` : 'N/A';
+                    const waist = measurements.waist ? `${measurements.waist} inches` : 'N/A';
+                    const hip = measurements.hip ? `${measurements.hip} inches` : 'N/A';
                     const recommendedSize = measurements.recommendedSize || 'N/A';
+                    
+                    // Get order number - check multiple fields
+                    const orderNumber = order.orderNumber || order.orderName || order.name || `#${order.id}`;
                     
                     const row = [
                         orderDate,
@@ -904,10 +908,11 @@
                         waist,
                         hip,
                         recommendedSize,
-                        order.orderNumber || order.orderName
+                        orderNumber
                     ];
                     
-                    csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+                    // Escape double quotes in cell values
+                    csv += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',') + '\n';
                 });
                 
                 // Create download link
