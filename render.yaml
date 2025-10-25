@@ -3,9 +3,8 @@ services:
     name: ideal-fit-app
     env: node
     plan: free
-    rootDir: ideal-fit
-    buildCommand: npm install && mkdir -p data && npm run setup && npm run build
-    startCommand: npm run start
+    buildCommand: cd ideal-fit && npm install && mkdir -p data && npm run setup && npm run build
+    startCommand: cd ideal-fit && npm run start
     envVars:
       - key: NODE_ENV
         value: production
