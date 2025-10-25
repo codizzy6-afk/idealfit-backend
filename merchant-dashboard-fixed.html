@@ -845,6 +845,18 @@
             try {
                 console.log('showTab called with:', tabName);
                 
+                // Check for unsaved changes in size chart
+                if (hasUnsavedChanges) {
+                    const shouldContinue = confirm('⚠️ You have unsaved changes in the size chart. If you leave now, your changes will be lost.\n\nWould you like to stay on this page and save your changes?');
+                    if (!shouldContinue) {
+                        // User chose to leave - continue with tab switch
+                        hasUnsavedChanges = false;
+                    } else {
+                        // User chose to stay - don't switch tabs
+                        return;
+                    }
+                }
+                
                 // Hide all tab contents
                 const contents = document.querySelectorAll('.tab-content');
                 contents.forEach(content => content.style.display = 'none');
@@ -1546,6 +1558,8 @@
         
         // Size Chart Management Functions
         let sizeChartData = [];
+        let sizeChartOriginalData = []; // Store original data to detect changes
+        let hasUnsavedChanges = false; // Track if there are unsaved changes
         
         // Load size chart from API
         async function loadSizeChart() {
@@ -1562,8 +1576,10 @@
                 
                 if (data.success && data.data && data.data.length > 0) {
                     const chart = data.data[0].sizeChart;
-                    sizeChartData = chart;
+                    sizeChartData = JSON.parse(JSON.stringify(chart)); // Deep copy
+                    sizeChartOriginalData = JSON.parse(JSON.stringify(chart)); // Store original
                     renderSizeChart();
+                    hasUnsavedChanges = false; // Reset unsaved changes flag
                     
                     if (statusEl) statusEl.textContent = '✅ Size chart loaded';
                 } else {
@@ -1576,7 +1592,9 @@
                         { size: 'XL', bust: 38, waist: 33, hip: 43 },
                         { size: 'XXL', bust: 40, waist: 35, hip: 45 }
                     ];
+                    sizeChartOriginalData = JSON.parse(JSON.stringify(sizeChartData)); // Store original
                     renderSizeChart();
+                    hasUnsavedChanges = false; // Reset unsaved changes flag
                     
                     if (statusEl) statusEl.textContent = '📝 Default size chart loaded';
                 }
@@ -1598,16 +1616,16 @@
                 html += `
                     <tr>
                         <td style="padding: 8px;">
-                            <input type="text" class="editable-input" data-index="${index}" data-field="size" value="${row.size}" placeholder="Size">
+                            <input type="text" class="editable-input" data-index="${index}" data-field="size" value="${row.size}" placeholder="Size" onchange="markAsChanged()" onblur="markAsChanged()">
                         </td>
                         <td style="padding: 8px;">
-                            <input type="number" class="editable-input" data-index="${index}" data-field="bust" value="${row.bust}" placeholder="Bust" step="0.5" min="0">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="bust" value="${row.bust}" placeholder="Bust" step="0.5" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
                         </td>
                         <td style="padding: 8px;">
-                            <input type="number" class="editable-input" data-index="${index}" data-field="waist" value="${row.waist}" placeholder="Waist" step="0.5" min="0">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="waist" value="${row.waist}" placeholder="Waist" step="0.5" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
                         </td>
                         <td style="padding: 8px;">
-                            <input type="number" class="editable-input" data-index="${index}" data-field="hip" value="${row.hip}" placeholder="Hip" step="0.5" min="0">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="hip" value="${row.hip}" placeholder="Hip" step="0.5" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
                         </td>
                         <td style="padding: 8px; text-align: center;">
                             <button class="delete-btn" onclick="deleteSizeRow(${index})">🗑️ Delete</button>
@@ -1619,6 +1637,13 @@
             tbody.innerHTML = html;
         }
         
+        // Mark as changed when user edits
+        function markAsChanged() {
+            hasUnsavedChanges = true;
+            const statusEl = document.getElementById('sizeChartStatus');
+            if (statusEl) statusEl.textContent = '⚠️ You have unsaved changes';
+        }
+        
         // Add new size row
         function addNewSizeRow() {
             sizeChartData.push({
@@ -1628,9 +1653,10 @@
                 hip: 0
             });
             renderSizeChart();
+            hasUnsavedChanges = true;
             
             const statusEl = document.getElementById('sizeChartStatus');
-            if (statusEl) statusEl.textContent = '➕ New row added';
+            if (statusEl) statusEl.textContent = '➕ New row added - you have unsaved changes';
         }
         
         // Delete size row
@@ -1643,9 +1669,10 @@
             if (confirm('Are you sure you want to delete this size?')) {
                 sizeChartData.splice(index, 1);
                 renderSizeChart();
+                hasUnsavedChanges = true;
                 
                 const statusEl = document.getElementById('sizeChartStatus');
-                if (statusEl) statusEl.textContent = '🗑️ Size deleted';
+                if (statusEl) statusEl.textContent = '🗑️ Size deleted - you have unsaved changes';
             }
         }
         
@@ -1699,6 +1726,10 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    // Update original data and reset unsaved changes flag
+                    sizeChartOriginalData = JSON.parse(JSON.stringify(sizeChartData));
+                    hasUnsavedChanges = false;
+                    
                     if (statusEl) statusEl.textContent = '✅ Size chart saved successfully!';
                     alert('✅ Size chart saved successfully!');
                 } else {
