@@ -763,7 +763,21 @@
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3>Editable Size Chart</h3>
-                        <span id="sizeChartStatus" style="color: #6b7280; font-size: 0.875rem;">Ready to edit</span>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <!-- Unit Toggle -->
+                            <div style="display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; padding: 0.5rem; border-radius: 8px;">
+                                <label style="font-size: 0.875rem; font-weight: 600; color: #374151;">Unit:</label>
+                                <label style="display: flex; align-items: center; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                                    <input type="radio" name="unitToggle" value="inches" checked onchange="toggleUnit('inches')" style="margin-right: 0.25rem;">
+                                    Inches
+                                </label>
+                                <label style="display: flex; align-items: center; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                                    <input type="radio" name="unitToggle" value="cm" onchange="toggleUnit('cm')" style="margin-right: 0.25rem;">
+                                    CM
+                                </label>
+                            </div>
+                            <span id="sizeChartStatus" style="color: #6b7280; font-size: 0.875rem;">Ready to edit</span>
+                        </div>
                     </div>
                     
                     <div id="sizeChartContainer" style="overflow-x: auto;">
@@ -771,9 +785,9 @@
                             <thead>
                                 <tr style="background: #f8fafc;">
                                     <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Size</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Bust (inches)</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Waist (inches)</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Hip (inches)</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;" id="bustHeader">Bust (inches)</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;" id="waistHeader">Waist (inches)</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;" id="hipHeader">Hip (inches)</th>
                                     <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #374151;">Actions</th>
                                 </tr>
                             </thead>
@@ -784,7 +798,7 @@
                     </div>
                     
                     <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
-                        💡 Tip: Click on any field to edit it. Changes will be saved when you click "Save Chart".
+                        💡 Tip: Toggle between Inches and CM to view measurements in your preferred unit. All values are automatically converted.
                     </p>
                 </div>
             </div>
@@ -1622,6 +1636,62 @@
         let sizeChartData = [];
         let sizeChartOriginalData = []; // Store original data to detect changes
         let hasUnsavedChanges = false; // Track if there are unsaved changes
+        let currentUnit = 'inches'; // Current unit for display (inches or cm)
+        const BASE_UNIT = 'inches'; // Always store in inches in the database
+        
+        // Unit conversion functions
+        function inchesToCm(inches) {
+            return parseFloat((inches * 2.54).toFixed(2));
+        }
+        
+        function cmToInches(cm) {
+            return parseFloat((cm / 2.54).toFixed(2));
+        }
+        
+        // Toggle between inches and cm
+        function toggleUnit(unit) {
+            currentUnit = unit;
+            
+            // Update headers
+            const bustHeader = document.getElementById('bustHeader');
+            const waistHeader = document.getElementById('waistHeader');
+            const hipHeader = document.getElementById('hipHeader');
+            
+            if (unit === 'inches') {
+                if (bustHeader) bustHeader.textContent = 'Bust (inches)';
+                if (waistHeader) waistHeader.textContent = 'Waist (inches)';
+                if (hipHeader) hipHeader.textContent = 'Hip (inches)';
+            } else {
+                if (bustHeader) bustHeader.textContent = 'Bust (cm)';
+                if (waistHeader) waistHeader.textContent = 'Waist (cm)';
+                if (hipHeader) hipHeader.textContent = 'Hip (cm)';
+            }
+            
+            // Re-render the size chart with converted values
+            renderSizeChart();
+        }
+        
+        // Get display value based on current unit
+        function getDisplayValue(inchesValue) {
+            if (currentUnit === 'inches') {
+                return inchesValue;
+            } else {
+                return inchesToCm(inchesValue);
+            }
+        }
+        
+        // Parse input value based on current unit
+        function parseInputValue(inputValue) {
+            const numValue = parseFloat(inputValue);
+            if (isNaN(numValue)) return 0;
+            
+            if (currentUnit === 'inches') {
+                return numValue;
+            } else {
+                // Convert cm back to inches for storage
+                return cmToInches(numValue);
+            }
+        }
         
         // Load size chart from API
         async function loadSizeChart() {
@@ -1675,19 +1745,27 @@
             let html = '';
             
             sizeChartData.forEach((row, index) => {
+                // Get display values based on current unit
+                const bustDisplay = getDisplayValue(row.bust);
+                const waistDisplay = getDisplayValue(row.waist);
+                const hipDisplay = getDisplayValue(row.hip);
+                
+                // Determine step based on unit (more precision for cm)
+                const step = currentUnit === 'inches' ? '0.5' : '1';
+                
                 html += `
                     <tr>
                         <td style="padding: 8px;">
                             <input type="text" class="editable-input" data-index="${index}" data-field="size" value="${row.size}" placeholder="Size" onchange="markAsChanged()" onblur="markAsChanged()">
                         </td>
                         <td style="padding: 8px;">
-                            <input type="number" class="editable-input" data-index="${index}" data-field="bust" value="${row.bust}" placeholder="Bust" step="0.5" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="bust" value="${bustDisplay}" placeholder="Bust" step="${step}" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
                         </td>
                         <td style="padding: 8px;">
-                            <input type="number" class="editable-input" data-index="${index}" data-field="waist" value="${row.waist}" placeholder="Waist" step="0.5" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="waist" value="${waistDisplay}" placeholder="Waist" step="${step}" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
                         </td>
                         <td style="padding: 8px;">
-                            <input type="number" class="editable-input" data-index="${index}" data-field="hip" value="${row.hip}" placeholder="Hip" step="0.5" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
+                            <input type="number" class="editable-input" data-index="${index}" data-field="hip" value="${hipDisplay}" placeholder="Hip" step="${step}" min="0" onchange="markAsChanged()" onblur="markAsChanged()">
                         </td>
                         <td style="padding: 8px; text-align: center;">
                             <button class="delete-btn" onclick="deleteSizeRow(${index})">🗑️ Delete</button>
@@ -1744,15 +1822,18 @@
                 const statusEl = document.getElementById('sizeChartStatus');
                 if (statusEl) statusEl.textContent = '💾 Saving...';
                 
-                // Collect all input values
+                // Collect all input values and convert based on current unit
                 const inputs = document.querySelectorAll('#sizeChartBody .editable-input');
                 inputs.forEach(input => {
                     const index = parseInt(input.dataset.index);
                     const field = input.dataset.field;
-                    const value = field === 'size' ? input.value.trim() : parseFloat(input.value);
                     
-                    if (sizeChartData[index]) {
-                        sizeChartData[index][field] = value;
+                    if (field === 'size') {
+                        sizeChartData[index][field] = input.value.trim();
+                    } else {
+                        // Parse measurement values based on current unit
+                        const inputValue = parseFloat(input.value);
+                        sizeChartData[index][field] = parseInputValue(inputValue);
                     }
                 });
                 
