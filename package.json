@@ -11,7 +11,7 @@
     "env": "shopify app env",
     "start": "pwd && ls -la && if [ -d build ]; then ls -la build/; else echo 'Build directory does not exist'; fi && node node_modules/@react-router/serve/dist/cli.js build/server/index.js",
     "docker-start": "npm run setup && npm run start",
-    "postinstall": "prisma generate && npm run setup && npm run build",
+    "postinstall": "export DATABASE_URL=${DATABASE_URL:-file:./data/prod.sqlite} && prisma generate && npm run setup && npm run build",
     "setup": "prisma migrate deploy",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "shopify": "shopify",
