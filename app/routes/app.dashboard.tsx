@@ -194,19 +194,269 @@ function AnalyticsTab({ data, period, setPeriod }: { data: any, period: string, 
 }
 
 function CustomersTab() {
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    dateFrom: '',
+    dateTo: '',
+    month: '',
+    year: ''
+  });
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/shopify-customers?limit=250');
+      const data = await response.json();
+      
+      if (data.success && data.customers) {
+        setCustomers(data.customers);
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCustomers = customers.filter((customer: any) => {
+    // Search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const name = `${customer.firstName || ''} ${customer.lastName || ''}`.toLowerCase();
+      const email = (customer.email || '').toLowerCase();
+      const phone = (customer.phone || '').toLowerCase();
+      
+      if (!name.includes(searchLower) && !email.includes(searchLower) && !phone.includes(searchLower)) {
+        return false;
+      }
+    }
+
+    // Date range filter
+    if (filters.dateFrom || filters.dateTo) {
+      const createdAt = new Date(customer.createdAt);
+      if (filters.dateFrom && createdAt < new Date(filters.dateFrom)) return false;
+      if (filters.dateTo && createdAt > new Date(filters.dateTo)) return false;
+    }
+
+    // Month filter
+    if (filters.month) {
+      const month = new Date(customer.createdAt).getMonth() + 1;
+      if (month.toString() !== filters.month) return false;
+    }
+
+    // Year filter
+    if (filters.year) {
+      const year = new Date(customer.createdAt).getFullYear().toString();
+      if (year !== filters.year) return false;
+    }
+
+    return true;
+  });
+
+  const exportToExcel = () => {
+    const csv = [
+      ['Name', 'Email', 'Mobile', 'Address', 'City', 'State', 'Country', 'Bust', 'Waist', 'Hip', 'Size', 'Order ID'],
+      ...filteredCustomers.map((customer: any) => {
+        const address = customer.defaultAddress || {};
+        // In real implementation, you'd extract measurements from order metafields
+        return [
+          `${customer.firstName} ${customer.lastName}`,
+          customer.email || '',
+          customer.phone || '',
+          address.address1 || '',
+          address.city || '',
+          address.province || '',
+          address.country || '',
+          '', // bust
+          '', // waist
+          '', // hip
+          '', // size
+          customer.orders?.[0]?.name || ''
+        ];
+      })
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `customers-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <s-page heading="Customer Database">
-        <s-section heading="Customer Management">
-          <s-paragraph>
-            Customer database and management features coming soon. This will display:
-          </s-paragraph>
-          <s-unordered-list>
-            <s-list-item>All customers with measurements</s-list-item>
-            <s-list-item>Search and filter functionality</s-list-item>
-            <s-list-item>Export to Excel</s-list-item>
-            <s-list-item>Date range filtering</s-list-item>
-          </s-unordered-list>
+        {/* Filters and Search */}
+        <s-section heading="Filters & Search">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Search</label>
+              <input
+                type="text"
+                placeholder="Search by name, email, phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px'
+                }}
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Date From</label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px'
+                }}
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Date To</label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px'
+                }}
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Month</label>
+              <select
+                value={filters.month}
+                onChange={(e) => setFilters({ ...filters, month: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px'
+                }}
+              >
+                <option value="">All Months</option>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleString('default', { month: 'long' })}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Year</label>
+              <select
+                value={filters.year}
+                onChange={(e) => setFilters({ ...filters, year: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px'
+                }}
+              >
+                <option value="">All Years</option>
+                {Array.from({ length: 10 }, (_, i) => {
+                  const year = new Date().getFullYear() - i;
+                  return <option key={year} value={year}>{year}</option>;
+                })}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setFilters({ dateFrom: '', dateTo: '', month: '', year: '' });
+              }}
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                background: 'white',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Clear Filters
+            </button>
+            
+            <button
+              onClick={exportToExcel}
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: 'none',
+                borderRadius: '8px',
+                background: '#10b981',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              📥 Export to Excel
+            </button>
+          </div>
+        </s-section>
+
+        {/* Customer Table */}
+        <s-section heading={`Customer Database (${filteredCustomers.length} customers)`}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading customers...</div>
+          ) : filteredCustomers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>No customers found</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f9fafb' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Name</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Email</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Mobile</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Address</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>State</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Country</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCustomers.map((customer: any, index: number) => {
+                    const address = customer.defaultAddress || {};
+                    return (
+                      <tr key={customer.id || index} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: '1rem', fontWeight: 600 }}>{customer.firstName} {customer.lastName}</td>
+                        <td style={{ padding: '1rem' }}>{customer.email || '-'}</td>
+                        <td style={{ padding: '1rem' }}>{customer.phone || '-'}</td>
+                        <td style={{ padding: '1rem' }}>{address.address1 || '-'}</td>
+                        <td style={{ padding: '1rem' }}>{address.province || '-'}</td>
+                        <td style={{ padding: '1rem' }}>{address.country || '-'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </s-section>
       </s-page>
     </div>
