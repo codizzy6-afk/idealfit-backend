@@ -9,7 +9,7 @@
     "deploy": "shopify app deploy",
     "config:use": "shopify app config use",
     "env": "shopify app env",
-    "start": "pwd && ls -la && if [ -d build ]; then ls -la build/; else echo 'Build directory does not exist'; fi && node node_modules/@react-router/serve/dist/cli.js build/server/index.js",
+    "start": "node build/server/index.js",
     "docker-start": "npm run setup && npm run start",
     "postinstall": "export DATABASE_URL=${DATABASE_URL:-file:./data/prod.sqlite} && prisma generate && npm run setup && npm run build",
     "setup": "prisma migrate deploy",
