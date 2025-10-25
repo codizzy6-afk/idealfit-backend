@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     # Trigger deployment
-    buildCommand: pwd && ls -la && npm install && mkdir -p data && npm run setup && npm run build && ls -la
+    buildCommand: echo "=== BUILD COMMAND START ===" && pwd && ls -la && npm install && mkdir -p data && npm run setup && npm run build && echo "=== BUILD COMPLETE ===" && ls -la && find . -name "build" -type d
     startCommand: pwd && ls -la && ls -la build/server/ && node node_modules/@react-router/serve/dist/cli.js build/server/index.js
     envVars:
       - key: NODE_ENV
