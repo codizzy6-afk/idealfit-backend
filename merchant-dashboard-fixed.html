@@ -215,6 +215,71 @@
             letter-spacing: 1px;
             font-weight: 500;
         }
+        
+        .customer-table-wrapper {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        
+        .customer-table {
+            width: 100%;
+            min-width: 1200px;
+            border-collapse: collapse;
+        }
+        
+        .customer-table thead th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .customer-table tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #6b7280;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        
+        .customer-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .size-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .size-badge.M {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .size-badge.L {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .size-badge.XL {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .size-badge.XXL {
+            background: #fecaca;
+            color: #991b1b;
+        }
     </style>
 </head>
 <body>
@@ -503,22 +568,28 @@
                 if (data.success && data.data && data.data.length > 0) {
                     const orders = data.data;
                     
-                    // Build table HTML
+                    // Build table HTML with wrapper for horizontal scroll
                     let tableHTML = `
-                        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-                            <thead>
-                                <tr style="background: #f8fafc;">
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Date</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Customer</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Email</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Bust</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Waist</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Hip</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Size</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0;">Order</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <div class="customer-table-wrapper">
+                            <table class="customer-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Customer Name</th>
+                                        <th>Email</th>
+                                        <th>Mobile</th>
+                                        <th>Address</th>
+                                        <th>City</th>
+                                        <th>State</th>
+                                        <th>Country</th>
+                                        <th>Bust</th>
+                                        <th>Waist</th>
+                                        <th>Hip</th>
+                                        <th>Size</th>
+                                        <th>Order ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                     `;
                     
                     orders.forEach(order => {
@@ -526,6 +597,14 @@
                         const customer = order.customer || {};
                         const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Unknown Customer';
                         const email = customer.email || 'N/A';
+                        const phone = customer.phone || 'N/A';
+                        
+                        // Get address details
+                        const address = customer.address || {};
+                        const address1 = address.address1 || 'N/A';
+                        const city = address.city || 'N/A';
+                        const province = address.province || 'N/A';
+                        const country = address.country || 'N/A';
                         
                         const measurements = order.measurements || {};
                         const bust = measurements.bust ? `${measurements.bust}"` : 'N/A';
@@ -535,21 +614,27 @@
                         
                         tableHTML += `
                             <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${orderDate}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${customerName}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${email}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${bust}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${waist}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${hip}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${recommendedSize}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6;">${order.orderNumber || order.orderName}</td>
+                                <td>${orderDate}</td>
+                                <td><strong>${customerName}</strong></td>
+                                <td>${email}</td>
+                                <td>${phone}</td>
+                                <td>${address1}</td>
+                                <td>${city}</td>
+                                <td>${province}</td>
+                                <td>${country}</td>
+                                <td>${bust}</td>
+                                <td>${waist}</td>
+                                <td>${hip}</td>
+                                <td><span class="size-badge ${recommendedSize}">${recommendedSize}</span></td>
+                                <td>${order.orderNumber || order.orderName}</td>
                             </tr>
                         `;
                     });
                     
                     tableHTML += `
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                         <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
                             Showing ${orders.length} orders with customer measurements
                         </p>
