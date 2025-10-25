@@ -811,19 +811,32 @@
                 if (data.success && data.data) {
                     const analytics = data.data;
                     
-                    // Update stat cards
-                    updateStatCard('totalOrders', analytics.totalOrders || 0);
-                    updateStatCard('totalRevenue', formatCurrency(analytics.totalRevenue || 0));
-                    updateStatCard('totalCustomers', analytics.totalCustomers || 0);
-                    updateStatCard('avgOrderValue', formatCurrency(analytics.avgOrderValue || 0));
+                    // Extract summary data - handle nested structure
+                    const summary = analytics.summary || analytics;
                     
-                    // Update size distribution
-                    if (analytics.sizeDistribution && Array.isArray(analytics.sizeDistribution)) {
-                        updateSizeDistribution(analytics.sizeDistribution);
+                    // Update stat cards with correct field names
+                    updateStatCard('totalOrders', summary.totalOrders || 0);
+                    updateStatCard('totalRevenue', formatCurrency(summary.totalRevenue || 0));
+                    updateStatCard('totalCustomers', summary.uniqueCustomers || summary.totalCustomers || 0);
+                    updateStatCard('avgOrderValue', formatCurrency(summary.averageOrderValue || summary.avgOrderValue || 0));
+                    
+                    // Update size distribution - handle both array and object format
+                    const sizeData = analytics.sizeDistribution || [];
+                    
+                    // Transform size data if it has a different structure
+                    const transformedSizeData = sizeData.map(item => ({
+                        size: item.size || item.label || 'Unknown',
+                        count: item.recommendations || item.count || item.quantity || 0
+                    }));
+                    
+                    if (transformedSizeData.length > 0) {
+                        updateSizeDistribution(transformedSizeData);
+                        generateSizeInsights(transformedSizeData);
+                    } else {
+                        // Show no data message
+                        document.getElementById('sizeDistributionChart').innerHTML = '<p style="color: #6b7280; text-align: center; padding: 2rem;">No size distribution data available yet. Size recommendations will appear here once customers start using the app.</p>';
+                        document.getElementById('sizeInsightsContainer').innerHTML = '<p style="color: #6b7280; text-align: center;">Waiting for size recommendation data...</p>';
                     }
-                    
-                    // Update insights
-                    generateSizeInsights(analytics.sizeDistribution || []);
                     
                     if (statusEl) statusEl.textContent = '✅ Last updated: ' + new Date().toLocaleTimeString();
                 } else {
@@ -865,17 +878,19 @@
             // Sort by count descending
             const sorted = [...sizeData].sort((a, b) => b.count - a.count);
             const maxCount = sorted.length > 0 ? sorted[0].count : 1;
+            const totalOrders = getTotalOrders(sizeData);
             
             let html = '<div style="margin-bottom: 1rem;">';
             sorted.forEach(item => {
                 const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
                 const color = getSizeColor(item.size);
+                const orderPercent = totalOrders > 0 ? ((item.count / totalOrders) * 100).toFixed(1) : 0;
                 
                 html += `
                     <div class="size-bar">
                         <div class="size-bar-fill" style="background: ${color}; width: ${percentage}%;">
                             <span class="size-bar-label">Size ${item.size}</span>
-                            <span class="size-bar-count">${item.count} orders (${((item.count / getTotalOrders(sizeData)) * 100).toFixed(1)}%)</span>
+                            <span class="size-bar-count">${item.count} orders (${orderPercent}%)</span>
                         </div>
                     </div>
                 `;
