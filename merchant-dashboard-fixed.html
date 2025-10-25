@@ -280,6 +280,98 @@
             background: #fecaca;
             color: #991b1b;
         }
+        
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .filter-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
     </style>
 </head>
 <body>
@@ -374,9 +466,53 @@
                             Customer measurements and order history
                         </div>
                     </div>
-                    <button onclick="loadCustomerData()" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                    <button onclick="loadCustomerData()" class="btn btn-primary">
                         🔄 Refresh Data
                     </button>
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <h3 style="margin-bottom: 1rem; color: #374151;">🔍 Filter Options</h3>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="filterDateFrom">Date From</label>
+                            <input type="date" id="filterDateFrom">
+                        </div>
+                        <div class="filter-group">
+                            <label for="filterDateTo">Date To</label>
+                            <input type="date" id="filterDateTo">
+                        </div>
+                        <div class="filter-group">
+                            <label for="filterMonth">Month</label>
+                            <select id="filterMonth">
+                                <option value="">All Months</option>
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03">March</option>
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filterYear">Year</label>
+                            <select id="filterYear">
+                                <option value="">All Years</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button onclick="applyFilters()" class="btn btn-primary">✅ Apply Filters</button>
+                        <button onclick="clearFilters()" class="btn btn-secondary">🔄 Clear Filters</button>
+                        <button onclick="exportToExcel()" class="btn btn-success">📥 Export to Excel</button>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -549,6 +685,250 @@
         // Initialize dashboard state
         dashboardState = { currentTab: 'analytics' };
         
+        // Store all customer data for filtering
+        let allCustomerData = [];
+        
+        // Populate year dropdown
+        function populateYearDropdown() {
+            const yearSelect = document.getElementById('filterYear');
+            if (!yearSelect) return;
+            
+            const currentYear = new Date().getFullYear();
+            for (let year = 2020; year <= currentYear + 1; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+        }
+        
+        // Apply filters to customer data
+        function applyFilters() {
+            try {
+                const dateFrom = document.getElementById('filterDateFrom').value;
+                const dateTo = document.getElementById('filterDateTo').value;
+                const month = document.getElementById('filterMonth').value;
+                const year = document.getElementById('filterYear').value;
+                
+                if (allCustomerData.length === 0) {
+                    alert('⚠️ No data to filter. Please refresh the data first.');
+                    return;
+                }
+                
+                let filteredData = [...allCustomerData];
+                
+                // Filter by date range
+                if (dateFrom) {
+                    filteredData = filteredData.filter(order => {
+                        const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+                        return orderDate >= dateFrom;
+                    });
+                }
+                
+                if (dateTo) {
+                    filteredData = filteredData.filter(order => {
+                        const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+                        return orderDate <= dateTo;
+                    });
+                }
+                
+                // Filter by month and year
+                if (month || year) {
+                    filteredData = filteredData.filter(order => {
+                        const orderDate = new Date(order.createdAt);
+                        const orderMonth = String(orderDate.getMonth() + 1).padStart(2, '0');
+                        const orderYear = orderDate.getFullYear();
+                        
+                        let matchesMonth = !month || orderMonth === month;
+                        let matchesYear = !year || orderYear.toString() === year;
+                        
+                        return matchesMonth && matchesYear;
+                    });
+                }
+                
+                // Display filtered data
+                displayCustomerData(filteredData);
+                
+                alert(`✅ Filter applied! Showing ${filteredData.length} of ${allCustomerData.length} orders.`);
+                
+            } catch (error) {
+                console.error('Error applying filters:', error);
+                alert('❌ Error applying filters. Please try again.');
+            }
+        }
+        
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+            document.getElementById('filterMonth').value = '';
+            document.getElementById('filterYear').value = '';
+            
+            // Display all data
+            displayCustomerData(allCustomerData);
+            
+            alert('🔄 Filters cleared!');
+        }
+        
+        // Display customer data in table
+        function displayCustomerData(orders) {
+            const containerEl = document.getElementById('customerDataContainer');
+            if (!containerEl) return;
+            
+            if (orders.length === 0) {
+                containerEl.innerHTML = '<p style="color: #6b7280;">No orders match the filter criteria.</p>';
+                return;
+            }
+            
+            let tableHTML = `
+                <div class="customer-table-wrapper">
+                    <table class="customer-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer Name</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
+                                <th>Address</th>
+                                <th>City</th>
+                                <th>State</th>
+                                <th>Country</th>
+                                <th>Bust</th>
+                                <th>Waist</th>
+                                <th>Hip</th>
+                                <th>Size</th>
+                                <th>Order ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            orders.forEach(order => {
+                const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+                const customer = order.customer || {};
+                const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Unknown Customer';
+                const email = customer.email || 'N/A';
+                const phone = customer.phone || 'N/A';
+                
+                // Get address details
+                const address = customer.address || {};
+                const address1 = address.address1 || 'N/A';
+                const city = address.city || 'N/A';
+                const province = address.province || 'N/A';
+                const country = address.country || 'N/A';
+                
+                const measurements = order.measurements || {};
+                const bust = measurements.bust ? `${measurements.bust}"` : 'N/A';
+                const waist = measurements.waist ? `${measurements.waist}"` : 'N/A';
+                const hip = measurements.hip ? `${measurements.hip}"` : 'N/A';
+                const recommendedSize = measurements.recommendedSize || 'N/A';
+                
+                tableHTML += `
+                    <tr>
+                        <td>${orderDate}</td>
+                        <td><strong>${customerName}</strong></td>
+                        <td>${email}</td>
+                        <td>${phone}</td>
+                        <td>${address1}</td>
+                        <td>${city}</td>
+                        <td>${province}</td>
+                        <td>${country}</td>
+                        <td>${bust}</td>
+                        <td>${waist}</td>
+                        <td>${hip}</td>
+                        <td><span class="size-badge ${recommendedSize}">${recommendedSize}</span></td>
+                        <td>${order.orderNumber || order.orderName}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+                <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    Showing ${orders.length} orders with customer measurements
+                </p>
+            `;
+            
+            containerEl.innerHTML = tableHTML;
+        }
+        
+        // Export data to Excel
+        function exportToExcel() {
+            try {
+                if (allCustomerData.length === 0) {
+                    alert('⚠️ No data to export. Please refresh the data first.');
+                    return;
+                }
+                
+                // Get currently displayed data (filtered or all)
+                const containerEl = document.getElementById('customerDataContainer');
+                const table = containerEl.querySelector('.customer-table');
+                if (!table) {
+                    alert('⚠️ No data table found.');
+                    return;
+                }
+                
+                let csv = 'Date,Customer Name,Email,Mobile,Address,City,State,Country,Bust,Waist,Hip,Size,Order ID\n';
+                
+                allCustomerData.forEach(order => {
+                    const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+                    const customer = order.customer || {};
+                    const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Unknown Customer';
+                    const email = customer.email || 'N/A';
+                    const phone = customer.phone || 'N/A';
+                    
+                    const address = customer.address || {};
+                    const address1 = address.address1 || 'N/A';
+                    const city = address.city || 'N/A';
+                    const province = address.province || 'N/A';
+                    const country = address.country || 'N/A';
+                    
+                    const measurements = order.measurements || {};
+                    const bust = measurements.bust ? `${measurements.bust}"` : 'N/A';
+                    const waist = measurements.waist ? `${measurements.waist}"` : 'N/A';
+                    const hip = measurements.hip ? `${measurements.hip}"` : 'N/A';
+                    const recommendedSize = measurements.recommendedSize || 'N/A';
+                    
+                    const row = [
+                        orderDate,
+                        customerName,
+                        email,
+                        phone,
+                        address1,
+                        city,
+                        province,
+                        country,
+                        bust,
+                        waist,
+                        hip,
+                        recommendedSize,
+                        order.orderNumber || order.orderName
+                    ];
+                    
+                    csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+                });
+                
+                // Create download link
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `customer_data_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                alert(`✅ Exported ${allCustomerData.length} records to Excel!`);
+                
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                alert('❌ Error exporting to Excel. Please try again.');
+            }
+        }
+        
         // Load customer data from API
         async function loadCustomerData() {
             try {
@@ -568,8 +948,14 @@
                 if (data.success && data.data && data.data.length > 0) {
                     const orders = data.data;
                     
-                    // Build table HTML with wrapper for horizontal scroll
-                    let tableHTML = `
+                    // Store all data for filtering
+                    allCustomerData = orders;
+                    
+                    // Display data using the new function
+                    displayCustomerData(orders);
+                    
+                    // OLD: Build table HTML with wrapper for horizontal scroll
+                    /* let tableHTML = `
                         <div class="customer-table-wrapper">
                             <table class="customer-table">
                                 <thead>
@@ -638,11 +1024,8 @@
                         <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
                             Showing ${orders.length} orders with customer measurements
                         </p>
-                    `;
+                    `; */
                     
-                    if (containerEl) {
-                        containerEl.innerHTML = tableHTML;
-                    }
                     if (statusEl) {
                         statusEl.textContent = `✅ Loaded ${orders.length} orders from Shopify`;
                         statusEl.style.color = '#10b981';
@@ -688,6 +1071,9 @@
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 IdealFit Merchant Dashboard Loaded Successfully!');
+            
+            // Populate year dropdown
+            populateYearDropdown();
             
             // Restore saved tab
             restoreSavedTab();
