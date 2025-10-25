@@ -9,7 +9,7 @@
     "deploy": "shopify app deploy",
     "config:use": "shopify app config use",
     "env": "shopify app env",
-    "start": "PORT=${PORT:-3000} DATABASE_URL=file:./data/prod.sqlite SHOPIFY_API_KEY=df65d05c59fdde03db6cad23f63bb6e7 SHOPIFY_APP_URL=https://ideal-fit-app1.onrender.com SCOPES=write_products,read_products,read_orders,read_customers node build/server/index.js",
+    "start": "PORT=${PORT:-3000} DATABASE_URL=file:./data/prod.sqlite SHOPIFY_API_KEY=df65d05c59fdde03db6cad23f63bb6e7 SHOPIFY_APP_URL=https://ideal-fit-app1.onrender.com SCOPES=write_products,read_products,read_orders,read_customers npx react-router-serve build/server/index.js",
     "docker-start": "npm run setup && npm run start",
     "postinstall": "export DATABASE_URL=${DATABASE_URL:-file:./data/prod.sqlite} && prisma generate && npm run setup && npm run build",
     "setup": "prisma migrate deploy",
