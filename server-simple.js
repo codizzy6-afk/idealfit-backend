@@ -1,5 +1,7 @@
 import express from 'express';
 import fetch from 'node-fetch';
+import fs from 'fs';
+import path from 'path';
 const app = express();
 
 app.use(express.json());
@@ -62,23 +64,51 @@ app.get('/auth/status', (req, res) => {
   });
 });
 
-// In-memory storage for size charts
-let sizeCharts = [
-  {
-    id: 1,
-    shop: 'idealfit-2.myshopify.com',
-    sizeChart: [
-      { size: 'XS', bust: 30, waist: 25, hip: 35 },
-      { size: 'S', bust: 32, waist: 27, hip: 37 },
-      { size: 'M', bust: 34, waist: 29, hip: 39 },
-      { size: 'L', bust: 36, waist: 31, hip: 41 },
-      { size: 'XL', bust: 38, waist: 33, hip: 43 },
-      { size: 'XXL', bust: 40, waist: 35, hip: 45 }
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+// Persistent storage for size charts (file-based)
+const DATA_FILE = path.join(process.cwd(), 'sizechart-data.json');
+
+// Load size charts from file or use default
+function loadSizeCharts() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const data = fs.readFileSync(DATA_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading size charts from file:', error);
   }
-];
+  
+  // Default size chart
+  return [
+    {
+      id: 1,
+      shop: 'idealfit-2.myshopify.com',
+      sizeChart: [
+        { size: 'XS', bust: 30, waist: 25, hip: 35 },
+        { size: 'S', bust: 32, waist: 27, hip: 37 },
+        { size: 'M', bust: 34, waist: 29, hip: 39 },
+        { size: 'L', bust: 36, waist: 31, hip: 41 },
+        { size: 'XL', bust: 38, waist: 33, hip: 43 },
+        { size: 'XXL', bust: 40, waist: 35, hip: 45 }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
+}
+
+// Save size charts to file
+function saveSizeCharts(charts) {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(charts, null, 2));
+    console.log('✅ Size charts saved to file');
+  } catch (error) {
+    console.error('Error saving size charts to file:', error);
+  }
+}
+
+let sizeCharts = loadSizeCharts();
+console.log('📦 Loaded size charts from file:', sizeCharts.length);
 
 // Get size charts
 app.get('/api/sizecharts', (req, res) => {
@@ -128,6 +158,9 @@ app.post('/api/sizecharts', (req, res) => {
     };
     sizeCharts.push(newChart);
   }
+  
+  // Save to file for persistence
+  saveSizeCharts(sizeCharts);
   
   res.json({
     success: true,
