@@ -372,6 +372,86 @@
         .btn-secondary:hover {
             background: #4b5563;
         }
+        
+        /* Analytics specific styles */
+        .size-bar {
+            background: #e5e7eb;
+            border-radius: 8px;
+            margin: 8px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .size-bar-fill {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: width 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .size-bar-label {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            font-weight: 600;
+        }
+        
+        .size-bar-count {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            font-weight: 600;
+        }
+        
+        .insight-card {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+        }
+        
+        .insight-card.success {
+            border-left-color: #10b981;
+        }
+        
+        .insight-card.warning {
+            border-left-color: #f59e0b;
+        }
+        
+        .insight-card.info {
+            border-left-color: #3b82f6;
+        }
+        
+        .insight-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        
+        .insight-desc {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .animated-number {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+        
+        .animated-number.updating {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -410,48 +490,58 @@
         <div class="main-content">
             <!-- Analytics Tab -->
             <div id="analytics" class="tab-content active">
-                <div class="page-header">
-                    <div class="page-title">
-                        📊 Analytics Dashboard
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div class="page-title">
+                            📊 Analytics Dashboard
+                        </div>
+                        <div class="page-subtitle">
+                            Real-time insights and performance metrics
+                        </div>
                     </div>
-                    <div class="page-subtitle">
-                        Real-time insights and performance metrics
-                    </div>
+                    <button onclick="loadAnalyticsData()" class="btn btn-primary" style="margin-left: auto;">
+                        🔄 Refresh Analytics
+                    </button>
                 </div>
 
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">📦</div>
-                        <div class="stat-number" id="totalOrders">42</div>
+                        <div class="stat-number" id="totalOrders">Loading...</div>
                         <div class="stat-label">Total Orders</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">💰</div>
-                        <div class="stat-number" id="totalRevenue">$4,200</div>
+                        <div class="stat-number" id="totalRevenue">Loading...</div>
                         <div class="stat-label">Total Revenue</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">👥</div>
-                        <div class="stat-number" id="totalCustomers">25</div>
+                        <div class="stat-number" id="totalCustomers">Loading...</div>
                         <div class="stat-label">Total Customers</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">📏</div>
-                        <div class="stat-number" id="avgOrderValue">$100</div>
+                        <div class="stat-number" id="avgOrderValue">Loading...</div>
                         <div class="stat-label">Avg Order Value</div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3>Size Distribution</h3>
-                    <p>Most popular sizes based on customer measurements:</p>
-                    <ul>
-                        <li>Size M: 15 orders (35.7%)</li>
-                        <li>Size L: 12 orders (28.6%)</li>
-                        <li>Size XL: 8 orders (19.0%)</li>
-                        <li>Size S: 5 orders (11.9%)</li>
-                        <li>Size XXL: 2 orders (4.8%)</li>
-                    </ul>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Size Distribution</h3>
+                        <span id="sizeDistributionStatus" style="color: #6b7280; font-size: 0.875rem;">Loading...</span>
+                    </div>
+                    <div id="sizeDistributionChart" style="min-height: 300px;">
+                        <p style="color: #6b7280;">Loading size distribution data...</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Size Performance Insights</h3>
+                    <div id="sizeInsightsContainer" style="margin-top: 1rem;">
+                        <p style="color: #6b7280;">Loading insights...</p>
+                    </div>
                 </div>
             </div>
 
@@ -671,7 +761,9 @@
                     localStorage.setItem('idealfit_current_tab', tabName);
                     
                     // Load data based on tab
-                    if (tabName === 'customers') {
+                    if (tabName === 'analytics') {
+                        loadAnalyticsData();
+                    } else if (tabName === 'customers') {
                         loadCustomerData();
                     }
                 }
@@ -700,6 +792,167 @@
                 option.textContent = year;
                 yearSelect.appendChild(option);
             }
+        }
+        
+        // Load analytics data
+        async function loadAnalyticsData() {
+            try {
+                const statusEl = document.getElementById('sizeDistributionStatus');
+                if (statusEl) statusEl.textContent = '🔄 Loading...';
+                
+                // Fetch data from API
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3001/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
+                
+                const response = await fetch(`${apiBaseUrl}/shopify-rest-analytics`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const analytics = data.data;
+                    
+                    // Update stat cards
+                    updateStatCard('totalOrders', analytics.totalOrders || 0);
+                    updateStatCard('totalRevenue', formatCurrency(analytics.totalRevenue || 0));
+                    updateStatCard('totalCustomers', analytics.totalCustomers || 0);
+                    updateStatCard('avgOrderValue', formatCurrency(analytics.avgOrderValue || 0));
+                    
+                    // Update size distribution
+                    if (analytics.sizeDistribution && Array.isArray(analytics.sizeDistribution)) {
+                        updateSizeDistribution(analytics.sizeDistribution);
+                    }
+                    
+                    // Update insights
+                    generateSizeInsights(analytics.sizeDistribution || []);
+                    
+                    if (statusEl) statusEl.textContent = '✅ Last updated: ' + new Date().toLocaleTimeString();
+                } else {
+                    if (statusEl) statusEl.textContent = '⚠️ No data available';
+                }
+                
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                const statusEl = document.getElementById('sizeDistributionStatus');
+                if (statusEl) statusEl.textContent = '❌ Error loading data';
+            }
+        }
+        
+        // Update stat card with animation
+        function updateStatCard(id, value) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.classList.add('animated-number', 'updating');
+                element.textContent = value;
+                setTimeout(() => {
+                    element.classList.remove('updating');
+                }, 300);
+            }
+        }
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+        
+        // Update size distribution chart
+        function updateSizeDistribution(sizeData) {
+            const container = document.getElementById('sizeDistributionChart');
+            if (!container) return;
+            
+            // Sort by count descending
+            const sorted = [...sizeData].sort((a, b) => b.count - a.count);
+            const maxCount = sorted.length > 0 ? sorted[0].count : 1;
+            
+            let html = '<div style="margin-bottom: 1rem;">';
+            sorted.forEach(item => {
+                const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                const color = getSizeColor(item.size);
+                
+                html += `
+                    <div class="size-bar">
+                        <div class="size-bar-fill" style="background: ${color}; width: ${percentage}%;">
+                            <span class="size-bar-label">Size ${item.size}</span>
+                            <span class="size-bar-count">${item.count} orders (${((item.count / getTotalOrders(sizeData)) * 100).toFixed(1)}%)</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+        
+        // Get color for size
+        function getSizeColor(size) {
+            const colors = {
+                'XS': '#6366f1',
+                'S': '#3b82f6',
+                'M': '#10b981',
+                'L': '#f59e0b',
+                'XL': '#ef4444',
+                'XXL': '#ec4899',
+                'XXXL': '#8b5cf6',
+                'XXXXL': '#64748b'
+            };
+            return colors[size] || '#6b7280';
+        }
+        
+        // Get total orders from size distribution
+        function getTotalOrders(sizeData) {
+            return sizeData.reduce((sum, item) => sum + item.count, 0);
+        }
+        
+        // Generate size insights
+        function generateSizeInsights(sizeData) {
+            const container = document.getElementById('sizeInsightsContainer');
+            if (!container || !sizeData || sizeData.length === 0) return;
+            
+            const sorted = [...sizeData].sort((a, b) => b.count - a.count);
+            const total = getTotalOrders(sizeData);
+            const topSize = sorted[0];
+            const leastSize = sorted[sorted.length - 1];
+            
+            let html = '';
+            
+            // Top performing size
+            if (topSize) {
+                const percentage = ((topSize.count / total) * 100).toFixed(1);
+                html += `
+                    <div class="insight-card success">
+                        <div class="insight-title">🏆 Best Selling Size: ${topSize.size}</div>
+                        <div class="insight-desc">Size ${topSize.size} accounts for ${percentage}% of all orders (${topSize.count} orders). Consider stocking more inventory for this popular size.</div>
+                    </div>
+                `;
+            }
+            
+            // Least performing size
+            if (leastSize && leastSize.count > 0) {
+                const percentage = ((leastSize.count / total) * 100).toFixed(1);
+                html += `
+                    <div class="insight-card warning">
+                        <div class="insight-title">📉 Low Demand: Size ${leastSize.size}</div>
+                        <div class="insight-desc">Size ${leastSize.size} has the lowest sales with only ${percentage}% of orders (${leastSize.count} orders). Consider targeted marketing or inventory adjustments.</div>
+                    </div>
+                `;
+            }
+            
+            // Size distribution analysis
+            if (sizeData.length > 0) {
+                const avgOrders = total / sizeData.length;
+                const aboveAvg = sizeData.filter(item => item.count > avgOrders);
+                
+                html += `
+                    <div class="insight-card info">
+                        <div class="insight-title">📊 Sales Distribution</div>
+                        <div class="insight-desc">Out of ${sizeData.length} available sizes, ${aboveAvg.length} sizes are performing above average (${avgOrders.toFixed(1)} orders per size). This indicates ${((aboveAvg.length / sizeData.length) * 100).toFixed(0)}% of your size range is meeting demand.</div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
         }
         
         // Apply filters to customer data
@@ -1062,11 +1315,9 @@
                 const savedTab = localStorage.getItem('idealfit_current_tab');
                 if (savedTab) {
                     showTab(savedTab);
-                    
-                    // Load data for the saved tab
-                    if (savedTab === 'customers') {
-                        loadCustomerData();
-                    }
+                } else {
+                    // Default to analytics tab and load data
+                    loadAnalyticsData();
                 }
             } catch (error) {
                 console.error('Error restoring saved tab:', error);
