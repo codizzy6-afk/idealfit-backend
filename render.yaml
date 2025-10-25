@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ideal-fit-app
+    name: ideal-fit-app1
     env: node
     plan: free
     # Trigger deployment
