@@ -14,8 +14,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       throw new Error("SHOPIFY_ACCESS_TOKEN not configured");
     }
 
-    // Fetch orders from Shopify REST API
-    const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/orders.json?limit=${limit}`, {
+    // Fetch orders from Shopify REST API with customer info
+    const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/orders.json?limit=${limit}&status=any`, {
       headers: {
         "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
         "Content-Type": "application/json"
@@ -27,6 +27,26 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
 
     const data = await response.json();
+    
+    // Also fetch customers to get detailed info
+    let customersData: any = {};
+    try {
+      const customersResponse = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/customers.json?limit=250`, {
+        headers: {
+          "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (customersResponse.ok) {
+        const customersJson = await customersResponse.json();
+        customersJson.customers.forEach((customer: any) => {
+          customersData[customer.id] = customer;
+        });
+      }
+    } catch (e) {
+      console.log("Could not fetch customers:", e);
+    }
 
     // Transform data to match expected format
     const orders = data.orders.map((order: any) => {
@@ -61,28 +81,35 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         });
       }
 
-      // Extract full name from first_name and last_name
-      const firstName = order.customer?.first_name || order.billing_address?.first_name || '';
-      const lastName = order.customer?.last_name || order.billing_address?.last_name || '';
-      const fullName = `${firstName} ${lastName}`.trim() || 'Unnamed Customer';
-
+      // Get customer details from fetched customers or order
+      const customerId = order.customer?.id;
+      const customerDetails = customersData[customerId] || null;
+      
+      const firstName = customerDetails?.first_name || order.customer?.first_name || order.billing_address?.first_name || '';
+      const lastName = customerDetails?.last_name || order.customer?.last_name || order.billing_address?.last_name || '';
+      
+      const email = customerDetails?.email || order.email || order.customer?.email || 'No email';
+      const phone = order.phone || customerDetails?.phone || order.billing_address?.phone || order.customer?.phone || customerDetails?.default_address?.phone || 'No phone';
+      
+      const addressObj = order.billing_address || order.shipping_address || customerDetails?.default_address || {};
+      
       return {
         id: order.id,
         orderNumber: order.order_number,
         orderName: order.name,
         createdAt: order.created_at,
         customer: {
-          id: order.customer?.id,
+          id: customerId,
           firstName: firstName,
           lastName: lastName,
-          email: order.email || order.customer?.email || 'No email',
-          phone: order.phone || order.billing_address?.phone || order.customer?.phone || 'No phone',
+          email: email,
+          phone: phone,
           address: {
-            address1: order.billing_address?.address1 || order.shipping_address?.address1 || 'No address',
-            city: order.billing_address?.city || order.shipping_address?.city || 'No city',
-            province: order.billing_address?.province || order.shipping_address?.province || 'No state',
-            country: order.billing_address?.country || order.shipping_address?.country || 'No country',
-            zip: order.billing_address?.zip || order.shipping_address?.zip || ''
+            address1: addressObj.address1 || 'No address',
+            city: addressObj.city || 'No city',
+            province: addressObj.province || 'No state',
+            country: addressObj.country || 'No country',
+            zip: addressObj.zip || ''
           }
         },
         measurements: {
