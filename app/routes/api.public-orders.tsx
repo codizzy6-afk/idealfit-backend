@@ -32,11 +32,31 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const orders = data.orders.map((order: any) => {
       // Extract measurements from order attributes or metafields
       const measurements: any = {};
+      
+      // Check note_attributes first
       order.note_attributes?.forEach((attr: any) => {
-        if (attr.name.includes('bust') || attr.name.includes('waist') || attr.name.includes('hip') || attr.name.includes('size')) {
-          measurements[attr.name.replace('_measurement_', '').replace('_', '')] = attr.value;
+        if (attr.name.includes('measurement_bust') || attr.name.includes('measurement_waist') || attr.name.includes('measurement_hip') || attr.name.includes('measurement_unit') || attr.name.includes('recommended_size')) {
+          const key = attr.name.replace('_measurement_', '').replace('_', '');
+          measurements[key] = attr.value;
         }
       });
+      
+      // Also check line_items for cart attributes
+      order.line_items?.forEach((item: any) => {
+        if (item.properties) {
+          item.properties.forEach((prop: any) => {
+            if (prop.name.includes('measurement_bust') || prop.name.includes('measurement_waist') || prop.name.includes('measurement_hip') || prop.name.includes('measurement_unit') || prop.name.includes('recommended_size')) {
+              const key = prop.name.replace('_measurement_', '').replace('_', '');
+              measurements[key] = prop.value;
+            }
+          });
+        }
+      });
+
+      // Extract full name from first_name and last_name
+      const firstName = order.customer?.first_name || order.billing_address?.first_name || '';
+      const lastName = order.customer?.last_name || order.billing_address?.last_name || '';
+      const fullName = `${firstName} ${lastName}`.trim() || 'Unnamed Customer';
 
       return {
         id: order.id,
@@ -45,22 +65,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         createdAt: order.created_at,
         customer: {
           id: order.customer?.id,
-          firstName: order.customer?.first_name || order.billing_address?.first_name,
-          lastName: order.customer?.last_name || order.billing_address?.last_name,
-          email: order.email,
-          phone: order.phone || order.billing_address?.phone,
+          firstName: firstName,
+          lastName: lastName,
+          email: order.email || order.customer?.email || 'No email',
+          phone: order.phone || order.billing_address?.phone || order.customer?.phone || 'No phone',
           address: {
-            address1: order.billing_address?.address1,
-            city: order.billing_address?.city,
-            province: order.billing_address?.province,
-            country: order.billing_address?.country,
+            address1: order.billing_address?.address1 || order.shipping_address?.address1 || 'No address',
+            city: order.billing_address?.city || order.shipping_address?.city || 'No city',
+            province: order.billing_address?.province || order.shipping_address?.province || 'No state',
+            country: order.billing_address?.country || order.shipping_address?.country || 'No country',
+            zip: order.billing_address?.zip || order.shipping_address?.zip || ''
           }
         },
         measurements: {
-          bust: measurements.bust || null,
-          waist: measurements.waist || null,
-          hip: measurements.hip || null,
-          recommendedSize: measurements.recommendedsize || measurements.size || null
+          bust: measurements.bust || measurements.measurement_bust || null,
+          waist: measurements.waist || measurements.measurement_waist || null,
+          hip: measurements.hip || measurements.measurement_hip || null,
+          recommendedSize: measurements.recommendedsize || measurements.recommended_size || measurements.size || null
         }
       };
     });
