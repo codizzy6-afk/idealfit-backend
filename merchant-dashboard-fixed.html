@@ -1042,19 +1042,29 @@
                 if (statusEl) statusEl.textContent = '🔄 Loading...';
                 
                 // Fetch data from API
-                const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3000/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
                 
                 const response = await fetch(`${apiBaseUrl}/analytics`);
                 const data = await response.json();
                 
+                console.log('Analytics API Response:', data); // Debug log
+                
                 if (data.success && data.data) {
                     const analytics = data.data;
+                    console.log('Analytics Data:', analytics); // Debug log
                     
                     // Update stat cards from KPIs
-                    updateStatCard('totalOrders', analytics.kpis.totalOrders || 0);
-                    updateStatCard('totalRevenue', formatCurrency(0)); // Not available yet
-                    updateStatCard('totalCustomers', analytics.kpis.totalOrders || 0);
-                    updateStatCard('avgOrderValue', formatCurrency(0)); // Not available yet
+                    if (analytics.kpis) {
+                        updateStatCard('totalOrders', analytics.kpis.totalOrders || 0);
+                        updateStatCard('totalRevenue', formatCurrency(0)); // Not available yet
+                        updateStatCard('totalCustomers', analytics.kpis.totalOrders || 0);
+                        updateStatCard('avgOrderValue', formatCurrency(0)); // Not available yet
+                        console.log('Updated KPIs:', analytics.kpis); // Debug log
+                    } else {
+                        console.error('No KPIs found in analytics data:', analytics);
+                    }
                     
                     // Get size distribution data
                     const sizeData = analytics.sizeDistribution || [];
@@ -1088,6 +1098,9 @@
                 console.error('Error loading analytics:', error);
                 const statusEl = document.getElementById('sizeDistributionStatus');
                 if (statusEl) statusEl.textContent = '❌ Error loading data';
+                
+                // Show error to user
+                alert('Error loading analytics data. Please check the console for details.');
             }
         }
         
