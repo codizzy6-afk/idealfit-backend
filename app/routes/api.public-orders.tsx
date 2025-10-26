@@ -93,6 +93,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       const customerId = order.customer?.id;
       const customerDetails = customersData[customerId] || null;
       
+      // Debug logging
+      if (!customerDetails) {
+        console.log(`No customer data found for customerId: ${customerId}`);
+        console.log(`Available customer IDs in customersData:`, Object.keys(customersData));
+      }
+      
       // Try multiple fallback paths for customer data
       const firstName = customerDetails?.first_name || order.customer?.first_name || order.billing_address?.first_name || order.shipping_address?.first_name || '';
       const lastName = customerDetails?.last_name || order.customer?.last_name || order.billing_address?.last_name || order.shipping_address?.last_name || '';
