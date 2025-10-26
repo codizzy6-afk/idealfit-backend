@@ -1,11 +1,12 @@
 import type { ActionFunctionArgs } from "react-router";
 import { json } from "react-router";
-import * as bcrypt from "bcryptjs";
 import prisma from "../db.server";
 
 // Merchant authentication endpoint
 // POST /api/merchant-auth
 export const action = async ({ request }: ActionFunctionArgs) => {
+  // Dynamic import for bcrypt (CommonJS module)
+  const bcrypt = await import("bcryptjs");
   try {
     const formData = await request.formData();
     const action = formData.get("action"); // "login" or "register"
