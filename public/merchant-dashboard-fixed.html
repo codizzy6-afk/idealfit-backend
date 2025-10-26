@@ -1560,7 +1560,7 @@
                                 // Fetch data from API
                 const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
                 
-                const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=50`);
+                const response = await fetch(`${apiBaseUrl}/public-orders?limit=50`);
                 const data = await response.json();
                 
                 if (data.success && data.data && data.data.length > 0) {
