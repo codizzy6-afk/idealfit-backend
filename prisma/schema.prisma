@@ -41,3 +41,13 @@ model Merchant {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+// Size charts for merchant stores
+model SizeChart {
+  id        String   @id @default(cuid())
+  shop      String   @unique
+  title     String   @default("Size Chart")
+  chartData String   // JSON string of size chart data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
