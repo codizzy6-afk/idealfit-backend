@@ -1,5 +1,4 @@
 import type { ActionFunctionArgs } from "react-router";
-import { json } from "react-router";
 import prisma from "../db.server";
 
 // Merchant authentication endpoint
@@ -20,9 +19,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       // Validate input
       if (!shopDomain || !username || !password) {
-        return json(
-          { success: false, error: "Shop domain, username, and password are required" },
-          { status: 400 }
+        return new Response(
+          JSON.stringify({ success: false, error: "Shop domain, username, and password are required" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
 
@@ -32,9 +31,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       });
 
       if (existingMerchant) {
-        return json(
-          { success: false, error: "Username already exists" },
-          { status: 400 }
+        return new Response(
+          JSON.stringify({ success: false, error: "Username already exists" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
 
@@ -52,16 +51,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       });
 
       // Return success (don't return password hash)
-      return json({
-        success: true,
-        message: "Merchant registered successfully",
-        merchant: {
-          id: merchant.id,
-          shopDomain: merchant.shopDomain,
-          username: merchant.username,
-          email: merchant.email,
-        },
-      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Merchant registered successfully",
+          merchant: {
+            id: merchant.id,
+            shopDomain: merchant.shopDomain,
+            username: merchant.username,
+            email: merchant.email,
+          },
+        }),
+        { status: 201, headers: { "Content-Type": "application/json" } }
+      );
     } else if (action === "login") {
       // Login existing merchant
       const username = formData.get("username") as string;
@@ -69,9 +71,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       // Validate input
       if (!username || !password) {
-        return json(
-          { success: false, error: "Username and password are required" },
-          { status: 400 }
+        return new Response(
+          JSON.stringify({ success: false, error: "Username and password are required" }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
 
@@ -81,9 +83,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       });
 
       if (!merchant) {
-        return json(
-          { success: false, error: "Invalid credentials" },
-          { status: 401 }
+        return new Response(
+          JSON.stringify({ success: false, error: "Invalid credentials" }),
+          { status: 401, headers: { "Content-Type": "application/json" } }
         );
       }
 
@@ -91,37 +93,40 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const isValid = await bcrypt.compare(password, merchant.passwordHash);
 
       if (!isValid) {
-        return json(
-          { success: false, error: "Invalid credentials" },
-          { status: 401 }
+        return new Response(
+          JSON.stringify({ success: false, error: "Invalid credentials" }),
+          { status: 401, headers: { "Content-Type": "application/json" } }
         );
       }
 
       // Return success (don't return password hash)
-      return json({
-        success: true,
-        message: "Login successful",
-        merchant: {
-          id: merchant.id,
-          shopDomain: merchant.shopDomain,
-          username: merchant.username,
-          email: merchant.email,
-        },
-      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Login successful",
+          merchant: {
+            id: merchant.id,
+            shopDomain: merchant.shopDomain,
+            username: merchant.username,
+            email: merchant.email,
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
     } else {
-      return json(
-        { success: false, error: "Invalid action" },
-        { status: 400 }
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid action" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
   } catch (error) {
     console.error("Merchant auth error:", error);
-    return json(
-      {
+    return new Response(
+      JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 };
