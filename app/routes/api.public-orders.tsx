@@ -34,24 +34,32 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       const measurements: any = {};
       
       // Check note_attributes first
-      order.note_attributes?.forEach((attr: any) => {
-        if (attr.name.includes('measurement_bust') || attr.name.includes('measurement_waist') || attr.name.includes('measurement_hip') || attr.name.includes('measurement_unit') || attr.name.includes('recommended_size')) {
-          const key = attr.name.replace('_measurement_', '').replace('_', '');
-          measurements[key] = attr.value;
-        }
-      });
+      if (order.note_attributes) {
+        order.note_attributes.forEach((attr: any) => {
+          if (attr.name && attr.value) {
+            if (attr.name.includes('measurement_bust') || attr.name.includes('measurement_waist') || attr.name.includes('measurement_hip') || attr.name.includes('measurement_unit') || attr.name.includes('recommended_size')) {
+              const key = attr.name.replace('_measurement_', '').replace('_', '');
+              measurements[key] = attr.value;
+            }
+          }
+        });
+      }
       
       // Also check line_items for cart attributes
-      order.line_items?.forEach((item: any) => {
-        if (item.properties) {
-          item.properties.forEach((prop: any) => {
-            if (prop.name.includes('measurement_bust') || prop.name.includes('measurement_waist') || prop.name.includes('measurement_hip') || prop.name.includes('measurement_unit') || prop.name.includes('recommended_size')) {
-              const key = prop.name.replace('_measurement_', '').replace('_', '');
-              measurements[key] = prop.value;
-            }
-          });
-        }
-      });
+      if (order.line_items) {
+        order.line_items.forEach((item: any) => {
+          if (item.properties && Array.isArray(item.properties)) {
+            item.properties.forEach((prop: any) => {
+              if (prop.name && prop.value) {
+                if (prop.name.includes('measurement_bust') || prop.name.includes('measurement_waist') || prop.name.includes('measurement_hip') || prop.name.includes('measurement_unit') || prop.name.includes('recommended_size')) {
+                  const key = prop.name.replace('_measurement_', '').replace('_', '');
+                  measurements[key] = prop.value;
+                }
+              }
+            });
+          }
+        });
+      }
 
       // Extract full name from first_name and last_name
       const firstName = order.customer?.first_name || order.billing_address?.first_name || '';
