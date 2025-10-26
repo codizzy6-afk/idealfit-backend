@@ -40,7 +40,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       
       if (customersResponse.ok) {
         const customersJson = await customersResponse.json();
-        customersJson.customers.forEach((customer: any) => {
+        console.log("Total customers fetched:", customersJson.customers?.length || 0);
+        console.log("Sample customer:", JSON.stringify(customersJson.customers?.[0], null, 2));
+        
+        customersJson.customers?.forEach((customer: any) => {
           customersData[customer.id] = customer;
         });
       }
@@ -84,6 +87,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       // Get customer details from fetched customers or order
       const customerId = order.customer?.id;
       const customerDetails = customersData[customerId] || null;
+      
+      console.log(`Order ${order.order_number}: Customer ID = ${customerId}, Found in customersData = ${!!customerDetails}`);
       
       const firstName = customerDetails?.first_name || order.customer?.first_name || order.billing_address?.first_name || '';
       const lastName = customerDetails?.last_name || order.customer?.last_name || order.billing_address?.last_name || '';
