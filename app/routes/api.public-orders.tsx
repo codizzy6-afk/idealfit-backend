@@ -28,50 +28,31 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     const data = await response.json();
     
-    // Log first order to see structure
-    console.log("First order raw data:", JSON.stringify(data.orders?.[0], null, 2));
-    
-    // Also fetch customers to get detailed info
-    let customersData: any = {};
-    try {
-      const customersResponse = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/customers.json?limit=250`, {
-        headers: {
-          "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
-          "Content-Type": "application/json"
-        }
-      });
-      
-      if (customersResponse.ok) {
-        const customersJson = await customersResponse.json();
-        console.log("Total customers fetched:", customersJson.customers?.length || 0);
-        
-        customersJson.customers?.forEach((customer: any) => {
-          customersData[customer.id] = customer;
-        });
-      }
-    } catch (e) {
-      console.log("Could not fetch customers:", e);
-    }
-    
-    // Fetch individual customer details for orders that don't have full data
+    // Fetch individual customer details for each order (skip bulk fetch to avoid rate limits)
+    const customersData: any = {};
     const uniqueCustomerIds = [...new Set(data.orders.map((o: any) => o.customer?.id).filter(Boolean))];
+    
+    // Fetch each customer individually to get full details
     for (const customerId of uniqueCustomerIds) {
-      if (!customersData[customerId]) {
-        try {
-          const customerResponse = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/customers/${customerId}.json`, {
-            headers: {
-              "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
-              "Content-Type": "application/json"
-            }
-          });
-          
-          if (customerResponse.ok) {
-            const customerJson = await customerResponse.json();
-            customersData[customerId] = customerJson.customer;
+      try {
+        const customerResponse = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/customers/${customerId}.json`, {
+          headers: {
+            "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
+            "Content-Type": "application/json"
           }
-        } catch (e) {
-          console.log(`Could not fetch customer ${customerId}:`, e);
+        });
+        
+        if (customerResponse.ok) {
+          const customerJson = await customerResponse.json();
+          customersData[customerId] = customerJson.customer;
+        } else {
+          console.log(`Failed to fetch customer ${customerId}: ${customerResponse.status}`);
         }
+        
+        // Add delay to avoid rate limits (50ms between requests)
+        await new Promise(resolve => setTimeout(resolve, 50));
+      } catch (e) {
+        console.log(`Could not fetch customer ${customerId}:`, e);
       }
     }
 
