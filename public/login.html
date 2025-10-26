@@ -240,16 +240,15 @@
     </div>
     
     <script>
+        // API base URL
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : 'https://ideal-fit-app1.onrender.com';
+        
         // Check if user is already logged in
         if (localStorage.getItem('idealfit_logged_in') === 'true') {
             window.location.href = 'merchant-dashboard-fixed.html';
         }
-        
-        // Default credentials (in production, this would be stored securely)
-        const DEFAULT_CREDENTIALS = {
-            username: 'admin',
-            password: 'admin123'
-        };
         
         // Forgot password modal
         function showForgotPassword() {
@@ -261,30 +260,53 @@
         }
         
         // Login form handler
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Get stored credentials or use default
-            const storedCredentials = JSON.parse(localStorage.getItem('idealfit_credentials') || JSON.stringify(DEFAULT_CREDENTIALS));
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Logging in...';
             
-            // Validate credentials
-            if (username === storedCredentials.username && password === storedCredentials.password) {
-                // Save login status
-                localStorage.setItem('idealfit_logged_in', 'true');
-                localStorage.setItem('idealfit_username', username);
+            try {
+                // Call the merchant auth API
+                const formData = new FormData();
+                formData.append('action', 'login');
+                formData.append('username', username);
+                formData.append('password', password);
                 
-                // Show success message
-                showSuccess('Login successful! Redirecting...');
+                const response = await fetch(`${API_BASE}/api/merchant-auth`, {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                // Redirect to dashboard after 1 second
-                setTimeout(() => {
-                    window.location.href = 'merchant-dashboard-fixed.html';
-                }, 1000);
-            } else {
-                showError('Invalid username or password. Please try again.');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Save login status
+                    localStorage.setItem('idealfit_logged_in', 'true');
+                    localStorage.setItem('idealfit_username', username);
+                    localStorage.setItem('idealfit_merchant', JSON.stringify(data.merchant));
+                    
+                    // Show success message
+                    showSuccess('Login successful! Redirecting...');
+                    
+                    // Redirect to dashboard after 1 second
+                    setTimeout(() => {
+                        window.location.href = 'merchant-dashboard-fixed.html';
+                    }, 1000);
+                } else {
+                    showError(data.error || 'Invalid username or password. Please try again.');
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Log In';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Network error. Please check your connection and try again.');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Log In';
             }
         });
         
