@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import db from "../db.server";
 
 // API endpoint to fetch size charts
@@ -30,12 +30,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       updatedAt: chart.updatedAt.toISOString()
     }));
 
-    return new Response(JSON.stringify(formattedCharts), {
+    return new Response(JSON.stringify({
+      success: true,
+      data: formattedCharts
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
       }
     });
@@ -56,12 +59,81 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 };
 
+// Handle POST for saving size charts
+export const action = async ({ request }: ActionFunctionArgs) => {
+  try {
+    const body = await request.json();
+    const { shop, sizeChart, title } = body;
+
+    if (!shop || !sizeChart) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Shop and sizeChart are required"
+      }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        }
+      });
+    }
+
+    // Upsert size chart
+    const upserted = await db.sizeChart.upsert({
+      where: {
+        shop: shop
+      },
+      update: {
+        chartData: JSON.stringify(sizeChart),
+        title: title || "Default Size Chart",
+        updatedAt: new Date()
+      },
+      create: {
+        shop: shop,
+        chartData: JSON.stringify(sizeChart),
+        title: title || "Default Size Chart"
+      }
+    });
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        id: upserted.id,
+        shop: upserted.shop,
+        title: upserted.title,
+        sizeChart: JSON.parse(upserted.chartData),
+        createdAt: upserted.createdAt.toISOString(),
+        updatedAt: upserted.updatedAt.toISOString()
+      }
+    }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+      }
+    });
+
+  } catch (error) {
+    console.error("Error saving size chart:", error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error"
+    }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+      }
+    });
+  }
+};
+
 // Handle OPTIONS for CORS
 export const OPTIONS = async () => {
   return new Response(null, {
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type"
     }
   });
