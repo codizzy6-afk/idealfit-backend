@@ -28,6 +28,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     const data = await response.json();
     
+    // Log first order to see structure
+    console.log("First order raw data:", JSON.stringify(data.orders?.[0], null, 2));
+    
     // Also fetch customers to get detailed info
     let customersData: any = {};
     try {
@@ -89,6 +92,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       const customerDetails = customersData[customerId] || null;
       
       console.log(`Order ${order.order_number}: Customer ID = ${customerId}, Found in customersData = ${!!customerDetails}`);
+      console.log(`Order ${order.order_number}: order.customer =`, JSON.stringify(order.customer, null, 2));
+      console.log(`Order ${order.order_number}: order.billing_address =`, JSON.stringify(order.billing_address, null, 2));
+      console.log(`Order ${order.order_number}: order.shipping_address =`, JSON.stringify(order.shipping_address, null, 2));
       
       const firstName = customerDetails?.first_name || order.customer?.first_name || order.billing_address?.first_name || '';
       const lastName = customerDetails?.last_name || order.customer?.last_name || order.billing_address?.last_name || '';
