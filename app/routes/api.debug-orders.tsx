@@ -35,11 +35,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const debug: any = {
       orderExists: !!order,
       customerId: customerId,
-      orderCustomerObject: order?.customer,
       orderEmail: order?.email,
+      orderPhone: order?.phone,
       orderBillingAddress: order?.billing_address,
       orderShippingAddress: order?.shipping_address,
-      orderPhone: order?.phone
+      // Log full order to see what's available
+      fullOrder: order
     };
 
     if (customerId) {
