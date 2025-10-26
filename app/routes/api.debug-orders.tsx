@@ -32,15 +32,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const order = data.orders?.[0];
     const customerId = order?.customer?.id;
 
+    // Check if order has email at the top level
+    const hasTopLevelEmail = !!order?.email;
+    const hasBillingEmail = !!order?.billing_address?.email;
+    const hasCustomerEmail = !!order?.customer?.email;
+    
     const debug: any = {
       orderExists: !!order,
       customerId: customerId,
       orderEmail: order?.email,
+      orderEmailExists: hasTopLevelEmail,
+      billingEmail: order?.billing_address?.email,
+      customerEmail: order?.customer?.email,
+      hasAnyEmail: hasTopLevelEmail || hasBillingEmail || hasCustomerEmail,
       orderPhone: order?.phone,
-      orderBillingAddress: order?.billing_address,
-      orderShippingAddress: order?.shipping_address,
-      // Log full order to see what's available
-      fullOrder: order
+      orderBillingAddressKeys: order?.billing_address ? Object.keys(order.billing_address) : [],
+      orderShippingAddressKeys: order?.shipping_address ? Object.keys(order.shipping_address) : [],
+      orderKeys: Object.keys(order || {})
     };
 
     if (customerId) {
