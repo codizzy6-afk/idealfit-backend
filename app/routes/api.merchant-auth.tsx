@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import { json } from "react-router";
-import bcrypt from "bcryptjs";
+import * as bcrypt from "bcryptjs";
 import prisma from "../db.server";
 
 // Merchant authentication endpoint
