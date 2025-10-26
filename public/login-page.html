@@ -242,7 +242,7 @@
     <script>
         // Check if user is already logged in
         if (localStorage.getItem('idealfit_logged_in') === 'true') {
-            window.location.href = '/merchant-dashboard';
+            window.location.href = 'merchant-dashboard-fixed.html';
         }
         
         // Default credentials (in production, this would be stored securely)
@@ -281,7 +281,7 @@
                 
                 // Redirect to dashboard after 1 second
                 setTimeout(() => {
-                    window.location.href = '/merchant-dashboard';
+                    window.location.href = 'merchant-dashboard-fixed.html';
                 }, 1000);
             } else {
                 showError('Invalid username or password. Please try again.');
@@ -292,7 +292,7 @@
         function loginAsGuest() {
             localStorage.setItem('idealfit_logged_in', 'true');
             localStorage.setItem('idealfit_username', 'guest');
-            window.location.href = '/merchant-dashboard';
+            window.location.href = 'merchant-dashboard-fixed.html';
         }
         
         // Show error message
