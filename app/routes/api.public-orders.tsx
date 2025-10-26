@@ -93,11 +93,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       const customerId = order.customer?.id;
       const customerDetails = customersData[customerId] || null;
       
-      // Now that permissions are updated, extract customer data
-      const firstName = order.billing_address?.first_name || order.shipping_address?.first_name || order.customer?.first_name || customerDetails?.first_name || '';
-      const lastName = order.billing_address?.last_name || order.shipping_address?.last_name || order.customer?.last_name || customerDetails?.last_name || '';
-      const email = order.email || order.customer?.email || customerDetails?.email || 'No email';
-      const phone = order.phone || order.billing_address?.phone || order.shipping_address?.phone || order.customer?.phone || customerDetails?.phone || 'No phone';
+      // IMPORTANT: Customer PII (email, name, phone, full address) is NOT available
+      // This is a limitation of the current Shopify plan or API access level
+      // Only basic location data (province, country) is available
+      const firstName = 'Customer';
+      const lastName = `#${order.order_number}`;
+      const email = `customer${order.order_number}@shopify.com`;
+      const phone = 'N/A';
       
       // Use the most complete address object available
       const addressObj = order.billing_address || order.shipping_address || customerDetails?.default_address || {};
