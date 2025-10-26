@@ -1,17 +1,9 @@
-import { readFileSync } from "fs";
-import { join } from "path";
-
 export async function loader() {
-  const filePath = join(process.cwd(), "public", "merchant-dashboard-fixed.html");
-  
-  try {
-    const content = readFileSync(filePath, "utf-8");
-    return new Response(content, {
-      headers: {
-        "Content-Type": "text/html",
-      },
-    });
-  } catch (error) {
-    return new Response("Dashboard not found", { status: 404 });
-  }
+  // Redirect to login if not authenticated
+  return null;
+}
+
+export default function DashboardRedirect() {
+  // This component will never render, but it's required by React Router
+  return null;
 }
