@@ -44,7 +44,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       if (customersResponse.ok) {
         const customersJson = await customersResponse.json();
         console.log("Total customers fetched:", customersJson.customers?.length || 0);
-        console.log("Sample customer:", JSON.stringify(customersJson.customers?.[0], null, 2));
         
         customersJson.customers?.forEach((customer: any) => {
           customersData[customer.id] = customer;
@@ -52,6 +51,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     } catch (e) {
       console.log("Could not fetch customers:", e);
+    }
+    
+    // Fetch individual customer details for orders that don't have full data
+    const uniqueCustomerIds = [...new Set(data.orders.map((o: any) => o.customer?.id).filter(Boolean))];
+    for (const customerId of uniqueCustomerIds) {
+      if (!customersData[customerId]) {
+        try {
+          const customerResponse = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/customers/${customerId}.json`, {
+            headers: {
+              "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
+              "Content-Type": "application/json"
+            }
+          });
+          
+          if (customerResponse.ok) {
+            const customerJson = await customerResponse.json();
+            customersData[customerId] = customerJson.customer;
+          }
+        } catch (e) {
+          console.log(`Could not fetch customer ${customerId}:`, e);
+        }
+      }
     }
 
     // Transform data to match expected format
@@ -91,17 +112,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       const customerId = order.customer?.id;
       const customerDetails = customersData[customerId] || null;
       
-      console.log(`Order ${order.order_number}: Customer ID = ${customerId}, Found in customersData = ${!!customerDetails}`);
-      console.log(`Order ${order.order_number}: order.customer =`, JSON.stringify(order.customer, null, 2));
-      console.log(`Order ${order.order_number}: order.billing_address =`, JSON.stringify(order.billing_address, null, 2));
-      console.log(`Order ${order.order_number}: order.shipping_address =`, JSON.stringify(order.shipping_address, null, 2));
+      // Try multiple fallback paths for customer data
+      const firstName = customerDetails?.first_name || order.customer?.first_name || order.billing_address?.first_name || order.shipping_address?.first_name || '';
+      const lastName = customerDetails?.last_name || order.customer?.last_name || order.billing_address?.last_name || order.shipping_address?.last_name || '';
       
-      const firstName = customerDetails?.first_name || order.customer?.first_name || order.billing_address?.first_name || '';
-      const lastName = customerDetails?.last_name || order.customer?.last_name || order.billing_address?.last_name || '';
+      const email = customerDetails?.email || order.email || order.customer?.email || order.billing_address?.email || 'No email';
+      const phone = customerDetails?.phone || order.phone || order.billing_address?.phone || order.customer?.phone || customerDetails?.default_address?.phone || order.shipping_address?.phone || 'No phone';
       
-      const email = customerDetails?.email || order.email || order.customer?.email || 'No email';
-      const phone = order.phone || customerDetails?.phone || order.billing_address?.phone || order.customer?.phone || customerDetails?.default_address?.phone || 'No phone';
-      
+      // Use the most complete address object available
       const addressObj = order.billing_address || order.shipping_address || customerDetails?.default_address || {};
       
       return {
