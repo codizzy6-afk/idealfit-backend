@@ -1044,22 +1044,19 @@
                 // Fetch data from API
                 const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
                 
-                const response = await fetch(`${apiBaseUrl}/shopify-rest-analytics`);
+                const response = await fetch(`${apiBaseUrl}/analytics`);
                 const data = await response.json();
                 
                 if (data.success && data.data) {
                     const analytics = data.data;
                     
-                    // Extract summary data - handle nested structure
-                    const summary = analytics.summary || analytics;
+                    // Update stat cards from KPIs
+                    updateStatCard('totalOrders', analytics.kpis.totalOrders || 0);
+                    updateStatCard('totalRevenue', formatCurrency(0)); // Not available yet
+                    updateStatCard('totalCustomers', analytics.kpis.totalOrders || 0);
+                    updateStatCard('avgOrderValue', formatCurrency(0)); // Not available yet
                     
-                    // Update stat cards with correct field names
-                    updateStatCard('totalOrders', summary.totalOrders || 0);
-                    updateStatCard('totalRevenue', formatCurrency(summary.totalRevenue || 0));
-                    updateStatCard('totalCustomers', summary.uniqueCustomers || summary.totalCustomers || 0);
-                    updateStatCard('avgOrderValue', formatCurrency(summary.averageOrderValue || summary.avgOrderValue || 0));
-                    
-                    // Update size distribution - handle both array and object format
+                    // Get size distribution data
                     const sizeData = analytics.sizeDistribution || [];
                     
                     // Transform size data if it has a different structure (preserve avgBust, avgWaist, avgHip)
@@ -1994,92 +1991,78 @@
                  const currencyInfo = getCurrencyRates(currency);
                  const currencySymbol = currencyInfo.symbol;
                  
-                 // Fetch orders data to calculate billing
-                 const apiBaseUrl = window.location.hostname === 'localhost' 
-                     ? 'http://localhost:3001/api' 
-                     : 'https://ideal-fit-app1.onrender.com/api';
-                 
-                 const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=250`);
-                 const data = await response.json();
-                 
-                 if (data.success && data.data && data.data.length > 0) {
-                     const orders = data.data;
-                     
-                     // Get current month orders
-                     const now = new Date();
-                     const currentMonth = now.getMonth();
-                     const currentYear = now.getFullYear();
-                     
-                     const currentMonthOrders = orders.filter(order => {
-                         const orderDate = new Date(order.createdAt);
-                         return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
-                     });
-                     
-                     // Calculate billing tier and rates based on currency
-                     const orderCount = currentMonthOrders.length;
-                     let plan, rate, totalCost;
-                     
-                     if (orderCount <= 500) {
-                         plan = 'Starter';
-                         rate = currencyInfo.starter;
-                     } else if (orderCount <= 1500) {
-                         plan = 'Professional';
-                         rate = currencyInfo.professional;
-                     } else {
-                         plan = 'Enterprise';
-                         rate = currencyInfo.enterprise;
-                     }
-                     
-                     totalCost = orderCount * rate;
-                     
-                     // Update stat cards
-                     updateStatCard('currentPlan', plan);
-                     updateStatCard('currentRate', currencySymbol + rate.toFixed(currency === 'INR' ? 0 : 2));
-                     updateStatCard('ordersThisMonth', orderCount);
-                     
-                     // Calculate next billing date (end of current month)
-                     const nextBillingDate = new Date(currentYear, currentMonth + 1, 0);
-                     updateStatCard('nextBillingDate', nextBillingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                                 // Fetch billing data from API
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3001/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
+                
+                const response = await fetch(`${apiBaseUrl}/billing`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const billing = data.data;
+                    const monthData = billing.currentMonth;
+                    const pricing = billing.pricing;
                     
-                                                                                  // Update billing breakdown
-                     const breakdownEl = document.getElementById('billingBreakdown');
-                     if (breakdownEl) {
-                         const rateDisplay = rate.toFixed(currency === 'INR' ? 0 : 2);
-                         const totalDisplay = totalCost.toFixed(currency === 'INR' ? 0 : 2);
+                    // Get values from API response
+                    const orderCount = monthData.orderCount || 0;
+                    const totalCost = monthData.totalBill || 0;
+                    const plan = pricing.currentTier.name;
+                    const rate = pricing.currentTier.pricePerOrder;
+                    const currencyFromAPI = monthData.currency;
+                    
+                    // Use API currency if available, otherwise use detected currency
+                    const finalCurrency = currencyFromAPI || currency;
+                    const finalCurrencyInfo = getCurrencyRates(finalCurrency);
+                    const finalCurrencySymbol = finalCurrencyInfo.symbol;
+                     
+                                         // Update stat cards
+                    updateStatCard('currentPlan', plan);
+                    updateStatCard('currentRate', finalCurrencySymbol + rate.toFixed(finalCurrency === 'INR' ? 0 : 2));
+                    updateStatCard('ordersThisMonth', orderCount);
+                    
+                    // Calculate next billing date (end of current month)
+                    const now = new Date();
+                    const nextBillingDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    updateStatCard('nextBillingDate', nextBillingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                   
+                    // Update billing breakdown
+                    const breakdownEl = document.getElementById('billingBreakdown');
+                    if (breakdownEl) {
+                        const rateDisplay = rate.toFixed(finalCurrency === 'INR' ? 0 : 2);
+                        const totalDisplay = totalCost.toFixed(finalCurrency === 'INR' ? 0 : 2);
                          
-                         breakdownEl.innerHTML = `
-                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                                 <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                                     <div style="font-size: 0.875rem; color: #6b7280;">Orders This Month</div>
-                                     <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">${orderCount}</div>
-                                 </div>
-                                 <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981;">
-                                     <div style="font-size: 0.875rem; color: #6b7280;">Current Rate</div>
-                                     <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">${currencySymbol}${rateDisplay}/order</div>
-                                 </div>
-                                 <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                                     <div style="font-size: 0.875rem; color: #6b7280;">Estimated Monthly Cost</div>
-                                     <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">${currencySymbol}${totalDisplay}</div>
-                                 </div>
-                             </div>
-                             <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
-                                 💡 <strong>Current Tier:</strong> ${plan} Plan - Based on ${orderCount} orders this month<br>
-                                 💵 <strong>Currency:</strong> ${currency} (${currencySymbol === '₹' ? 'Indian Rupee' : 'US Dollar'})
-                             </p>
-                         `;
-                          
-                          // Show payment section if there are orders
-                          const paymentSection = document.getElementById('makePaymentSection');
-                          if (paymentSection && orderCount > 0) {
-                              paymentSection.style.display = 'block';
-                          }
-                      }
+                                                 breakdownEl.innerHTML = `
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Orders This Month</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">${orderCount}</div>
+                                </div>
+                                <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981;">
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Current Rate</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">${finalCurrencySymbol}${rateDisplay}/order</div>
+                                </div>
+                                <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Estimated Monthly Cost</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">${finalCurrencySymbol}${totalDisplay}</div>
+                                </div>
+                            </div>
+                            <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                                💡 <strong>Current Tier:</strong> ${plan} Plan - Based on ${orderCount} orders this month<br>
+                                💵 <strong>Currency:</strong> ${finalCurrency} (${finalCurrencySymbol === '₹' ? 'Indian Rupee' : 'US Dollar'})
+                            </p>
+                        `;
+                         
+                         // Show payment section if there are orders
+                         const paymentSection = document.getElementById('makePaymentSection');
+                         if (paymentSection && orderCount > 0) {
+                             paymentSection.style.display = 'block';
+                         }
+                     }
                     
-                                                              // Generate billing history (last 3 months)
-                     generateBillingHistory(orders, currency, currencyInfo, currencySymbol);
-                     
-                     // Update billing tier table
-                     updateBillingTierTable(currency, currencyInfo, currencySymbol);
+                    // Skip billing history for now (would need orders data)
+                    // Update billing tier table
+                    updateBillingTierTable(finalCurrency, finalCurrencyInfo, finalCurrencySymbol);
                      
                 } else {
                     // No orders found
