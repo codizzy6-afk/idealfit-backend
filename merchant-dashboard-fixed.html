@@ -1035,21 +1035,25 @@
             }
         }
         
-        // Load analytics data
-        async function loadAnalyticsData() {
-            try {
-                const statusEl = document.getElementById('sizeDistributionStatus');
-                if (statusEl) statusEl.textContent = '🔄 Loading...';
-                
-                // Fetch data from API
-                const apiBaseUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3000/api' 
-                    : 'https://ideal-fit-app1.onrender.com/api';
-                
-                const response = await fetch(`${apiBaseUrl}/analytics`);
-                const data = await response.json();
-                
-                console.log('Analytics API Response:', data); // Debug log
+                 // Load analytics data
+         async function loadAnalyticsData() {
+             try {
+                 console.log('🔄 Starting analytics data load...');
+                 const statusEl = document.getElementById('sizeDistributionStatus');
+                 if (statusEl) statusEl.textContent = '🔄 Loading...';
+                 
+                 // Fetch data from API
+                 const apiBaseUrl = window.location.hostname === 'localhost' 
+                     ? 'http://localhost:3000/api' 
+                     : 'https://ideal-fit-app1.onrender.com/api';
+                 
+                 console.log('📡 Fetching from:', `${apiBaseUrl}/analytics`);
+                 const response = await fetch(`${apiBaseUrl}/analytics`);
+                 
+                 console.log('📥 Response status:', response.status);
+                 const data = await response.json();
+                 
+                 console.log('✅ Analytics API Response:', data); // Debug log
                 
                 if (data.success && data.data) {
                     const analytics = data.data;
