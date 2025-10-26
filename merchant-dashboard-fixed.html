@@ -1939,12 +1939,18 @@
                 const savedTab = localStorage.getItem('idealfit_current_tab');
                 if (savedTab) {
                     showTab(savedTab);
+                    // Load data for the restored tab
+                    if (savedTab === 'analytics') {
+                        loadAnalyticsData();
+                    }
                 } else {
                     // Default to analytics tab and load data
                     loadAnalyticsData();
                 }
             } catch (error) {
                 console.error('Error restoring saved tab:', error);
+                // Fallback: always load analytics on error
+                loadAnalyticsData();
             }
         }
         
