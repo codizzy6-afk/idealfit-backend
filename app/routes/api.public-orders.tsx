@@ -93,18 +93,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       const customerId = order.customer?.id;
       const customerDetails = customersData[customerId] || null;
       
-      // Debug logging
-      if (!customerDetails) {
-        console.log(`No customer data found for customerId: ${customerId}`);
-        console.log(`Available customer IDs in customersData:`, Object.keys(customersData));
-      }
+      // IMPORTANT: The Shopify access token doesn't have permissions for first_name, last_name, email, phone
+      // So we need to use the order's email and fallback to customer data if available
+      const firstName = order.billing_address?.first_name || order.shipping_address?.first_name || customerDetails?.first_name || '';
+      const lastName = order.billing_address?.last_name || order.shipping_address?.last_name || customerDetails?.last_name || '';
       
-      // Try multiple fallback paths for customer data
-      const firstName = customerDetails?.first_name || order.customer?.first_name || order.billing_address?.first_name || order.shipping_address?.first_name || '';
-      const lastName = customerDetails?.last_name || order.customer?.last_name || order.billing_address?.last_name || order.shipping_address?.last_name || '';
+      // Email is available on the order object directly
+      const email = order.email || customerDetails?.email || 'No email';
       
-      const email = customerDetails?.email || order.email || order.customer?.email || order.billing_address?.email || 'No email';
-      const phone = customerDetails?.phone || order.phone || order.billing_address?.phone || order.customer?.phone || customerDetails?.default_address?.phone || order.shipping_address?.phone || 'No phone';
+      // Phone might be on the order or in addresses
+      const phone = order.phone || order.billing_address?.phone || order.shipping_address?.phone || 'No phone';
       
       // Use the most complete address object available
       const addressObj = order.billing_address || order.shipping_address || customerDetails?.default_address || {};
