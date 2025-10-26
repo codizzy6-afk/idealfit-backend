@@ -1050,14 +1050,16 @@
                 if (data.success && data.data) {
                     const analytics = data.data;
                     
-                    // Extract summary data - handle nested structure
-                    const summary = analytics.summary || analytics;
+                    // Extract KPIs from analytics data
+                    const kpis = analytics.kpis || {};
+                    
+                    console.log('📊 KPIs from API:', kpis);
                     
                     // Update stat cards with correct field names
-                    updateStatCard('totalOrders', summary.totalOrders || 0);
-                    updateStatCard('totalRevenue', formatCurrency(summary.totalRevenue || 0));
-                    updateStatCard('totalCustomers', summary.uniqueCustomers || summary.totalCustomers || 0);
-                    updateStatCard('avgOrderValue', formatCurrency(summary.averageOrderValue || summary.avgOrderValue || 0));
+                    updateStatCard('totalOrders', kpis.totalOrders || 0);
+                    updateStatCard('totalRevenue', formatCurrency(kpis.totalRevenue || 0));
+                    updateStatCard('totalCustomers', kpis.totalOrders || 0); // Use totalOrders as fallback
+                    updateStatCard('avgOrderValue', formatCurrency(kpis.avgOrderValue || 0));
                     
                     // Update size distribution - handle both array and object format
                     const sizeData = analytics.sizeDistribution || [];
