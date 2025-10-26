@@ -59,8 +59,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
             lastName: customerJson.customer?.last_name,
             phone: customerJson.customer?.phone,
             hasAddresses: !!customerJson.customer?.addresses,
-            addressCount: customerJson.customer?.addresses?.length || 0
+            addressCount: customerJson.customer?.addresses?.length || 0,
+            // Add raw keys to see what's available
+            allKeys: Object.keys(customerJson.customer || {})
           };
+          // Also log the full customer object
+          debug.fullCustomerData = customerJson.customer;
         } else {
           debug.customerFetchError = await customerResponse.text();
         }
