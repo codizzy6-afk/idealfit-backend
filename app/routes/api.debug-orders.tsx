@@ -36,7 +36,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       orderExists: !!order,
       customerId: customerId,
       orderCustomerObject: order?.customer,
-      orderEmail: order?.email
+      orderEmail: order?.email,
+      orderBillingAddress: order?.billing_address,
+      orderShippingAddress: order?.shipping_address,
+      orderPhone: order?.phone
     };
 
     if (customerId) {
