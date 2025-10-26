@@ -1042,9 +1042,7 @@
                 if (statusEl) statusEl.textContent = '🔄 Loading...';
                 
                 // Fetch data from API
-                const apiBaseUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3001/api' 
-                    : 'https://ideal-fit-app1.onrender.com/api';
+                const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
                 
                 const response = await fetch(`${apiBaseUrl}/shopify-rest-analytics`);
                 const data = await response.json();
@@ -1559,12 +1557,10 @@
                 
                 if (statusEl) statusEl.textContent = '🔄 Loading customer data from Shopify...';
                 
-                // Fetch data from API
-                const apiBaseUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3001/api' 
-                    : 'https://ideal-fit-app1.onrender.com/api';
+                                // Fetch data from API
+                const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
                 
-                const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=50`);
+                const response = await fetch(`${apiBaseUrl}/public-orders?limit=50`);
                 const data = await response.json();
                 
                 if (data.success && data.data && data.data.length > 0) {
