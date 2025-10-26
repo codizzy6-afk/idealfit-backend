@@ -121,6 +121,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     // Most popular size
     const mostPopularSize = sizeStats.length > 0 ? sizeStats[0] : null;
 
+    // Calculate total revenue (sum of all order totals)
+    const totalRevenue = orders.reduce((sum, order: any) => {
+      return sum + (parseFloat(order.total_price) || 0);
+    }, 0);
+
+    // Calculate average order value
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    // Get current month's order count
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const currentMonthOrders = orders.filter((order: any) => {
+      if (!order.created_at) return false;
+      const orderMonth = order.created_at.substring(0, 7); // YYYY-MM
+      return orderMonth === currentMonth;
+    });
+
     return new Response(JSON.stringify({
       success: true,
       data: {
@@ -128,7 +145,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           totalOrders,
           ordersWithRecommendations,
           conversionRate: parseFloat(conversionRate),
-          mostPopularSize: mostPopularSize?.size || 'N/A'
+          mostPopularSize: mostPopularSize?.size || 'N/A',
+          totalRevenue: parseFloat(totalRevenue.toFixed(2)),
+          avgOrderValue: parseFloat(avgOrderValue.toFixed(2)),
+          currentMonthOrders: currentMonthOrders.length
         },
         sizeDistribution: sizeStats,
         monthlyTrends: Object.keys(monthlyTrends).sort().map(month => ({

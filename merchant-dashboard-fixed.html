@@ -1059,22 +1059,26 @@
                      const analytics = data.data;
                      console.log('Analytics Data:', analytics); // Debug log
                      
-                     // Update stat cards from KPIs
-                     if (analytics.kpis) {
-                         console.log('📊 Updating KPIs with:', analytics.kpis);
-                         updateStatCard('totalOrders', analytics.kpis.totalOrders || 0);
-                         updateStatCard('totalRevenue', '$0.00'); // Not available yet
-                         updateStatCard('totalCustomers', analytics.kpis.totalCustomers || analytics.kpis.totalOrders || 0);
-                         updateStatCard('avgOrderValue', '$0.00'); // Not available yet
-                         console.log('✅ KPIs Updated Successfully');
-                     } else {
-                         console.error('❌ No KPIs found in analytics data:', analytics);
-                         // Set default values if KPIs not found
-                         updateStatCard('totalOrders', 0);
-                         updateStatCard('totalRevenue', '$0.00');
-                         updateStatCard('totalCustomers', 0);
-                         updateStatCard('avgOrderValue', '$0.00');
-                     }
+                                           // Update stat cards from KPIs
+                      if (analytics.kpis) {
+                          console.log('📊 Updating KPIs with:', analytics.kpis);
+                          updateStatCard('totalOrders', analytics.kpis.totalOrders || 0);
+                          // Format revenue with $ and 2 decimals
+                          const revenue = analytics.kpis.totalRevenue || 0;
+                          updateStatCard('totalRevenue', formatCurrency(revenue));
+                          updateStatCard('totalCustomers', analytics.kpis.totalCustomers || analytics.kpis.currentMonthOrders || analytics.kpis.totalOrders || 0);
+                          // Format average order value with $ and 2 decimals
+                          const avgValue = analytics.kpis.avgOrderValue || 0;
+                          updateStatCard('avgOrderValue', formatCurrency(avgValue));
+                          console.log('✅ KPIs Updated Successfully');
+                      } else {
+                          console.error('❌ No KPIs found in analytics data:', analytics);
+                          // Set default values if KPIs not found
+                          updateStatCard('totalOrders', 0);
+                          updateStatCard('totalRevenue', formatCurrency(0));
+                          updateStatCard('totalCustomers', 0);
+                          updateStatCard('avgOrderValue', formatCurrency(0));
+                      }
                     
                     // Get size distribution data
                     const sizeData = analytics.sizeDistribution || [];
