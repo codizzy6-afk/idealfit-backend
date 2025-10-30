@@ -5,10 +5,24 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get("limit") || "50");
+    const merchantId = url.searchParams.get("merchantId");
 
-    // Use your Shopify access token from environment variables
-    const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
-    const SHOPIFY_STORE = process.env.SHOPIFY_STORE || "idealfit-2.myshopify.com";
+    // Resolve Shopify credentials per merchant (fallback to env)
+    let SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
+    let SHOPIFY_STORE = process.env.SHOPIFY_STORE || "idealfit-2.myshopify.com";
+
+    if (merchantId) {
+      try {
+        const db = (await import("../db.server")).default;
+        const merchant = await db.merchant.findUnique({ where: { id: merchantId } });
+        if (merchant?.shopifyAccessToken && merchant.shopDomain) {
+          SHOPIFY_ACCESS_TOKEN = merchant.shopifyAccessToken;
+          SHOPIFY_STORE = merchant.shopDomain;
+        }
+      } catch (e) {
+        // If lookup fails, continue with env vars
+      }
+    }
     
     if (!SHOPIFY_ACCESS_TOKEN) {
       throw new Error("SHOPIFY_ACCESS_TOKEN not configured");

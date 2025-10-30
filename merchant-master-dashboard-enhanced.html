@@ -2498,42 +2498,6 @@
                     </div>
                 </div>
 
-                <!-- Dynamic KPI Cards -->
-                <div class="stats-grid">
-                    <div class="stat-card dynamic" id="totalOrdersCard">
-                        <div class="stat-icon">📦</div>
-                        <div class="stat-number" id="totalOrders">-</div>
-                        <div class="stat-label">Total Orders</div>
-                        <div class="trend-indicator" id="totalOrdersTrend">
-                            <span class="trend-neutral">↔ No change</span>
-                        </div>
-                    </div>
-                    <div class="stat-card dynamic" id="uniqueCustomersCard">
-                        <div class="stat-icon">👤</div>
-                        <div class="stat-number" id="uniqueCustomers">-</div>
-                        <div class="stat-label">Unique Customers</div>
-                        <div class="trend-indicator" id="uniqueCustomersTrend">
-                            <span class="trend-neutral">↔ No change</span>
-                        </div>
-                    </div>
-                    <div class="stat-card dynamic" id="mostPopularSizeCard">
-                        <div class="stat-icon">📏</div>
-                        <div class="stat-number" id="mostPopularSize">-</div>
-                        <div class="stat-label">Most Popular Size</div>
-                        <div class="trend-indicator" id="mostPopularSizeTrend">
-                            <span class="trend-neutral">↔ No change</span>
-                        </div>
-                    </div>
-                    <div class="stat-card dynamic" id="returnReductionCard">
-                        <div class="stat-icon">📈</div>
-                        <div class="stat-number" id="returnReduction">-</div>
-                        <div class="stat-label">Est. Return Reduction</div>
-                        <div class="trend-indicator" id="returnReductionTrend">
-                            <span class="trend-neutral">↔ No change</span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Dynamic Size Distribution Chart -->
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -3130,6 +3094,8 @@
         // Tab navigation function (global scope)
         function showTab(tabName) {
             try {
+                console.log('showTab called with:', tabName);
+                
                 // Hide all tab contents
                 const contents = document.querySelectorAll('.tab-content');
                 contents.forEach(content => content.style.display = 'none');
@@ -3154,6 +3120,15 @@
                     
                     // Save current tab to localStorage for persistence
                     localStorage.setItem('idealfit_current_tab', tabName);
+                    
+                    // Load data based on tab
+                    if (tabName === 'analytics' && typeof refreshAnalyticsData === 'function') {
+                        console.log('📊 Loading analytics data...');
+                        refreshAnalyticsData();
+                    } else if (tabName === 'customers' && typeof loadCustomerData === 'function') {
+                        console.log('👥 Loading customer data...');
+                        loadCustomerData();
+                    }
                 }
             } catch (error) {
                 console.error('Error switching tabs:', error);
@@ -3180,8 +3155,8 @@
         class DynamicAnalytics {
             constructor() {
                 this.apiBaseUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3001/api' 
-                    : 'https://ideal-fit-app1.onrender.com/api';
+                    ? 'http://localhost:3002' 
+                    : 'https://ideal-fit-app1.onrender.com';
                 this.refreshInterval = 30000; // 30 seconds
                 this.autoRefreshEnabled = true;
                 this.refreshTimer = null;
@@ -3363,35 +3338,40 @@
             // Fetch analytics data from Shopify REST API
             async fetchAnalyticsData() {
                 try {
-                    // Try Shopify REST API first
-                    const response = await fetch(`${this.apiBaseUrl}/shopify-rest-analytics?period=30d`);
+                    // Use the working endpoint that matches the old dashboard
+                    const apiUrl = this.apiBaseUrl === 'https://ideal-fit-app1.onrender.com' 
+                        ? `${this.apiBaseUrl}/api/analytics`
+                        : `${this.apiBaseUrl}/api/shopify-rest-analytics?period=30d`;
+                    
+                    console.log(`🔄 Fetching analytics data from: ${apiUrl}`);
+                    const response = await fetch(apiUrl);
+                    console.log(`📡 API Response status: ${response.status}`);
+                    
                     if (response.ok) {
                         const apiData = await response.json();
-                        if (apiData.success) {
+                        console.log('📊 API Response data:', apiData);
+                        
+                        if (apiData.success && apiData.data) {
                             if (apiData.fallback) {
                                 console.log('⚠️ Using fallback analytics data:', apiData.message);
                             } else {
                                 console.log('✅ Using Shopify REST API analytics data');
                             }
                             return this.transformShopifyAnalyticsData(apiData.data);
+                        } else {
+                            console.warn('❌ API returned success=false or missing data:', apiData);
                         }
+                    } else {
+                        console.warn(`⚠️ API response not OK: ${response.status} ${response.statusText}`);
                     }
                     
-                    // Fallback to local analytics API
-                    console.log('⚠️ Shopify REST API unavailable, using local analytics');
-                    const localResponse = await fetch(`${this.apiBaseUrl}/analytics?shop=idealfit-2.myshopify.com`);
-                    if (localResponse.ok) {
-                        const localData = await localResponse.json();
-                        if (localData.success) {
-                            return this.transformLocalAnalyticsData(localData.data);
-                        }
-                    }
-                    
-                    throw new Error('Both Shopify REST and local APIs failed');
+                    throw new Error('Analytics API failed');
                     
                 } catch (error) {
-                    console.error('Error fetching analytics data:', error);
+                    console.error('❌ Error fetching analytics data:', error);
+                    console.error('Error details:', error.message);
                     // Fallback to mock data
+                    console.log('🔄 Using mock data as fallback');
                     return this.generateMockData();
                 }
             }
@@ -3399,39 +3379,60 @@
             // Transform Shopify analytics data to dashboard format
             transformShopifyAnalyticsData(data) {
                 console.log('📊 Transforming Shopify analytics data:', data);
+                
+                // Safely handle missing data - check for both kpis and summary structures
+                const kpis = data.kpis || {};
+                const summary = data.summary || {};
+                const stats = kpis.totalOrders !== undefined ? kpis : summary;
+                
+                const sizeDistribution = data.sizeDistribution || [];
+                const topCustomers = data.topCustomers || [];
+                const recentActivity = data.recentActivity || { orders: 0, revenue: 0 };
+                
                 return {
                     summary: {
-                        totalOrders: data.summary.totalOrders,
-                        uniqueCustomers: data.summary.uniqueCustomers,
-                        totalRevenue: data.summary.totalRevenue,
-                        averageOrderValue: data.summary.averageOrderValue
+                        totalOrders: stats.totalOrders || 0,
+                        uniqueCustomers: stats.uniqueCustomers || 0,
+                        totalRevenue: stats.totalRevenue || 0,
+                        averageOrderValue: stats.averageOrderValue || 0
                     },
-                    sizeData: data.sizeDistribution || [],
-                    topPerformers: data.topCustomers.slice(0, 2).map(customer => ({
-                        name: customer.name,
-                        orders: customer.totalOrders
+                    sizeData: sizeDistribution,
+                    topPerformers: topCustomers.slice(0, 2).map(customer => ({
+                        name: customer.name || 'Unknown',
+                        orders: customer.totalOrders || customer.orders || 0
                     })),
-                    highDemand: data.sizeDistribution ? data.sizeDistribution.filter(item => item.recommendations > 1).map(item => item.size) : [],
-                    recentActivity: data.recentActivity
+                    highDemand: sizeDistribution.filter(item => item.recommendations > 1).map(item => item.size),
+                    recentActivity: recentActivity
                 };
             }
             
             // Transform local analytics data to dashboard format
             transformLocalAnalyticsData(data) {
+                console.log('📊 Transforming local analytics data:', data);
+                
+                // Safely handle missing data - check for both kpis and summary structures
+                const kpis = data.kpis || {};
+                const summary = data.summary || {};
+                const stats = kpis.totalOrders !== undefined ? kpis : summary;
+                
+                const sizeDistribution = data.sizeDistribution || [];
+                const topCustomers = data.topCustomers || [];
+                const recentActivity = data.recentActivity || { orders: 0, revenue: 0 };
+                
                 return {
                     summary: {
-                        totalOrders: data.summary.totalOrders,
-                        uniqueCustomers: data.summary.uniqueCustomers,
-                        totalRevenue: data.summary.totalRevenue,
-                        averageOrderValue: data.summary.averageOrderValue
+                        totalOrders: stats.totalOrders || 0,
+                        uniqueCustomers: stats.uniqueCustomers || 0,
+                        totalRevenue: stats.totalRevenue || 0,
+                        averageOrderValue: stats.averageOrderValue || 0
                     },
-                    sizeData: data.sizeDistribution || [],
-                    topPerformers: data.topCustomers.slice(0, 2).map(customer => ({
-                        name: customer.name,
-                        orders: customer.totalOrders
+                    sizeData: sizeDistribution,
+                    topPerformers: topCustomers.slice(0, 2).map(customer => ({
+                        name: customer.name || 'Unknown',
+                        orders: customer.totalOrders || customer.orders || 0
                     })),
-                    highDemand: data.sizeDistribution ? data.sizeDistribution.filter(item => item.recommendations > 1).map(item => item.size) : [],
-                    recentActivity: data.recentActivity
+                    highDemand: sizeDistribution.filter(item => item.recommendations > 1).map(item => item.size),
+                    recentActivity: recentActivity
                 };
             }
             
@@ -3503,10 +3504,14 @@
             updateTrends(data) {
                 if (!this.previousData) return;
                 
+                // Use summary instead of kpis - matching the data structure
+                const oldSummary = this.previousData.summary || {};
+                const newSummary = data.summary || {};
+                
                 const trends = {
-                    totalOrders: this.calculateTrend(this.previousData.kpis.totalOrders, data.kpis.totalOrders),
-                    uniqueCustomers: this.calculateTrend(this.previousData.kpis.uniqueCustomers, data.kpis.uniqueCustomers),
-                    returnReduction: this.calculateTrend(parseFloat(this.previousData.kpis.returnReduction), parseFloat(data.kpis.returnReduction))
+                    totalOrders: this.calculateTrend(oldSummary.totalOrders || 0, newSummary.totalOrders || 0),
+                    uniqueCustomers: this.calculateTrend(oldSummary.uniqueCustomers || 0, newSummary.uniqueCustomers || 0),
+                    returnReduction: this.calculateTrend(parseFloat('32%') || 0, parseFloat('32%') || 0) // Fixed value for now
                 };
                 
                 Object.entries(trends).forEach(([key, trend]) => {
@@ -3818,9 +3823,9 @@
                 try {
                     console.log('🔄 Loading size chart from API...');
                     const apiBaseUrl = window.location.hostname === 'localhost' 
-                        ? 'http://localhost:3001/api' 
-                        : 'https://ideal-fit-app1.onrender.com/api';
-                    const response = await fetch(`${apiBaseUrl}/sizecharts?shop=idealfit-2.myshopify.com`);
+                        ? 'http://localhost:3002' 
+                        : 'https://ideal-fit-app1.onrender.com';
+                    const response = await fetch(`${apiBaseUrl}/api/sizecharts?shop=idealfit-2.myshopify.com`);
                     const data = await response.json();
                     
                     if (data && data.success && data.data && data.data.length > 0) {
@@ -4012,9 +4017,9 @@
                 try {
                     // Save to API server
                     const apiBaseUrl = window.location.hostname === 'localhost' 
-                        ? 'http://localhost:3001/api' 
-                        : 'https://ideal-fit-app1.onrender.com/api';
-                    const response = await fetch(`${apiBaseUrl}/sizecharts`, {
+                        ? 'http://localhost:3002' 
+                        : 'https://ideal-fit-app1.onrender.com';
+                    const response = await fetch(`${apiBaseUrl}/api/sizecharts`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -4391,11 +4396,91 @@
             }
         }
 
-        // Refresh analytics data
-        function refreshAnalyticsData() {
-            if (dynamicAnalytics) {
-                dynamicAnalytics.loadAnalyticsData();
+        // Simple analytics loading - like the working dashboard
+        async function loadAnalyticsData() {
+            try {
+                console.log('🔄 Loading analytics data...');
+                
+                const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
+                
+                console.log(`📡 Fetching from: ${apiBaseUrl}/analytics`);
+                const response = await fetch(`${apiBaseUrl}/analytics`);
+                console.log(`📥 Response status: ${response.status}`);
+                
+                const data = await response.json();
+                console.log('✅ Analytics API Response:', data);
+                
+                if (data.success && data.data) {
+                    const analytics = data.data;
+                    
+                    // Extract kpis or summary data
+                    const kpis = analytics.kpis || {};
+                    const summary = analytics.summary || analytics;
+                    const stats = kpis.totalOrders !== undefined ? kpis : summary;
+                    
+                    console.log('📊 Updating KPIs with:', stats);
+                    
+                    // Update KPI cards - try both old and new dashboard formats
+                    updateStatCard('totalOrders', stats.totalOrders || 0);
+                    
+                    // Update totalRevenue if element exists
+                    if (document.getElementById('totalRevenue')) {
+                        updateStatCard('totalRevenue', formatCurrency(stats.totalRevenue || 0));
+                    }
+                    
+                    // Update totalCustomers if element exists  
+                    if (document.getElementById('totalCustomers')) {
+                        updateStatCard('totalCustomers', stats.uniqueCustomers || stats.totalCustomers || 0);
+                    }
+                    
+                    // Update avgOrderValue if element exists
+                    if (document.getElementById('avgOrderValue')) {
+                        updateStatCard('avgOrderValue', formatCurrency(stats.averageOrderValue || stats.avgOrderValue || 0));
+                    }
+                    
+                    // Update enhanced dashboard cards if they exist
+                    if (document.getElementById('uniqueCustomers')) {
+                        updateStatCard('uniqueCustomers', stats.uniqueCustomers || 0);
+                    }
+                    if (document.getElementById('mostPopularSize')) {
+                        updateStatCard('mostPopularSize', analytics.sizeDistribution?.[0]?.size || 'L');
+                    }
+                    if (document.getElementById('returnReduction')) {
+                        updateStatCard('returnReduction', '32%');
+                    }
+                    
+                    console.log('✅ KPIs Updated Successfully');
+                } else {
+                    console.warn('⚠️ No data available');
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
             }
+        }
+
+        // Update stat card with animation
+        function updateStatCard(id, value) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.classList.add('animated-number', 'updating');
+                element.textContent = value;
+                setTimeout(() => {
+                    element.classList.remove('updating');
+                }, 300);
+            }
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        // Refresh analytics data - simple wrapper
+        function refreshAnalyticsData() {
+            loadAnalyticsData();
         }
 
         // Sort table
@@ -5459,9 +5544,9 @@
                 
                 // Try Shopify REST API first
                 const apiBaseUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3001/api' 
-                    : 'https://ideal-fit-app1.onrender.com/api';
-                const response = await fetch(`${apiBaseUrl}/shopify-rest-orders?limit=50`);
+                    ? 'http://localhost:3002' 
+                    : 'https://ideal-fit-app1.onrender.com';
+                const response = await fetch(`${apiBaseUrl}/api/shopify-rest-orders?limit=50`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
@@ -5477,7 +5562,7 @@
                 
                 // Fallback to local API
                 console.log('⚠️ Shopify REST API unavailable, using local customer data');
-                const localResponse = await fetch(`${apiBaseUrl}/customers?shop=idealfit-2.myshopify.com`);
+                const localResponse = await fetch(`${apiBaseUrl}/api/customers?shop=idealfit-2.myshopify.com`);
                 if (localResponse.ok) {
                     const localData = await localResponse.json();
                     if (localData.success) {
@@ -5559,8 +5644,6 @@
             if (countElement) {
                 countElement.textContent = `Showing ${orders.length} of ${orders.length} customers`;
             }
-        }
-        
         }
 
         function filterCustomerTable(fromDate, toDate, month, year, size) {
@@ -5821,11 +5904,18 @@
                     console.warn('Billing manager initialization failed:', error);
                 }
                 
-                // Load customer data from API
+                // Load data based on current tab
                 try {
-                    loadCustomerData();
+                    const currentTab = dashboardState?.currentTab || localStorage.getItem('idealfit_current_tab') || 'analytics';
+                    if (currentTab === 'analytics' && typeof refreshAnalyticsData === 'function') {
+                        console.log('📊 Loading initial analytics data...');
+                        refreshAnalyticsData();
+                    } else if (currentTab === 'customers' && typeof loadCustomerData === 'function') {
+                        console.log('👥 Loading initial customer data...');
+                        loadCustomerData();
+                    }
                 } catch (error) {
-                    console.warn('Customer data loading failed:', error);
+                    console.warn('Initial data loading failed:', error);
                 }
                 
                 // Set default dates (with null checks)

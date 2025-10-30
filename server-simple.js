@@ -724,6 +724,120 @@ app.get('/api/shopify-rest-analytics', async (req, res) => {
   }
 });
 
+// Get analytics - simple endpoint for dashboard
+app.get('/api/analytics', async (req, res) => {
+  try {
+    const accessToken = process.env.SHOPIFY_ACCESS_TOKEN;
+    const shop = process.env.SHOPIFY_STORE || 'idealfit-2.myshopify.com';
+    
+    if (!accessToken) {
+      return res.json({
+        success: false,
+        message: 'SHOPIFY_ACCESS_TOKEN not configured',
+        data: {
+          kpis: {
+            totalOrders: 0,
+            ordersWithRecommendations: 0,
+            conversionRate: 0,
+            mostPopularSize: 'N/A',
+            totalRevenue: 0,
+            avgOrderValue: 0,
+            currentMonthOrders: 0
+          },
+          sizeDistribution: [],
+          monthlyTrends: []
+        }
+      });
+    }
+
+    // Fetch from shopify-rest-analytics endpoint
+    const analyticsResponse = await shopifyApiCall('orders.json?limit=250&status=any');
+    const orders = analyticsResponse.orders || [];
+    
+    // Process analytics same as shopify-rest-analytics
+    const sizeDistribution = {};
+    const measurementData = {};
+    
+    orders.forEach(order => {
+      if (order.note_attributes) {
+        let bust = null, waist = null, hip = null, recommendedSize = null;
+        
+        order.note_attributes.forEach(attr => {
+          if (attr.name === '_measurement_bust') bust = parseFloat(attr.value);
+          if (attr.name === '_measurement_waist') waist = parseFloat(attr.value);
+          if (attr.name === '_measurement_hip') hip = parseFloat(attr.value);
+          if (attr.name === '_recommended_size') recommendedSize = attr.value;
+        });
+        
+        if (recommendedSize) {
+          sizeDistribution[recommendedSize] = (sizeDistribution[recommendedSize] || 0) + 1;
+          
+          if (!measurementData[recommendedSize]) {
+            measurementData[recommendedSize] = { bust: [], waist: [], hip: [] };
+          }
+          
+          if (bust) measurementData[recommendedSize].bust.push(bust);
+          if (waist) measurementData[recommendedSize].waist.push(waist);
+          if (hip) measurementData[recommendedSize].hip.push(hip);
+        }
+      }
+    });
+    
+    const sizeDistributionArray = Object.keys(sizeDistribution).map(size => {
+      const measurements = measurementData[size] || { bust: [], waist: [], hip: [] };
+      const avgBust = measurements.bust.length > 0 ? 
+        (measurements.bust.reduce((sum, val) => sum + val, 0) / measurements.bust.length).toFixed(1) : '0.0';
+      const avgWaist = measurements.waist.length > 0 ? 
+        (measurements.waist.reduce((sum, val) => sum + val, 0) / measurements.waist.length).toFixed(1) : '0.0';
+      const avgHip = measurements.hip.length > 0 ? 
+        (measurements.hip.reduce((sum, val) => sum + val, 0) / measurements.hip.length).toFixed(1) : '0.0';
+      
+      return {
+        size,
+        recommendations: sizeDistribution[size],
+        percentage: orders.length > 0 ? ((sizeDistribution[size] / orders.length) * 100).toFixed(1) : '0.0',
+        avgBust,
+        avgWaist,
+        avgHip,
+        priority: sizeDistribution[size] > 2 ? 'HIGH' : 'MEDIUM'
+      };
+    }).sort((a, b) => b.recommendations - a.recommendations);
+    
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.total_price), 0);
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const uniqueCustomers = new Set(orders.map(o => o.customer?.id)).size;
+    
+    res.json({
+      success: true,
+      data: {
+        kpis: {
+          totalOrders,
+          ordersWithRecommendations: Object.values(sizeDistribution).reduce((a, b) => a + b, 0),
+          conversionRate: totalOrders > 0 ? ((Object.values(sizeDistribution).reduce((a, b) => a + b, 0) / totalOrders) * 100).toFixed(1) : '0.0',
+          mostPopularSize: sizeDistributionArray[0]?.size || 'N/A',
+          totalRevenue: parseFloat(totalRevenue.toFixed(2)),
+          avgOrderValue: parseFloat(avgOrderValue.toFixed(2)),
+          uniqueCustomers
+        },
+        sizeDistribution: sizeDistributionArray,
+        monthlyTrends: []
+      }
+    });
+  } catch (error) {
+    console.error('Error in /api/analytics:', error);
+    res.json({
+      success: false,
+      error: error.message,
+      data: {
+        kpis: { totalOrders: 0, ordersWithRecommendations: 0, conversionRate: 0, mostPopularSize: 'N/A', totalRevenue: 0, avgOrderValue: 0, uniqueCustomers: 0 },
+        sizeDistribution: [],
+        monthlyTrends: []
+      }
+    });
+  }
+});
+
 // Serve static files
 app.use(express.static('.'));
 
@@ -732,8 +846,10 @@ app.listen(PORT, () => {
   console.log(`🎯 IdealFit API Server running on port ${PORT}`);
   console.log(`📊 Available endpoints:`);
   console.log(`   GET  /api/test`);
+  console.log(`   GET  /api/analytics`);
   console.log(`   GET  /api/shopify-rest-customers`);
   console.log(`   GET  /api/shopify-rest-orders`);
+  console.log(`   GET  /api/shopify-rest-analytics`);
   console.log(`   GET  /merchant-master-dashboard-enhanced.html`);
   console.log(`   GET  /company-admin-dashboard.html`);
 });
