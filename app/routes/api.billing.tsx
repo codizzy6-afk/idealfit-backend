@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { cache, billingCacheKey } from "../utils/cache.server";
 
 // Billing API endpoint - calculates usage and billing based on order count
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -8,6 +9,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     
     if (!SHOPIFY_ACCESS_TOKEN) {
       throw new Error("SHOPIFY_ACCESS_TOKEN not configured");
+    }
+
+    // Cache current month billing for 2 minutes
+    const cached = cache.get<any>(billingCacheKey(SHOPIFY_STORE));
+    if (cached) {
+      return new Response(JSON.stringify({ success: true, data: cached }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
     }
 
     // Fetch orders from Shopify
@@ -69,7 +79,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const nextTier = tiers.find(tier => orderCount < tier.min);
     const ordersToNextTier = nextTier ? nextTier.min - orderCount : null;
 
-    return new Response(JSON.stringify({
+    const result = {
       success: true,
       data: {
         currentMonth: {
@@ -97,7 +107,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         invoiceGenerated: false, // Placeholder for invoice generation
         lastInvoiceDate: null
       }
-    }), {
+    };
+
+    cache.set(billingCacheKey(SHOPIFY_STORE), result.data, 2 * 60 * 1000);
+
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: {
         "Content-Type": "application/json",

@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { cache, analyticsCacheKey } from "../utils/cache.server";
 
 // Analytics API endpoint - calculates statistics from orders
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -8,6 +9,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     
     if (!SHOPIFY_ACCESS_TOKEN) {
       throw new Error("SHOPIFY_ACCESS_TOKEN not configured");
+    }
+
+    // Simple per-shop caching for 2 minutes
+    const cached = cache.get<any>(analyticsCacheKey(SHOPIFY_STORE));
+    if (cached) {
+      return new Response(JSON.stringify({ success: true, data: cached }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
     }
 
     // Fetch orders from Shopify
@@ -138,7 +148,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       return orderMonth === currentMonth;
     });
 
-    return new Response(JSON.stringify({
+    const result = {
       success: true,
       data: {
         kpis: {
@@ -156,7 +166,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           count: monthlyTrends[month]
         }))
       }
-    }), {
+    };
+
+    // cache for 2 minutes
+    cache.set(analyticsCacheKey(SHOPIFY_STORE), result.data, 2 * 60 * 1000);
+
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
