@@ -1991,52 +1991,68 @@
             }
         }
 
-        // Live updates: poll server for webhook version and auto-refresh
+        // Live updates via Server-Sent Events (fallback to polling if unavailable)
         let lastLiveVersion = 0;
-        async function checkLiveUpdates() {
-            try {
-                const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : 'https://ideal-fit-app1.onrender.com/api';
-                const res = await fetch(`${apiBaseUrl}/live?shop=idealfit-2.myshopify.com`, { cache: 'no-store' });
-                const json = await res.json();
-                if (!json.success) return;
-                const { version, lastWebhookTs } = json.data || {};
-
-                // Update indicator status
-                const dot = document.getElementById('liveDot');
-                const txt = document.getElementById('liveText');
-                if (dot && txt) {
-                    if (version > lastLiveVersion) {
-                        // Pulse
-                        dot.style.background = '#10b981';
-                        dot.style.boxShadow = '0 0 0 6px rgba(16,185,129,0.25)';
-                        txt.textContent = 'Updated just now';
-
-                        // Auto-refresh analytics and billing silently
-                        loadAnalyticsData();
-                        if (typeof loadBillingData === 'function') {
-                            loadBillingData();
-                        }
-
-                        setTimeout(() => {
-                            dot.style.boxShadow = 'none';
-                            txt.textContent = `Last update: ${new Date(lastWebhookTs || Date.now()).toLocaleTimeString()}`;
-                        }, 1500);
-                    } else {
-                        dot.style.background = '#9CA3AF';
-                        txt.textContent = 'Idle';
-                    }
-                }
-
-                lastLiveVersion = Math.max(lastLiveVersion, version || 0);
-            } catch (e) {
-                // ignore temporary network errors
-            }
+        function handleLiveUpdate(version, lastWebhookTs) {
+            const dot = document.getElementById('liveDot');
+            const txt = document.getElementById('liveText');
+            if (!dot || !txt) return;
+            // Pulse
+            dot.style.background = '#10b981';
+            dot.style.boxShadow = '0 0 0 6px rgba(16,185,129,0.25)';
+            txt.textContent = 'Updated just now';
+            // Auto-refresh analytics and billing silently
+            loadAnalyticsData();
+            if (typeof loadBillingData === 'function') loadBillingData();
+            setTimeout(() => {
+                dot.style.boxShadow = 'none';
+                txt.textContent = `Last update: ${new Date(lastWebhookTs || Date.now()).toLocaleTimeString()}`;
+            }, 1500);
+            lastLiveVersion = Math.max(lastLiveVersion, version || 0);
         }
 
-        // Start live polling every 12s
-        setInterval(checkLiveUpdates, 12000);
-        // Kick off immediately
-        checkLiveUpdates();
+        (function initLiveUpdates(){
+            const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : 'https://ideal-fit-app1.onrender.com/api';
+            if (window.EventSource) {
+                try {
+                    const es = new EventSource(`${apiBaseUrl}/live-sse?shop=idealfit-2.myshopify.com`);
+                    es.addEventListener('init', (ev) => {
+                        const d = JSON.parse(ev.data);
+                        lastLiveVersion = d.version || 0;
+                        const txt = document.getElementById('liveText');
+                        if (txt) txt.textContent = `Last update: ${new Date(d.lastWebhookTs || Date.now()).toLocaleTimeString()}`;
+                    });
+                    es.addEventListener('update', (ev) => {
+                        const d = JSON.parse(ev.data);
+                        if ((d.version || 0) > lastLiveVersion) handleLiveUpdate(d.version, d.lastWebhookTs);
+                    });
+                    es.onerror = () => {
+                        // Fallback to polling if SSE fails
+                        startLivePolling();
+                        es.close();
+                    };
+                    return; // using SSE
+                } catch (e) {
+                    // fallthrough to polling
+                }
+            }
+            // If no SSE support, use polling
+            startLivePolling();
+
+            function startLivePolling(){
+                async function checkLive(){
+                    try {
+                        const res = await fetch(`${apiBaseUrl}/live?shop=idealfit-2.myshopify.com`, { cache: 'no-store' });
+                        const json = await res.json();
+                        if (!json.success) return;
+                        const { version, lastWebhookTs } = json.data || {};
+                        if ((version || 0) > lastLiveVersion) handleLiveUpdate(version, lastWebhookTs);
+                    } catch (_e) {}
+                }
+                setInterval(checkLive, 12000);
+                checkLive();
+            }
+        })();
         
                  // Billing Management Functions
          // Currency detection
