@@ -1756,11 +1756,22 @@
             }
         }
         
-        // Ensure at least N rows in size chart
+        // Ensure at least N rows in size chart with sensible size labels
         function ensureMinimumRows(minRows) {
             if (!Array.isArray(sizeChartData)) sizeChartData = [];
+            const preferredLabels = ['XS','S','M','L','XL','XXL','3XL','4XL','5XL','6XL'];
+            const existingLabels = new Set(sizeChartData.map(r => (r.size || '').toUpperCase()));
+            let labelIndex = 0;
             while (sizeChartData.length < minRows) {
-                sizeChartData.push({ size: '', bust: 0, waist: 0, hip: 0 });
+                let label = preferredLabels[labelIndex] || `SIZE ${labelIndex + 1}`;
+                // avoid duplicates
+                while (existingLabels.has(label)) {
+                    labelIndex++;
+                    label = preferredLabels[labelIndex] || `SIZE ${labelIndex + 1}`;
+                }
+                sizeChartData.push({ size: label, bust: 0, waist: 0, hip: 0 });
+                existingLabels.add(label);
+                labelIndex++;
             }
         }
 
@@ -1787,7 +1798,7 @@
                     
                     if (statusEl) statusEl.textContent = '✅ Size chart loaded';
                 } else {
-                    // Default size chart if none exists
+                    // Default size chart if none exists (seed 6 + auto-expand to 10)
                     sizeChartData = [
                         { size: 'XS', bust: 30, waist: 25, hip: 35 },
                         { size: 'S', bust: 32, waist: 27, hip: 37 },
