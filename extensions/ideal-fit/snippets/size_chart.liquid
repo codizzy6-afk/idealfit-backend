@@ -1,0 +1,86 @@
+{%- comment -%}
+  IdealFit Size Chart Snippet
+  Usage (in product template):
+  {% render 'size_chart', chart: product.metafields.idealfit.size_chart, title: 'Size Chart' %}
+
+  Expects metafield of type JSON with array of rows:
+  [
+    { "size": "M", "bust": 34, "waist": 29, "hip": 39 },
+    ...
+  ]
+{%- endcomment -%}
+
+{%- assign chart_json = chart | default: product.metafields.idealfit.size_chart -%}
+{%- if chart_json == blank -%}
+  <div class="idealfit-sizechart-empty" style="color:#6b7280; font-size: 0.9rem;">
+    No size chart available for this product.
+  </div>
+  {%- break -%}
+{%- endif -%}
+
+{%- assign rows = chart_json | parse_json -%}
+{%- if rows == blank -%}
+  <div class="idealfit-sizechart-empty" style="color:#6b7280; font-size: 0.9rem;">
+    Size chart data is not in the expected format.
+  </div>
+  {%- break -%}
+{%- endif -%}
+
+{%- assign heading = title | default: 'Size Chart' -%}
+{%- assign unit_opt = unit | default: 'inches' -%}
+{%- assign show_bust = show_bust | default: true -%}
+{%- assign show_waist = show_waist | default: true -%}
+{%- assign show_hip = show_hip | default: true -%}
+{%- assign precision = precision | default: 0 -%}
+
+{%- assign factor = 1 -%}
+{%- assign unit_label = 'in' -%}
+{%- if unit_opt == 'cm' -%}
+  {%- assign factor = 2.54 -%}
+  {%- assign unit_label = 'cm' -%}
+{%- endif -%}
+
+{%- assign fmt = precision | plus: 0 -%}
+
+<div class="idealfit-sizechart" style="margin: 1.25rem 0;">
+  <h3 style="margin:0 0 0.75rem 0; font-size:1.125rem; font-weight:700; color:#111827;">{{ heading }}</h3>
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#f8fafc;">
+          <th style="padding:10px; text-align:left; border-bottom:1px solid #e5e7eb;">Size</th>
+          {%- if show_bust -%}<th style="padding:10px; text-align:left; border-bottom:1px solid #e5e7eb;">Bust ({{ unit_label }})</th>{%- endif -%}
+          {%- if show_waist -%}<th style="padding:10px; text-align:left; border-bottom:1px solid #e5e7eb;">High Waist ({{ unit_label }})</th>{%- endif -%}
+          {%- if show_hip -%}<th style="padding:10px; text-align:left; border-bottom:1px solid #e5e7eb;">Hip ({{ unit_label }})</th>{%- endif -%}
+        </tr>
+      </thead>
+      <tbody>
+        {%- for r in rows -%}
+          <tr>
+            <td style="padding:10px; border-bottom:1px solid #f3f4f6; font-weight:600; color:#111827;">{{ r.size }}</td>
+            {%- if show_bust -%}
+              {%- assign bust_val = r.bust | times: factor -%}
+              <td style="padding:10px; border-bottom:1px solid #f3f4f6; color:#374151;">{{ bust_val | round: fmt }}</td>
+            {%- endif -%}
+            {%- if show_waist -%}
+              {%- assign waist_val = r.waist | times: factor -%}
+              <td style="padding:10px; border-bottom:1px solid #f3f4f6; color:#374151;">{{ waist_val | round: fmt }}</td>
+            {%- endif -%}
+            {%- if show_hip -%}
+              {%- assign hip_val = r.hip | times: factor -%}
+              <td style="padding:10px; border-bottom:1px solid #f3f4f6; color:#374151;">{{ hip_val | round: fmt }}</td>
+            {%- endif -%}
+          </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
+  </div>
+  {%- if subtext -%}
+    <div style="margin-top:0.5rem; color:#6b7280; font-size:0.85rem;">{{ subtext }}</div>
+  {%- endif -%}
+  {%- if product -%}
+    <div style="margin-top:0.25rem; color:#9ca3af; font-size:0.75rem;">Product: {{ product.title }}</div>
+  {%- endif -%}
+</div>
+
+

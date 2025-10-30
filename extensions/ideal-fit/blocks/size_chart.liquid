@@ -1,0 +1,77 @@
+{% comment %}
+  IdealFit Size Chart - Theme App Block
+  Merchants can add this block from the Theme Editor.
+{% endcomment %}
+
+<div class="idealfit-sizechart-block">
+  {% render 'size_chart', 
+     chart: product.metafields.idealfit.size_chart, 
+     title: block.settings.heading, 
+     subtext: block.settings.subtext,
+     unit: block.settings.unit,
+     show_bust: block.settings.show_bust,
+     show_waist: block.settings.show_waist,
+     show_hip: block.settings.show_hip,
+     precision: block.settings.precision
+  %}
+</div>
+
+{% schema %}
+{
+  "name": "IdealFit Size Chart",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Size Chart"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "Measurements are shown in inches unless otherwise specified."
+    },
+    {
+      "type": "select",
+      "id": "unit",
+      "label": "Display unit",
+      "default": "inches",
+      "options": [
+        { "value": "inches", "label": "Inches" },
+        { "value": "cm", "label": "Centimeters" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "precision",
+      "label": "Decimal precision",
+      "min": 0,
+      "max": 2,
+      "step": 1,
+      "default": 0
+    },
+    {
+      "type": "checkbox",
+      "id": "show_bust",
+      "label": "Show Bust",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_waist",
+      "label": "Show Waist",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_hip",
+      "label": "Show Hip",
+      "default": true
+    }
+  ]
+}
+{% endschema %}
+
+

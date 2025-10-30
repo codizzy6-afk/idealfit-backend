@@ -15,7 +15,7 @@
   
   <div style="margin-bottom: 10px;">
     <input type="number" id="bustInput" placeholder="Bust" style="width:30%; margin-right:2%; padding:8px; border-radius:6px; border:1px solid #ddd;">
-    <input type="number" id="waistInput" placeholder="Waist" style="width:30%; margin-right:2%; padding:8px; border-radius:6px; border:1px solid #ddd;">
+    <input type="number" id="waistInput" placeholder="High Waist" style="width:30%; margin-right:2%; padding:8px; border-radius:6px; border:1px solid #ddd;">
     <input type="number" id="hipInput" placeholder="Hip" style="width:30%; padding:8px; border-radius:6px; border:1px solid #ddd;">
   </div>
   
@@ -138,7 +138,7 @@ function detectAndSetUnit() {
 function updatePlaceholders() {
   const unit = currentUnit === 'inches' ? 'inches' : 'cm';
   document.getElementById('bustInput').placeholder = `Bust (${unit})`;
-  document.getElementById('waistInput').placeholder = `Waist (${unit})`;
+  document.getElementById('waistInput').placeholder = `High Waist (${unit})`;
   document.getElementById('hipInput').placeholder = `Hip (${unit})`;
 }
 
@@ -401,13 +401,13 @@ document.addEventListener("DOMContentLoaded", function(){
     if (rec === "N/A") {
       messageDiv.innerHTML = `
         <div class="recommendedSize" style="color: #dc2626;">⚠️ Recommended Size: ${rec}</div>
-        <div class="userMeasurements">Your Measurements: Bust ${bust}${unit}, Waist ${waist}${unit}, Hip ${hip}${unit}</div>
+        <div class="userMeasurements">Your Measurements: Bust ${bust}${unit}, High Waist ${waist}${unit}, Hip ${hip}${unit}</div>
         <div style="color: #dc2626; font-size: 13px; margin-top: 4px;">Your measurements exceed our available sizes. Please contact us for custom sizing options.</div>
       `;
     } else {
       messageDiv.innerHTML = `
         <div class="recommendedSize">✅ Recommended Size: ${rec}</div>
-        <div class="userMeasurements">Your Measurements: Bust ${bust}${unit}, Waist ${waist}${unit}, Hip ${hip}${unit}</div>
+        <div class="userMeasurements">Your Measurements: Bust ${bust}${unit}, High Waist ${waist}${unit}, Hip ${hip}${unit}</div>
         <div style="color: #059669; font-size: 13px; margin-top: 4px;">Based on our Comfort Fit algorithm - all measurements fit comfortably in this size.</div>
       `;
     }

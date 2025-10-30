@@ -38,7 +38,6 @@ model Merchant {
   username     String   @unique
   passwordHash String   // bcrypt hashed password
   email        String?
-  shopifyAccessToken String? // per-merchant Shopify Admin API token
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
