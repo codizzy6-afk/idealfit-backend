@@ -15,8 +15,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   } catch (e) {
     console.warn("Webhook registration skipped/failed:", e instanceof Error ? e.message : e);
   }
-  // Redirect to dashboard
-  throw redirect("/app/dashboard");
+  // Redirect to merchant dashboard (SSO)
+  throw redirect("/app/merchant-dashboard");
 };
 
 export const headers: HeadersFunction = (headersArgs) => {
