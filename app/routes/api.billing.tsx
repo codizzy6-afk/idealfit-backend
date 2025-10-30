@@ -3,22 +3,8 @@ import type { LoaderFunctionArgs } from "react-router";
 // Billing API endpoint - calculates usage and billing based on order count
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
-    const url = new URL(request.url);
-    const merchantId = url.searchParams.get("merchantId");
-
-    let SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
-    let SHOPIFY_STORE = process.env.SHOPIFY_STORE || "idealfit-2.myshopify.com";
-
-    if (merchantId) {
-      try {
-        const db = (await import("../db.server")).default;
-        const merchant = await db.merchant.findUnique({ where: { id: merchantId } });
-        if (merchant?.shopifyAccessToken && merchant.shopDomain) {
-          SHOPIFY_ACCESS_TOKEN = merchant.shopifyAccessToken;
-          SHOPIFY_STORE = merchant.shopDomain;
-        }
-      } catch (_) {}
-    }
+    const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
+    const SHOPIFY_STORE = process.env.SHOPIFY_STORE || "idealfit-2.myshopify.com";
     
     if (!SHOPIFY_ACCESS_TOKEN) {
       throw new Error("SHOPIFY_ACCESS_TOKEN not configured");
