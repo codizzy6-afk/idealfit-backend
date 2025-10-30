@@ -627,9 +627,13 @@
                             Real-time insights and performance metrics
                         </div>
                     </div>
-                    <button onclick="loadAnalyticsData()" class="btn btn-primary" style="margin-left: auto;">
+                    <div id="liveIndicator" style="display:flex; align-items:center; gap:10px; margin-left:auto;">
+                        <span id="liveDot" style="width:10px; height:10px; border-radius:50%; background:#9CA3AF; display:inline-block;"></span>
+                        <span id="liveText" style="color:#6b7280; font-size:12px;">Idle</span>
+                        <button onclick="loadAnalyticsData()" class="btn btn-primary">
                         🔄 Refresh Analytics
-                    </button>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="stats-grid">
@@ -1986,6 +1990,53 @@
                 console.error('Error restoring saved tab:', error);
             }
         }
+
+        // Live updates: poll server for webhook version and auto-refresh
+        let lastLiveVersion = 0;
+        async function checkLiveUpdates() {
+            try {
+                const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : 'https://ideal-fit-app1.onrender.com/api';
+                const res = await fetch(`${apiBaseUrl}/live?shop=idealfit-2.myshopify.com`, { cache: 'no-store' });
+                const json = await res.json();
+                if (!json.success) return;
+                const { version, lastWebhookTs } = json.data || {};
+
+                // Update indicator status
+                const dot = document.getElementById('liveDot');
+                const txt = document.getElementById('liveText');
+                if (dot && txt) {
+                    if (version > lastLiveVersion) {
+                        // Pulse
+                        dot.style.background = '#10b981';
+                        dot.style.boxShadow = '0 0 0 6px rgba(16,185,129,0.25)';
+                        txt.textContent = 'Updated just now';
+
+                        // Auto-refresh analytics and billing silently
+                        loadAnalyticsData();
+                        if (typeof loadBillingData === 'function') {
+                            loadBillingData();
+                        }
+
+                        setTimeout(() => {
+                            dot.style.boxShadow = 'none';
+                            txt.textContent = `Last update: ${new Date(lastWebhookTs || Date.now()).toLocaleTimeString()}`;
+                        }, 1500);
+                    } else {
+                        dot.style.background = '#9CA3AF';
+                        txt.textContent = 'Idle';
+                    }
+                }
+
+                lastLiveVersion = Math.max(lastLiveVersion, version || 0);
+            } catch (e) {
+                // ignore temporary network errors
+            }
+        }
+
+        // Start live polling every 12s
+        setInterval(checkLiveUpdates, 12000);
+        // Kick off immediately
+        checkLiveUpdates();
         
                  // Billing Management Functions
          // Currency detection

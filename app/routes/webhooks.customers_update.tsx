@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
-import { invalidateShopCaches } from "../utils/cache.server";
+import { invalidateShopCaches, incrementWebhookVersion } from "../utils/cache.server";
 
 // Receives Shopify CUSTOMERS_UPDATE webhook
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -9,6 +9,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     console.log(`[Webhook] ${topic} received for ${shop} | customer id:`, payload?.id || payload?.admin_graphql_api_id);
     invalidateShopCaches(shop);
+    incrementWebhookVersion(shop);
   } catch (err) {
     console.error("CUSTOMERS_UPDATE webhook handler error:", err);
   }

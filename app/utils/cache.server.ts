@@ -45,4 +45,30 @@ export function invalidateShopCaches(shop: string) {
   cache.invalidateByPrefix(`billing:${shop}`);
 }
 
+// Live updates: simple version counter and timestamp per shop
+function liveKey(shop: string) {
+  return `live:${shop}`;
+}
+
+export function incrementWebhookVersion(shop: string) {
+  const key = liveKey(shop);
+  const current = cache.get<{ version: number; ts: number }>(key) || {
+    version: 0,
+    ts: Date.now(),
+  };
+  const next = { version: current.version + 1, ts: Date.now() };
+  cache.set(key, next, 24 * 60 * 60 * 1000); // keep for a day
+  return next;
+}
+
+export function getWebhookVersion(shop: string) {
+  const key = liveKey(shop);
+  return (
+    cache.get<{ version: number; ts: number }>(key) || {
+      version: 0,
+      ts: Date.now(),
+    }
+  );
+}
+
 
