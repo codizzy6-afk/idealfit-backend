@@ -2272,14 +2272,66 @@
                     updateBillingTierTable(currency, currencyInfo, currencySymbol);
                 }
                 
-                // Initialize billing history with empty state
+                // Load billing history
+                loadBillingHistory();
+                
+            } catch (error) {
+                console.error('Error loading billing data:', error);
+            }
+        }
+        
+        // Load billing history
+        async function loadBillingHistory() {
+            try {
                 const historyEl = document.getElementById('billingHistory');
-                if (historyEl) {
+                if (!historyEl) return;
+                
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3001/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
+                
+                const response = await fetch(`${apiBaseUrl}/invoices?shop=idealfit-2.myshopify.com`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const invoices = data.data;
+                    const currency = detectCurrency();
+                    const currencySymbol = getCurrencyRates(currency).symbol;
+                    
+                    let html = '<table style="width: 100%; border-collapse: collapse;">';
+                    html += '<thead><tr style="background: #f9fafb;">';
+                    html += '<th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Invoice ID</th>';
+                    html += '<th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Month</th>';
+                    html += '<th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb;">Orders</th>';
+                    html += '<th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb;">Rate</th>';
+                    html += '<th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">Amount</th>';
+                    html += '<th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb;">Status</th>';
+                    html += '</tr></thead><tbody>';
+                    
+                    invoices.forEach(inv => {
+                        const amount = inv.total || (inv.totalINR / 83);
+                        html += '<tr style="border-bottom: 1px solid #e5e7eb;">';
+                        html += `<td style="padding: 12px; font-weight: 600;">${inv.id}</td>`;
+                        html += `<td style="padding: 12px;">${new Date(inv.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</td>`;
+                        html += `<td style="padding: 12px; text-align: center;">${inv.orderCount}</td>`;
+                        html += `<td style="padding: 12px; text-align: center;">${currencySymbol}${inv.pricePerOrder.toFixed(currency === 'INR' ? 0 : 2)}</td>`;
+                        html += `<td style="padding: 12px; text-align: right; font-weight: 600;">${currencySymbol}${amount.toFixed(currency === 'INR' ? 0 : 2)}</td>`;
+                        html += `<td style="padding: 12px; text-align: center;"><span style="padding: 4px 12px; border-radius: 12px; background: #d1fae5; color: #166534; font-size: 0.875rem; font-weight: 600;">${inv.status.toUpperCase()}</span></td>`;
+                        html += '</tr>';
+                    });
+                    
+                    html += '</tbody></table>';
+                    historyEl.innerHTML = html;
+                } else {
                     historyEl.innerHTML = '<p style="color: #6b7280;">No billing history available yet.</p>';
                 }
                 
             } catch (error) {
-                console.error('Error loading billing data:', error);
+                console.error('Error loading billing history:', error);
+                const historyEl = document.getElementById('billingHistory');
+                if (historyEl) {
+                    historyEl.innerHTML = '<p style="color: #ef4444;">❌ Error loading billing history</p>';
+                }
             }
         }
         
