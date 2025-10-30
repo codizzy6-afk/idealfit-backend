@@ -1756,6 +1756,14 @@
             }
         }
         
+        // Ensure at least N rows in size chart
+        function ensureMinimumRows(minRows) {
+            if (!Array.isArray(sizeChartData)) sizeChartData = [];
+            while (sizeChartData.length < minRows) {
+                sizeChartData.push({ size: '', bust: 0, waist: 0, hip: 0 });
+            }
+        }
+
         // Load size chart from API
         async function loadSizeChart() {
             try {
@@ -1773,6 +1781,7 @@
                     const chart = data.data[0].sizeChart;
                     sizeChartData = JSON.parse(JSON.stringify(chart)); // Deep copy
                     sizeChartOriginalData = JSON.parse(JSON.stringify(chart)); // Store original
+                    ensureMinimumRows(10);
                     renderSizeChart();
                     hasUnsavedChanges = false; // Reset unsaved changes flag
                     
@@ -1788,6 +1797,7 @@
                         { size: 'XXL', bust: 40, waist: 35, hip: 45 }
                     ];
                     sizeChartOriginalData = JSON.parse(JSON.stringify(sizeChartData)); // Store original
+                    ensureMinimumRows(10);
                     renderSizeChart();
                     hasUnsavedChanges = false; // Reset unsaved changes flag
                     
