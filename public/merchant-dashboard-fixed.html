@@ -1881,6 +1881,7 @@
             
             if (confirm('Are you sure you want to delete this size?')) {
                 sizeChartData.splice(index, 1);
+                ensureMinimumRows(10);
                 renderSizeChart();
                 hasUnsavedChanges = true;
                 
@@ -1910,18 +1911,16 @@
                     }
                 });
                 
-                // Validate data
-                for (let row of sizeChartData) {
-                    if (!row.size || row.size.trim() === '') {
-                        alert('⚠️ All sizes must have a size name!');
-                        if (statusEl) statusEl.textContent = '❌ Validation failed';
-                        return;
-                    }
-                    if (!row.bust || !row.waist || !row.hip) {
-                        alert('⚠️ All measurements must be filled in!');
-                        if (statusEl) statusEl.textContent = '❌ Validation failed';
-                        return;
-                    }
+                // Clean: keep only filled rows, ignore blank placeholders
+                const cleaned = sizeChartData.filter(r => {
+                    const hasSize = r.size && r.size.trim() !== '';
+                    const hasAnyMeasure = Number(r.bust) > 0 || Number(r.waist) > 0 || Number(r.hip) > 0;
+                    return hasSize && hasAnyMeasure;
+                });
+                if (cleaned.length === 0) {
+                    alert('⚠️ Please enter at least one valid size with measurements.');
+                    if (statusEl) statusEl.textContent = '❌ Validation failed';
+                    return;
                 }
                 
                 const apiBaseUrl = window.location.hostname === 'localhost' 
@@ -1935,15 +1934,18 @@
                     },
                     body: JSON.stringify({
                         shop: 'idealfit-2.myshopify.com',
-                        sizeChart: sizeChartData
+                        sizeChart: cleaned
                     })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Update original data and reset unsaved changes flag
-                    sizeChartOriginalData = JSON.parse(JSON.stringify(sizeChartData));
+                    // Persist cleaned data and pad back to 10 for UI
+                    sizeChartData = JSON.parse(JSON.stringify(cleaned));
+                    sizeChartOriginalData = JSON.parse(JSON.stringify(cleaned));
+                    ensureMinimumRows(10);
+                    renderSizeChart();
                     hasUnsavedChanges = false;
                     
                     if (statusEl) statusEl.textContent = '✅ Size chart saved successfully!';
