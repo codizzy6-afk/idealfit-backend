@@ -954,6 +954,11 @@
     <script>
         // Global variables
         let dashboardState;
+        // Ensure dashboard state is available globally for inline handlers
+        if (typeof window !== 'undefined') {
+            window.dashboardState = window.dashboardState || { currentTab: 'analytics' };
+            dashboardState = window.dashboardState;
+        }
         
         // Tab navigation function (global scope)
         function showTab(tabName) {
@@ -1014,9 +1019,18 @@
                 console.error('Error switching tabs:', error);
             }
         }
+        // Expose for inline onclick handlers
+        if (typeof window !== 'undefined') {
+            window.showTab = showTab;
+        }
         
-        // Initialize dashboard state
-        dashboardState = { currentTab: 'analytics' };
+        // Initialize dashboard state if not already set
+        if (!dashboardState) {
+            dashboardState = { currentTab: 'analytics' };
+            if (typeof window !== 'undefined') {
+                window.dashboardState = dashboardState;
+            }
+        }
         
         // Store all customer data for filtering
         let allCustomerData = [];
@@ -1042,15 +1056,9 @@
                 if (statusEl) statusEl.textContent = '🔄 Loading...';
                 
                                  // Fetch data from API
-               const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
-               const merchant = JSON.parse(localStorage.getItem('idealfit_merchant') || 'null');
-               const merchantId = merchant?.id || '';
-               const merchant = JSON.parse(localStorage.getItem('idealfit_merchant') || 'null');
-               const merchantId = merchant?.id || '';
-                 const merchant = JSON.parse(localStorage.getItem('idealfit_merchant') || 'null');
-                 const merchantId = merchant?.id || '';
+                 const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
                  
-                 const response = await fetch(`${apiBaseUrl}/analytics${merchantId ? `?merchantId=${merchantId}` : ''}`);
+                 const response = await fetch(`${apiBaseUrl}/analytics`);
                 const data = await response.json();
                 
                 if (data.success && data.data) {
@@ -1568,7 +1576,7 @@
                                 // Fetch data from API
                 const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
                 
-               const response = await fetch(`${apiBaseUrl}/public-orders?limit=50${merchantId ? `&merchantId=${merchantId}` : ''}`);
+                const response = await fetch(`${apiBaseUrl}/public-orders?limit=50`);
                 const data = await response.json();
                 
                 if (data.success && data.data && data.data.length > 0) {
@@ -2007,7 +2015,7 @@
                       ? 'http://localhost:3001/api' 
                       : 'https://ideal-fit-app1.onrender.com/api';
                   
-                   const response = await fetch(`${apiBaseUrl}/billing${merchantId ? `?merchantId=${merchantId}` : ''}`);
+                                   const response = await fetch(`${apiBaseUrl}/billing`);
                 const data = await response.json();
                 
                 if (data.success && data.data) {
@@ -2396,38 +2404,8 @@
          document.addEventListener('DOMContentLoaded', function() {
              console.log('🎯 IdealFit Merchant Dashboard Loaded Successfully!');
              
-            // Check authentication
-            checkAuth();
-
-            // Ensure merchant Shopify settings are configured
-            try {
-                const merchant = JSON.parse(localStorage.getItem('idealfit_merchant') || 'null');
-                if (merchant && (!merchant.shopDomain || !merchant.shopifyAccessToken)) {
-                    // Prompt user once to set settings
-                    const shopDomain = prompt('Enter your Shopify shop domain (e.g., idealfit-2.myshopify.com):');
-                    const accessToken = shopDomain ? prompt('Enter your Shopify Admin API access token:') : null;
-                    if (shopDomain && accessToken) {
-                        const formData = new FormData();
-                        formData.append('merchantId', merchant.id);
-                        formData.append('shopDomain', shopDomain.trim());
-                        formData.append('shopifyAccessToken', accessToken.trim());
-                        fetch('https://ideal-fit-app1.onrender.com/api/merchant-settings', { method: 'POST', body: formData })
-                            .then(r => r.json())
-                            .then(res => {
-                                if (res.success) {
-                                    // Save locally for convenience
-                                    const updated = { ...merchant, shopDomain, shopifyAccessToken: accessToken };
-                                    localStorage.setItem('idealfit_merchant', JSON.stringify(updated));
-                                    alert('✅ Shopify settings saved. Reloading dashboard...');
-                                    location.reload();
-                                } else {
-                                    console.error('Failed to save settings:', res.error);
-                                }
-                            })
-                            .catch(err => console.error('Settings error:', err));
-                    }
-                }
-            } catch (e) { console.warn('Merchant settings check skipped:', e); }
+             // Check authentication
+             checkAuth();
              
              // Initialize credentials if not exists
              if (!localStorage.getItem('idealfit_credentials')) {
