@@ -1101,12 +1101,22 @@
                     if (statusEl) statusEl.textContent = '✅ Last updated: ' + new Date().toLocaleTimeString();
                 } else {
                     if (statusEl) statusEl.textContent = '⚠️ No data available';
+                    // Reset KPIs to zero to avoid endless "Loading..."
+                    updateStatCard('totalOrders', 0);
+                    updateStatCard('totalRevenue', formatCurrency(0));
+                    updateStatCard('totalCustomers', 0);
+                    updateStatCard('avgOrderValue', formatCurrency(0));
                 }
                 
             } catch (error) {
                 console.error('Error loading analytics:', error);
                 const statusEl = document.getElementById('sizeDistributionStatus');
                 if (statusEl) statusEl.textContent = '❌ Error loading data';
+                // Reset KPIs on error
+                updateStatCard('totalOrders', 0);
+                updateStatCard('totalRevenue', formatCurrency(0));
+                updateStatCard('totalCustomers', 0);
+                updateStatCard('avgOrderValue', formatCurrency(0));
             }
         }
         
