@@ -25,9 +25,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      // Demo mode - return mock order for testing
+      console.log("⚠️ Razorpay not configured. Running in DEMO MODE.");
+      const mockOrderId = "order_demo_" + Date.now();
       return new Response(
-        JSON.stringify({ success: false, error: "Razorpay not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to environment variables." }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: true,
+          orderId: mockOrderId,
+          keyId: "rzp_demo",
+          amount: Math.round(amount * 100),
+          currency: "INR",
+          invoiceId,
+          invoiceNumber,
+          demo: true,
+          demoMessage: "Demo mode: Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to enable real payments",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 

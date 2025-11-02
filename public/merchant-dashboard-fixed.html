@@ -2477,51 +2477,58 @@
                          })
                      });
                      
-                     const data = await response.json();
-                     if (!data.success) {
-                         alert('❌ Failed to initialize Razorpay: ' + (data.error || 'Unknown error'));
-                         return;
-                     }
-                     
-                     // Create Razorpay Checkout
-                     const options = {
-                         key: data.keyId,
-                         amount: data.amount,
-                         currency: data.currency,
-                         order_id: data.orderId,
-                         name: 'IdealFit',
-                         description: `Invoice ${data.invoiceNumber}`,
-                         prefill: {
-                             email: localStorage.getItem('idealfit_email') || 'store@example.com'
-                         },
-                         handler: async function(response) {
-                             alert('✅ Payment successful! Transaction ID: ' + response.razorpay_payment_id);
-                             loadBillingData();
-                             if (typeof loadBillingHistory === 'function') loadBillingHistory();
-                         },
-                         theme: {
-                             color: '#667eea'
-                         },
-                         modal: {
-                             ondismiss: function() {
-                                 console.log('Payment cancelled by user');
-                             }
-                         }
-                     };
-                     
-                     // Load Razorpay Checkout script dynamically
-                     if (!window.Razorpay) {
-                         const script = document.createElement('script');
-                         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-                         script.onload = function() {
-                             const rzp = new window.Razorpay(options);
-                             rzp.open();
-                         };
-                         document.head.appendChild(script);
-                     } else {
-                         const rzp = new window.Razorpay(options);
-                         rzp.open();
-                     }
+                    const data = await response.json();
+                    if (!data.success) {
+                        alert('❌ Failed to initialize Razorpay: ' + (data.error || 'Unknown error'));
+                        return;
+                    }
+                    
+                    // Check if in demo mode
+                    if (data.demo) {
+                        alert('🧪 DEMO MODE\n\n' + data.demoMessage + '\n\nThis is a test payment. No actual charge will be made.');
+                        console.log('Demo mode order created:', data);
+                        return;
+                    }
+                    
+                    // Create Razorpay Checkout
+                    const options = {
+                        key: data.keyId,
+                        amount: data.amount,
+                        currency: data.currency,
+                        order_id: data.orderId,
+                        name: 'IdealFit',
+                        description: `Invoice ${data.invoiceNumber}`,
+                        prefill: {
+                            email: localStorage.getItem('idealfit_email') || 'store@example.com'
+                        },
+                        handler: async function(response) {
+                            alert('✅ Payment successful! Transaction ID: ' + response.razorpay_payment_id);
+                            loadBillingData();
+                            if (typeof loadBillingHistory === 'function') loadBillingHistory();
+                        },
+                        theme: {
+                            color: '#667eea'
+                        },
+                        modal: {
+                            ondismiss: function() {
+                                console.log('Payment cancelled by user');
+                            }
+                        }
+                    };
+                    
+                    // Load Razorpay Checkout script dynamically
+                    if (!window.Razorpay) {
+                        const script = document.createElement('script');
+                        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                        script.onload = function() {
+                            const rzp = new window.Razorpay(options);
+                            rzp.open();
+                        };
+                        document.head.appendChild(script);
+                    } else {
+                        const rzp = new window.Razorpay(options);
+                        rzp.open();
+                    }
                      
                  } else if (gateway === 'stripe') {
                      // Stripe payment - create checkout session on backend
