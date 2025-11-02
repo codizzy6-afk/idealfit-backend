@@ -11,9 +11,21 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       throw new Error("SHOPIFY_ACCESS_TOKEN not configured");
     }
 
+    // Get filter parameters from URL
+    const url = new URL(request.url);
+    const dateFrom = url.searchParams.get('dateFrom');
+    const dateTo = url.searchParams.get('dateTo');
+    const month = url.searchParams.get('month');
+    const year = url.searchParams.get('year');
+    
+    // Build cache key including filters
+    const cacheKey = analyticsCacheKey(SHOPIFY_STORE) + `:${dateFrom || ''}:${dateTo || ''}:${month || ''}:${year || ''}`;
+    
     // Simple per-shop caching for 2 minutes
-    const cached = cache.get<any>(analyticsCacheKey(SHOPIFY_STORE));
-    if (cached) {
+    const cached = cache.get<any>(cacheKey);
+    const forceRefresh = url.searchParams.get('refresh') === 'true';
+    
+    if (cached && !forceRefresh) {
       return new Response(JSON.stringify({ success: true, data: cached }), {
         status: 200,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
@@ -40,7 +52,33 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const monthlyTrends: { [key: string]: number } = {};
     const ordersWithMeasurements: any[] = [];
 
-    orders.forEach((order: any) => {
+    // Filter orders by date if filters are provided
+    let filteredOrders = [...orders];
+    
+    if (dateFrom || dateTo || month || year) {
+      filteredOrders = orders.filter((order: any) => {
+        if (!order.created_at) return false;
+        
+        const orderDate = new Date(order.created_at);
+        const orderDateStr = order.created_at.substring(0, 10); // YYYY-MM-DD
+        const orderMonth = order.created_at.substring(5, 7); // MM
+        const orderYear = order.created_at.substring(0, 4); // YYYY
+        
+        // Check date range
+        if (dateFrom && orderDateStr < dateFrom) return false;
+        if (dateTo && orderDateStr > dateTo) return false;
+        
+        // Check month
+        if (month && orderMonth !== month) return false;
+        
+        // Check year
+        if (year && orderYear !== year) return false;
+        
+        return true;
+      });
+    }
+    
+    filteredOrders.forEach((order: any) => {
       // Extract measurements
       const measurements: any = {};
       
@@ -86,9 +124,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
 
       // Monthly trends
-      const month = order.created_at?.substring(0, 7); // YYYY-MM
-      if (month) {
-        monthlyTrends[month] = (monthlyTrends[month] || 0) + 1;
+      const orderMonth = order.created_at?.substring(0, 7); // YYYY-MM
+      if (orderMonth) {
+        monthlyTrends[orderMonth] = (monthlyTrends[orderMonth] || 0) + 1;
       }
 
       // Store order with measurements
@@ -123,26 +161,26 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     // Sort by count descending
     sizeStats.sort((a, b) => b.recommendations - a.recommendations);
 
-    // Calculate KPIs
-    const totalOrders = orders.length;
+    // Calculate KPIs (use filteredOrders instead of orders)
+    const totalOrders = filteredOrders.length;
     const ordersWithRecommendations = ordersWithMeasurements.length;
     const conversionRate = totalOrders > 0 ? ((ordersWithRecommendations / totalOrders) * 100).toFixed(1) : '0.0';
     
     // Most popular size
     const mostPopularSize = sizeStats.length > 0 ? sizeStats[0] : null;
 
-    // Calculate total revenue (sum of all order totals)
-    const totalRevenue = orders.reduce((sum, order: any) => {
+    // Calculate total revenue (sum of all filtered order totals)
+    const totalRevenue = filteredOrders.reduce((sum, order: any) => {
       return sum + (parseFloat(order.total_price) || 0);
     }, 0);
 
     // Calculate average order value
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    // Get current month's order count
+    // Get current month's order count (use filteredOrders)
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const currentMonthOrders = orders.filter((order: any) => {
+    const currentMonthOrders = filteredOrders.filter((order: any) => {
       if (!order.created_at) return false;
       const orderMonth = order.created_at.substring(0, 7); // YYYY-MM
       return orderMonth === currentMonth;
@@ -168,8 +206,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     };
 
-    // cache for 2 minutes
-    cache.set(analyticsCacheKey(SHOPIFY_STORE), result.data, 2 * 60 * 1000);
+    // cache for 2 minutes with the combined key
+    cache.set(cacheKey, result.data, 2 * 60 * 1000);
 
     return new Response(JSON.stringify(result), {
       status: 200,

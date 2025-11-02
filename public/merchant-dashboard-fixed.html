@@ -636,6 +636,53 @@
                     </div>
                 </div>
 
+                <!-- Date Filters -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">📅 Filter Data by Date Range</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div>
+                            <label for="analyticsDateFrom" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">From Date</label>
+                            <input type="date" id="analyticsDateFrom" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem;">
+                        </div>
+                        <div>
+                            <label for="analyticsDateTo" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">To Date</label>
+                            <input type="date" id="analyticsDateTo" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem;">
+                        </div>
+                        <div>
+                            <label for="analyticsMonth" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Month</label>
+                            <select id="analyticsMonth" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem;">
+                                <option value="">All Months</option>
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03">March</option>
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="analyticsYear" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Year</label>
+                            <select id="analyticsYear" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem;">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                            <button onclick="applyAnalyticsFilters()" class="btn btn-primary" style="flex: 1; padding: 0.75rem;">
+                                ✅ Apply Filter
+                            </button>
+                            <button onclick="clearAnalyticsFilters()" class="btn" style="flex: 1; padding: 0.75rem; background: #f3f4f6; color: #374151;">
+                                🗑️ Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">📦</div>
@@ -1110,7 +1157,7 @@
         // Store all customer data for filtering
         let allCustomerData = [];
         
-        // Populate year dropdown
+        // Populate year dropdown for customer filters
         function populateYearDropdown() {
             const yearSelect = document.getElementById('filterYear');
             if (!yearSelect) return;
@@ -1124,16 +1171,104 @@
             }
         }
         
+        // Populate analytics year dropdown
+        function populateAnalyticsYearDropdown() {
+            const yearSelect = document.getElementById('analyticsYear');
+            if (!yearSelect) return;
+            
+            // Clear existing options
+            yearSelect.innerHTML = '';
+            
+            const currentYear = new Date().getFullYear();
+            for (let year = 2020; year <= currentYear + 1; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+            
+            // Set default to current year
+            yearSelect.value = currentYear;
+        }
+        
+        // Store original analytics data for filtering
+        let originalAnalyticsData = null;
+        
+        // Apply analytics filters
+        function applyAnalyticsFilters() {
+            const dateFrom = document.getElementById('analyticsDateFrom').value;
+            const dateTo = document.getElementById('analyticsDateTo').value;
+            const month = document.getElementById('analyticsMonth').value;
+            const year = document.getElementById('analyticsYear').value;
+            
+            console.log('Applying filters:', { dateFrom, dateTo, month, year });
+            
+            // Reload data with filters applied
+            loadAnalyticsData();
+        }
+        
+        // Clear analytics filters
+        function clearAnalyticsFilters() {
+            document.getElementById('analyticsDateFrom').value = '';
+            document.getElementById('analyticsDateTo').value = '';
+            document.getElementById('analyticsMonth').value = '';
+            
+            // Reset year to current year
+            const currentYear = new Date().getFullYear();
+            document.getElementById('analyticsYear').value = currentYear;
+            
+            console.log('Cleared filters, reloading data...');
+            
+            // Load default data
+            loadAnalyticsData();
+        }
+        
+        // Set current month as default
+        function setCurrentMonthDefault() {
+            const now = new Date();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const currentYear = now.getFullYear();
+            
+            const monthSelect = document.getElementById('analyticsMonth');
+            if (monthSelect) {
+                monthSelect.value = currentMonth;
+            }
+            
+            const yearSelect = document.getElementById('analyticsYear');
+            if (yearSelect && yearSelect.value === '') {
+                yearSelect.value = currentYear;
+            }
+        }
+        
+        // Expose filter functions globally
+        if (typeof window !== 'undefined') {
+            window.applyAnalyticsFilters = applyAnalyticsFilters;
+            window.clearAnalyticsFilters = clearAnalyticsFilters;
+        }
+        
         // Load analytics data
         async function loadAnalyticsData() {
             try {
                 const statusEl = document.getElementById('sizeDistributionStatus');
                 if (statusEl) statusEl.textContent = '🔄 Loading...';
                 
-                                 // Fetch data from API
-                 const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
-                 
-                 const response = await fetch(`${apiBaseUrl}/analytics`);
+                // Get filter values
+                const dateFrom = document.getElementById('analyticsDateFrom')?.value || '';
+                const dateTo = document.getElementById('analyticsDateTo')?.value || '';
+                const month = document.getElementById('analyticsMonth')?.value || '';
+                const year = document.getElementById('analyticsYear')?.value || '';
+                
+                // Build API URL with filters
+                const apiBaseUrl = 'https://ideal-fit-app1.onrender.com/api';
+                const params = new URLSearchParams();
+                if (dateFrom) params.append('dateFrom', dateFrom);
+                if (dateTo) params.append('dateTo', dateTo);
+                if (month) params.append('month', month);
+                if (year) params.append('year', year);
+                
+                const url = `${apiBaseUrl}/analytics${params.toString() ? '?' + params.toString() : ''}`;
+                
+                const response = await fetch(url);
                 const data = await response.json();
                 
                 if (data.success && data.data) {
@@ -2724,11 +2859,15 @@
                  }));
              }
              
-             // Populate year dropdown
-             populateYearDropdown();
-             
-             // Restore saved tab
-             restoreSavedTab();
+            // Populate year dropdowns
+            populateYearDropdown();
+            populateAnalyticsYearDropdown();
+            
+            // Set current month as default for analytics
+            setCurrentMonthDefault();
+            
+            // Restore saved tab
+            restoreSavedTab();
              
              // Load billing data if on billing tab
              if (localStorage.getItem('idealfit_current_tab') === 'billing') {
