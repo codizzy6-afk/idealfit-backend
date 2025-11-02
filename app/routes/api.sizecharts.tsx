@@ -21,14 +21,34 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     });
 
     // Parse and format data to match dashboard expectations
-    const formattedCharts = sizeCharts.map(chart => ({
-      id: chart.id,
-      shop: chart.shop,
-      title: chart.title,
-      sizeChart: JSON.parse(chart.chartData), // Dashboard expects 'sizeChart' key
-      createdAt: chart.createdAt.toISOString(),
-      updatedAt: chart.updatedAt.toISOString()
-    }));
+    const formattedCharts = sizeCharts.map(chart => {
+      try {
+        // Safely parse chartData, handle corrupted data
+        const parsedChartData = typeof chart.chartData === 'string' 
+          ? JSON.parse(chart.chartData) 
+          : chart.chartData;
+        
+        return {
+          id: chart.id,
+          shop: chart.shop,
+          title: chart.title,
+          sizeChart: parsedChartData, // Dashboard expects 'sizeChart' key
+          createdAt: chart.createdAt.toISOString(),
+          updatedAt: chart.updatedAt.toISOString()
+        };
+      } catch (parseError) {
+        console.error(`Error parsing chart data for shop ${chart.shop}:`, parseError);
+        // Return default empty chart if parsing fails
+        return {
+          id: chart.id,
+          shop: chart.shop,
+          title: chart.title,
+          sizeChart: [],
+          createdAt: chart.createdAt.toISOString(),
+          updatedAt: chart.updatedAt.toISOString()
+        };
+      }
+    });
 
     return new Response(JSON.stringify({
       success: true,
