@@ -15,16 +15,15 @@
   <div class="idealfit-sizechart-empty" style="color:#6b7280; font-size: 0.9rem;">
     No size chart available for this product.
   </div>
-  {%- break -%}
-{%- endif -%}
-
-{%- assign rows = chart_json | parse_json -%}
-{%- if rows == blank -%}
-  <div class="idealfit-sizechart-empty" style="color:#6b7280; font-size: 0.9rem;">
-    Size chart data is not in the expected format.
-  </div>
-  {%- break -%}
-{%- endif -%}
+{%- else -%}
+  {%- comment -%} For JSON metafields, Shopify automatically parses them {%- endcomment -%}
+  {%- assign rows = chart_json -%}
+  
+  {%- if rows == blank or rows.first == blank -%}
+    <div class="idealfit-sizechart-empty" style="color:#6b7280; font-size: 0.9rem;">
+      Size chart data is not in the expected format.
+    </div>
+  {%- else -%}
 
 {%- assign heading = title | default: 'Size Chart' -%}
 {%- assign unit_opt = unit | default: 'inches' -%}
@@ -82,5 +81,7 @@
     <div style="margin-top:0.25rem; color:#9ca3af; font-size:0.75rem;">Product: {{ product.title }}</div>
   {%- endif -%}
 </div>
+  {%- endif -%}
+{%- endif -%}
 
 
