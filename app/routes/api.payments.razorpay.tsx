@@ -43,6 +43,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
+    
+    // Detect if using test or live keys
+    const isTestMode = RAZORPAY_KEY_ID.startsWith("rzp_test_");
+    const isLiveMode = RAZORPAY_KEY_ID.startsWith("rzp_live_");
+    console.log(`Using Razorpay ${isLiveMode ? 'LIVE' : isTestMode ? 'TEST' : 'UNKNOWN'} mode`);
 
     // Convert to paise (100 * INR amount)
     const amountInPaise = Math.round(amount * 100);
@@ -88,6 +93,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         currency: "INR",
         invoiceId,
         invoiceNumber,
+        isLiveMode: isLiveMode,
+        isTestMode: isTestMode,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );

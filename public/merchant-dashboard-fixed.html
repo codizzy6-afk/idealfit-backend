@@ -2496,6 +2496,14 @@
                         return;
                     }
                     
+                    // Show live mode warning
+                    if (data.isLiveMode) {
+                        console.warn('⚠️ LIVE MODE: Real money transactions will be charged!');
+                        if (!confirm('⚠️ LIVE MODE ACTIVE\n\nThis will charge REAL MONEY.\n\nAre you sure you want to proceed?')) {
+                            return;
+                        }
+                    }
+                    
                     // Create Razorpay Checkout
                     const options = {
                         key: data.keyId,
