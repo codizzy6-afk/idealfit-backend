@@ -78,6 +78,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 };
 
+// Handle OPTIONS for CORS preflight
+export const OPTIONS = async () => {
+  return new Response(null, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    }
+  });
+};
+
 // Handle GET requests for testing
 export const loader = async ({ request }: ActionFunctionArgs) => {
   const url = new URL(request.url);
@@ -94,7 +105,10 @@ export const loader = async ({ request }: ActionFunctionArgs) => {
       error: 'Missing parameters: bust, waist, hip'
     }), { 
       status: 400,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
