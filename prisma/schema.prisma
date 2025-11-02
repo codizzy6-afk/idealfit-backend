@@ -72,3 +72,19 @@ model Invoice {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+// Customer measurement submissions
+model Submission {
+  id              String   @id @default(cuid())
+  shop            String   // Shop domain
+  customerName    String   @default("Anonymous")
+  productId       String?
+  bust            Float
+  waist           Float
+  hip             Float
+  recommendedSize String
+  orderId         String?
+  date            DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
