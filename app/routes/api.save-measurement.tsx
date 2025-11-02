@@ -1,7 +1,8 @@
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+// Action function for POST requests
+async function handleAction(request: Request) {
   try {
     const data = await request.json();
     console.log('📊 Received measurement data:', data);
@@ -76,21 +77,26 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     });
   }
+}
+
+// Export action and loader for React Router
+export const action = async ({ request }: ActionFunctionArgs) => {
+  return handleAction(request);
 };
 
-// Handle OPTIONS for CORS preflight
-export const OPTIONS = async () => {
-  return new Response(null, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
-    }
-  });
-};
-
-// Handle GET requests for testing
 export const loader = async ({ request }: ActionFunctionArgs) => {
+  // Handle CORS preflight
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
+    });
+  }
+
+  // Handle GET requests for testing
   const url = new URL(request.url);
   const bust = url.searchParams.get('bust');
   const waist = url.searchParams.get('waist');
@@ -112,7 +118,7 @@ export const loader = async ({ request }: ActionFunctionArgs) => {
     });
   }
 
-  // Call the action function
+  // Call the action function for GET requests
   const mockRequest = new Request(request.url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -125,11 +131,8 @@ export const loader = async ({ request }: ActionFunctionArgs) => {
     })
   });
 
-  return action({ request: mockRequest });
+  return handleAction(mockRequest);
 };
-
-
-
 
 
 
