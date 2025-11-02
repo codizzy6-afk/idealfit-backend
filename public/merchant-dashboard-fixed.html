@@ -2575,25 +2575,39 @@
              return 0;
          }
          
-         // Authentication check
-         function checkAuth() {
-             const isLoggedIn = localStorage.getItem('idealfit_logged_in');
-             if (isLoggedIn !== 'true') {
-                 window.location.href = 'login.html';
-             } else {
-                 // Update displayed username
-                 const username = localStorage.getItem('idealfit_username') || 'admin';
-                 const usernameElement = document.getElementById('displayUsername');
-                 if (usernameElement) {
-                     usernameElement.textContent = username;
-                 }
-                 // Update sidebar username
-                 const sidebarUsername = document.querySelector('.user-name');
-                 if (sidebarUsername && username !== 'guest') {
-                     sidebarUsername.textContent = username;
-                 }
-             }
-         }
+        // Authentication check
+        function checkAuth() {
+            const isLoggedIn = localStorage.getItem('idealfit_logged_in');
+            if (isLoggedIn !== 'true') {
+                // Auto-login for standalone dashboard access
+                console.log('Auto-logging in for standalone dashboard access');
+                localStorage.setItem('idealfit_logged_in', 'true');
+                localStorage.setItem('idealfit_username', 'admin');
+                
+                // Update displayed username
+                const usernameElement = document.getElementById('displayUsername');
+                if (usernameElement) {
+                    usernameElement.textContent = 'admin';
+                }
+                // Update sidebar username
+                const sidebarUsername = document.querySelector('.user-name');
+                if (sidebarUsername) {
+                    sidebarUsername.textContent = 'admin';
+                }
+            } else {
+                // Update displayed username
+                const username = localStorage.getItem('idealfit_username') || 'admin';
+                const usernameElement = document.getElementById('displayUsername');
+                if (usernameElement) {
+                    usernameElement.textContent = username;
+                }
+                // Update sidebar username
+                const sidebarUsername = document.querySelector('.user-name');
+                if (sidebarUsername && username !== 'guest') {
+                    sidebarUsername.textContent = username;
+                }
+            }
+        }
          
          // Logout function
          function logout() {
