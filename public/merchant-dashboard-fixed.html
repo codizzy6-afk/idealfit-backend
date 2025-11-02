@@ -877,6 +877,8 @@
                     try {
                         const productId = prompt('Enter Product ID to sync to (numeric)');
                         if (!productId) return;
+                        
+                        // Step 1: First save current changes to database to ensure consistency
                         const inputs = document.querySelectorAll('#sizeChartBody .editable-input');
                         const draft = JSON.parse(JSON.stringify(sizeChartData));
                         inputs.forEach(input => {
@@ -887,17 +889,58 @@
                         });
                         const cleaned = draft.filter(r => r.size && r.size.trim() !== '' && (Number(r.bust)>0 || Number(r.waist)>0 || Number(r.hip)>0));
                         if (cleaned.length === 0) { alert('Enter at least one valid row.'); return; }
+                        
                         const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : 'https://ideal-fit-app1.onrender.com/api';
-                        const res = await fetch(`${apiBaseUrl}/sizechart-sync`, {
+                        
+                        // Save to database first (this ensures database is source of truth)
+                        const saveRes = await fetch(`${apiBaseUrl}/sizecharts`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ shop: 'idealfit-2.myshopify.com', productId, namespace: 'idealfit', key: 'size_chart', sizeChart: cleaned })
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Cache-Control': 'no-cache',
+                                'Pragma': 'no-cache'
+                            },
+                            body: JSON.stringify({
+                                shop: 'idealfit-2.myshopify.com',
+                                sizeChart: cleaned
+                            })
                         });
-                        const json = await res.json();
-                        if (json.success) {
-                            alert('✅ Synced to Shopify metafield! ID: ' + (json.data?.id || 'created'));
+                        
+                        const saveData = await saveRes.json();
+                        if (!saveData.success) {
+                            alert('❌ Failed to save to database first. Cannot sync.');
+                            return;
+                        }
+                        
+                        console.log('✅ Saved to database before syncing to Shopify');
+                        
+                        // Step 2: Now sync to Shopify metafield
+                        const syncRes = await fetch(`${apiBaseUrl}/sizechart-sync`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Cache-Control': 'no-cache',
+                                'Pragma': 'no-cache'
+                            },
+                            body: JSON.stringify({ 
+                                shop: 'idealfit-2.myshopify.com', 
+                                productId, 
+                                namespace: 'idealfit', 
+                                key: 'size_chart', 
+                                sizeChart: cleaned 
+                            })
+                        });
+                        
+                        const syncJson = await syncRes.json();
+                        if (syncJson.success) {
+                            // Update local state
+                            sizeChartData = JSON.parse(JSON.stringify(cleaned));
+                            sizeChartOriginalData = JSON.parse(JSON.stringify(cleaned));
+                            hasUnsavedChanges = false;
+                            
+                            alert('✅ Saved to database and synced to Shopify metafield! ID: ' + (syncJson.data?.id || 'created'));
                         } else {
-                            alert('❌ Sync failed: ' + (json.error || 'Unknown error'));
+                            alert('❌ Sync to Shopify failed: ' + (syncJson.error || 'Unknown error') + '\n\nNote: Data was saved to database, but Shopify sync failed.');
                         }
                     } catch (e) {
                         alert('❌ Sync error. Check console.');
