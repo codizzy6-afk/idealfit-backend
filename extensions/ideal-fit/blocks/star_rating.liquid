@@ -389,7 +389,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   // Display recommendation + measurements
   async function showRecommendation(){
-    const rec = getRecommendedSizeLocal();
+    const rec = await getRecommendedSize();
     const bust = bustInput.value;
     const waist = waistInput.value;
     const hip = hipInput.value;
@@ -437,7 +437,7 @@ document.addEventListener("DOMContentLoaded", function(){
     
     if (!bust || !waist || !hip) return;
     
-    const rec = getRecommendedSizeLocal();
+    const rec = await getRecommendedSize();
     
     const text = target.textContent?.toLowerCase() || '';
     const name = target.name || '';
