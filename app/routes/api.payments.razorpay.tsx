@@ -69,6 +69,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (!razorpayResponse.ok) {
       const errorData = await razorpayResponse.json();
       console.error("Razorpay API error:", errorData);
+      console.error("Status code:", razorpayResponse.status);
+      console.error("Request body:", { amount: amountInPaise, currency: "INR", receipt: invoiceNumber });
       return new Response(
         JSON.stringify({ success: false, error: "Razorpay order creation failed", details: errorData }),
         { status: 500, headers: { "Content-Type": "application/json" } }
