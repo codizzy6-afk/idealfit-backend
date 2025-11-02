@@ -44,17 +44,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const data = await response.json();
     const orders = data.orders || [];
 
-    // Get current month's orders
+    // Get last month's orders (for billing/invoice)
     const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
     
-    const currentMonthOrders = orders.filter((order: any) => {
+    const lastMonthOrders = orders.filter((order: any) => {
       if (!order.created_at) return false;
       const orderMonth = order.created_at.substring(0, 7); // YYYY-MM
-      return orderMonth === currentMonth;
+      return orderMonth === lastMonth;
     });
 
-    const orderCount = currentMonthOrders.length;
+    const orderCount = lastMonthOrders.length;
+    
+    console.log(`Billing for month: ${lastMonth}, Orders: ${orderCount}`);
 
     // Define pricing tiers
     const tiers = [
@@ -92,7 +95,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       success: true,
       data: {
         currentMonth: {
-          month: currentMonth,
+          month: lastMonth,
           orderCount,
           totalBill: parseFloat(totalBill.toFixed(2)),
           totalBillINR: parseFloat(totalBillINR.toFixed(2)),
