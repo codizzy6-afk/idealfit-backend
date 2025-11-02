@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { cache, billingCacheKey } from "../utils/cache.server";
+import { cache, billingCacheKey, getUSDToINRRate } from "../utils/cache.server";
 
 // Billing API endpoint - calculates usage and billing based on order count
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -84,7 +84,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     // Detect currency based on Shopify store settings (default to USD, can be set to INR)
     const currency = 'USD'; // Can be made dynamic based on store settings
-    const exchangeRate = 83.0; // USD to INR
+    // Fetch live exchange rate (cached for 1 hour)
+    const exchangeRate = await getUSDToINRRate();
     const totalBillINR = totalBill * exchangeRate;
 
     // Get next tier info

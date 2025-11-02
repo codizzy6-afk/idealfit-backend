@@ -1027,7 +1027,8 @@
     <script>
         // Global variables
         let dashboardState;
-        let lastBillingAmount = 0; // Store last fetched billing amount
+        let lastBillingAmount = 0; // Store last fetched billing amount (USD)
+        let lastBillingAmountINR = 0; // Store last fetched billing amount (INR)
         // Ensure dashboard state is available globally for inline handlers
         if (typeof window !== 'undefined') {
             window.dashboardState = window.dashboardState || { currentTab: 'analytics' };
@@ -2197,7 +2198,9 @@
                     // Get values from API response
                     const orderCount = monthData.orderCount || 0;
                     const totalCost = monthData.totalBill || 0;
-                    lastBillingAmount = totalCost; // Store for payment use
+                    const totalCostINR = monthData.totalBillINR || 0;
+                    lastBillingAmount = totalCost; // Store USD for payment use
+                    lastBillingAmountINR = totalCostINR; // Store INR for payment use
                     const plan = pricing.currentTier.name;
                     const rate = pricing.currentTier.pricePerOrder;
                     const currencyFromAPI = monthData.currency;
@@ -2446,13 +2449,10 @@
                  await loadBillingData(true); // Force refresh to bypass cache
                  await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms for UI update
                  
-                 // Use stored billing amount from API
-                 const amountUSD = lastBillingAmount || 0;
+                 // Use stored billing amount in INR from API (already calculated with dynamic rate)
+                 const finalAmount = lastBillingAmountINR || (lastBillingAmount * 83); // Fallback to static if INR not available
                  
-                 // Convert to INR for Razorpay
-                 const finalAmount = amountUSD * 83;
-                 
-                 console.log('Payment details:', { amountUSD, finalAmountINR: finalAmount, orderCount: getOrdersCount() });
+                 console.log('Payment details:', { amountUSD: lastBillingAmount, amountINR: lastBillingAmountINR, finalAmountINR: finalAmount, orderCount: getOrdersCount() });
                  
                  if (finalAmount === 0 || finalAmount < 1) {
                      alert('⚠️ No billing amount to charge. Minimum amount is ₹1.');

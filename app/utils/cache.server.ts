@@ -71,4 +71,49 @@ export function getWebhookVersion(shop: string) {
   );
 }
 
+// Exchange rate cache key
+export function exchangeRateKey() {
+  return "exchange:usd:inr";
+}
+
+// Fetch live USD to INR exchange rate
+export async function getUSDToINRRate(): Promise<number> {
+  const cacheKey = exchangeRateKey();
+  const cached = cache.get<number>(cacheKey);
+  
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    // Try exchangerate-api.com (free tier, no API key needed)
+    const response = await fetch("https://api.exchangerate-api.com/v4/latest/USD", {
+      headers: {
+        "User-Agent": "IdealFit/1.0",
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const rate = data.rates?.INR;
+      
+      if (rate && typeof rate === 'number' && rate > 0) {
+        // Cache for 1 hour
+        cache.set(cacheKey, rate, 60 * 60 * 1000);
+        console.log(`✅ Fetched live USD/INR rate: ${rate.toFixed(2)}`);
+        return rate;
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to fetch exchange rate from API:", error);
+  }
+
+  // Fallback to static rate if API fails
+  const fallbackRate = 83.0;
+  console.log(`⚠️ Using fallback USD/INR rate: ${fallbackRate}`);
+  // Cache fallback for 15 minutes (shorter, so we retry sooner)
+  cache.set(cacheKey, fallbackRate, 15 * 60 * 1000);
+  return fallbackRate;
+}
+
 
