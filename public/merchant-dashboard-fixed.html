@@ -2035,7 +2035,15 @@
                     ? 'http://localhost:3001/api' 
                     : 'https://ideal-fit-app1.onrender.com/api';
                 
-                const response = await fetch(`${apiBaseUrl}/sizecharts?shop=idealfit-2.myshopify.com`);
+                // Add cache-busting timestamp to prevent browser caching
+                const timestamp = new Date().getTime();
+                const response = await fetch(`${apiBaseUrl}/sizecharts?shop=idealfit-2.myshopify.com&_t=${timestamp}`, {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
                 const data = await response.json();
                 
                 if (data.success && data.data && data.data.length > 0) {
@@ -2191,7 +2199,9 @@
                 const response = await fetch(`${apiBaseUrl}/sizecharts`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
                     },
                     body: JSON.stringify({
                         shop: 'idealfit-2.myshopify.com',
@@ -2208,6 +2218,11 @@
                     ensureMinimumRows(10);
                     renderSizeChart();
                     hasUnsavedChanges = false;
+                    
+                    // Force reload from server to confirm save (bypass any cache)
+                    setTimeout(() => {
+                        loadSizeChart();
+                    }, 500);
                     
                     if (statusEl) statusEl.textContent = '✅ Size chart saved successfully!';
                     alert('✅ Size chart saved successfully!');
