@@ -899,7 +899,7 @@
                             💰 Billing & Subscription
                         </div>
                         <div class="page-subtitle">
-                            Manage your subscription and billing preferences
+                            View last month's invoice and make payments
                         </div>
                     </div>
                     <button onclick="loadBillingData()" class="btn btn-primary">
@@ -926,7 +926,7 @@
                     <div class="stat-card">
                         <div class="stat-icon">📦</div>
                         <div class="stat-number" id="ordersThisMonth">Loading...</div>
-                        <div class="stat-label">Orders This Month</div>
+                        <div class="stat-label">Last Month's Orders</div>
                     </div>
                 </div>
 
@@ -963,7 +963,7 @@
                          <!-- Dynamic content will be loaded here -->
                      </div>
                      <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
-                         💡 <strong>Note:</strong> Billing is calculated automatically at the end of each month based on your total order count. The tier is determined by the total number of orders in the current month. Currency is automatically detected based on your location.
+                         💡 <strong>Note:</strong> Billing is calculated for the previous month based on your order count. You pay for last month's usage. Currency is automatically detected based on your location.
                      </p>
                  </div>
             </div>
@@ -2226,7 +2226,7 @@
                         breakdownEl.innerHTML = `
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
                                 <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                                    <div style="font-size: 0.875rem; color: #6b7280;">Orders This Month</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Last Month's Orders</div>
                                     <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">${orderCount}</div>
                                 </div>
                                 <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981;">
@@ -2234,13 +2234,14 @@
                                     <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">${finalCurrencySymbol}${rateDisplay}/order</div>
                                 </div>
                                 <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                                    <div style="font-size: 0.875rem; color: #6b7280;">Estimated Monthly Cost</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">Last Month's Invoice Amount</div>
                                     <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;">${finalCurrencySymbol}${totalDisplay}</div>
                                 </div>
                             </div>
                             <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
-                                💡 <strong>Current Tier:</strong> ${plan} Plan - Based on ${orderCount} orders this month<br>
-                                💵 <strong>Currency:</strong> ${finalCurrency} (${finalCurrencySymbol === '₹' ? 'Indian Rupee' : 'US Dollar'})
+                                💡 <strong>Invoice Tier:</strong> ${plan} Plan - Based on ${orderCount} orders from last month<br>
+                                💵 <strong>Currency:</strong> ${finalCurrency} (${finalCurrencySymbol === '₹' ? 'Indian Rupee' : 'US Dollar'})<br>
+                                📅 <strong>Billing Period:</strong> Previous month invoice
                             </p>
                         `;
                           
