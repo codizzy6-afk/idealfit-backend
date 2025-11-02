@@ -823,7 +823,6 @@
                         <button onclick="loadSizeChart()" class="btn btn-primary">🔄 Refresh</button>
                         <button onclick="addNewSizeRow()" class="btn btn-success">➕ Add Size</button>
                         <button onclick="saveSizeChart()" class="btn btn-primary">💾 Save Chart</button>
-                        <button onclick="openOverrideDialog()" class="btn">🎯 Apply to Product/Collection</button>
                         <button onclick="syncSizeChartMetafield()" class="btn">⬆️ Sync to Shopify</button>
                         <button onclick="openVersionsDialog()" class="btn">🕒 Versions</button>
                     </div>
@@ -947,29 +946,6 @@
                         console.error('Sync error:', e);
                     }
                 }
-                async function openOverrideDialog() {
-                    const type = prompt('Override for: type "product" or "collection"');
-                    if (!type) return;
-                    const id = prompt(`Enter ${type} ID (numeric)`);
-                    if (!id) return;
-                    const inputs = document.querySelectorAll('#sizeChartBody .editable-input');
-                    const draft = JSON.parse(JSON.stringify(sizeChartData));
-                    inputs.forEach(input => {
-                        const index = parseInt(input.dataset.index);
-                        const field = input.dataset.field;
-                        if (field === 'size') draft[index][field] = input.value.trim();
-                        else draft[index][field] = parseInputValue(parseFloat(input.value));
-                    });
-                    const cleaned = draft.filter(r => r.size && r.size.trim() !== '' && (Number(r.bust)>0 || Number(r.waist)>0 || Number(r.hip)>0));
-                    if (cleaned.length === 0) { alert('Enter at least one valid row.'); return; }
-                    const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : 'https://ideal-fit-app1.onrender.com/api';
-                    const payload = { shop: 'idealfit-2.myshopify.com', sizeChart: cleaned };
-                    if (type.toLowerCase() === 'product') payload.productId = id; else payload.collectionId = id;
-                    const res = await fetch(`${apiBaseUrl}/sizechart-override`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-                    const json = await res.json();
-                    if (json.success) alert('✅ Override saved.'); else alert('❌ Failed: ' + (json.error||'Error'));
-                }
-
                 async function openVersionsDialog() {
                     const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : 'https://ideal-fit-app1.onrender.com/api';
                     const res = await fetch(`${apiBaseUrl}/sizechart-versions?shop=idealfit-2.myshopify.com`);
