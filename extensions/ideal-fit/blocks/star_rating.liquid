@@ -381,10 +381,9 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }
     
-    // If no size fits, return largest size
-    const largestSize = sizeChart[sizeChart.length - 1].size;
-    console.log('⚠️ No size fits, returning largest:', largestSize);
-    return largestSize;
+    // If no size fits, return "Custom Size"
+    console.log('⚠️ No size fits - measurements too large for available sizes');
+    return "Custom Size";
   }
 
 
@@ -402,7 +401,13 @@ document.addEventListener("DOMContentLoaded", function(){
       messageDiv.innerHTML = `
         <div class="recommendedSize" style="color: #dc2626;">⚠️ Recommended Size: ${rec}</div>
         <div class="userMeasurements">Your Measurements: Bust ${bust}${unit}, High Waist ${waist}${unit}, Hip ${hip}${unit}</div>
-        <div style="color: #dc2626; font-size: 13px; margin-top: 4px;">Your measurements exceed our available sizes. Please contact us for custom sizing options.</div>
+        <div style="color: #dc2626; font-size: 13px; margin-top: 4px;">Please enter all measurements to get a size recommendation.</div>
+      `;
+    } else if (rec === "Custom Size") {
+      messageDiv.innerHTML = `
+        <div class="recommendedSize" style="color: #f59e0b;">📏 Recommended Size: <strong>${rec}</strong></div>
+        <div class="userMeasurements">Your Measurements: Bust ${bust}${unit}, High Waist ${waist}${unit}, Hip ${hip}${unit}</div>
+        <div style="color: #f59e0b; font-size: 13px; margin-top: 4px;">Your measurements are larger than our available sizes. Please contact us for custom sizing options.</div>
       `;
     } else {
       messageDiv.innerHTML = `
