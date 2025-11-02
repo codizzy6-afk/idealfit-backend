@@ -16,7 +16,8 @@ async function handleAction(request: Request) {
       customerName, 
       productId, 
       orderId, 
-      shop 
+      shop,
+      unit
     } = data;
 
     // Validate required fields
@@ -30,6 +31,45 @@ async function handleAction(request: Request) {
       });
     }
 
+    // Calculate recommended size if not provided
+    let calculatedSize = recommendedSize;
+    if (!calculatedSize) {
+      try {
+        // Fetch merchant size chart
+        const shopDomain = shop || 'idealfit-2.myshopify.com';
+        const sizeChart = await db.sizeChart.findFirst({
+          where: { shop: shopDomain },
+          orderBy: { updatedAt: 'desc' }
+        });
+
+        if (sizeChart && sizeChart.chartData) {
+          const chartData = typeof sizeChart.chartData === 'string' 
+            ? JSON.parse(sizeChart.chartData) 
+            : sizeChart.chartData;
+          
+          const bustInches = unit === 'inches' ? parseFloat(bust) : parseFloat(bust) / 2.54;
+          const waistInches = unit === 'inches' ? parseFloat(waist) : parseFloat(waist) / 2.54;
+          const hipInches = unit === 'inches' ? parseFloat(hip) : parseFloat(hip) / 2.54;
+
+          // Find first size where all measurements fit
+          for (const size of chartData) {
+            if (bustInches <= size.bust && waistInches <= size.waist && hipInches <= size.hip) {
+              calculatedSize = size.size;
+              break;
+            }
+          }
+
+          // If no size fits, return "Custom Size"
+          if (!calculatedSize) {
+            calculatedSize = 'Custom Size';
+          }
+        }
+      } catch (chartError) {
+        console.error('Error calculating size:', chartError);
+        calculatedSize = 'N/A';
+      }
+    }
+
     // Save to database
     const submission = await db.submission.create({
       data: {
@@ -39,7 +79,7 @@ async function handleAction(request: Request) {
         bust: parseFloat(bust),
         waist: parseFloat(waist),
         hip: parseFloat(hip),
-        recommendedSize: recommendedSize || 'N/A',
+        recommendedSize: calculatedSize || 'N/A',
         orderId: orderId || null,
         date: new Date()
       }
@@ -49,12 +89,13 @@ async function handleAction(request: Request) {
       id: submission.id,
       customer: customerName,
       measurements: { bust, waist, hip },
-      size: recommendedSize
+      size: calculatedSize
     });
 
     return new Response(JSON.stringify({
       success: true,
       message: 'Measurement saved successfully',
+      recommendedSize: calculatedSize,
       data: submission
     }), {
       status: 200,

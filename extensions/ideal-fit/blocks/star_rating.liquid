@@ -337,7 +337,8 @@ document.addEventListener("DOMContentLoaded", function(){
       const data = await response.json();
       console.log('✅ Local API response:', data);
       
-      return data.recommendedSize || "M"; // Default to M if no recommendation
+      // API returns data.recommendedSize directly or data.data.recommendedSize
+      return data.recommendedSize || data.data?.recommendedSize || "M"; // Default to M if no recommendation
     } catch (error) {
       console.error('❌ Local API error, using local calculation:', error);
       // Fallback to local calculation if API fails
