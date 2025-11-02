@@ -2172,7 +2172,7 @@
              return rates[baseCurrency] || rates['USD'];
          }
          
-         async function loadBillingData() {
+         async function loadBillingData(forceRefresh = false) {
              try {
                  // Detect user's currency
                  const currency = detectCurrency();
@@ -2184,7 +2184,8 @@
                       ? 'http://localhost:3001/api' 
                       : 'https://ideal-fit-app1.onrender.com/api';
                   
-                                   const response = await fetch(`${apiBaseUrl}/billing`);
+                                   const url = forceRefresh ? `${apiBaseUrl}/billing?refresh=true` : `${apiBaseUrl}/billing`;
+                  const response = await fetch(url);
                 const data = await response.json();
                 
                 if (data.success && data.data) {
@@ -2439,7 +2440,7 @@
              try {
                  // Refresh billing data first to get latest amounts
                  console.log('Refreshing billing data before payment...');
-                 await loadBillingData();
+                 await loadBillingData(true); // Force refresh to bypass cache
                  await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms for UI update
                  
                  // Get the current estimated cost from the page

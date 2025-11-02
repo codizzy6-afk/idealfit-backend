@@ -11,13 +11,22 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       throw new Error("SHOPIFY_ACCESS_TOKEN not configured");
     }
 
-    // Cache current month billing for 2 minutes
+    // Check if cache should be bypassed
+    const url = new URL(request.url);
+    const bypassCache = url.searchParams.get("refresh") === "true";
+    
+    // Cache current month billing for 2 minutes (unless bypassed)
     const cached = cache.get<any>(billingCacheKey(SHOPIFY_STORE));
-    if (cached) {
+    if (cached && !bypassCache) {
       return new Response(JSON.stringify({ success: true, data: cached }), {
         status: 200,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
+    }
+    
+    if (bypassCache) {
+      console.log("Bypassing billing cache due to refresh=true");
+      cache.invalidate(billingCacheKey(SHOPIFY_STORE));
     }
 
     // Fetch orders from Shopify
