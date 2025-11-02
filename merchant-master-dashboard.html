@@ -674,7 +674,7 @@
         }
         
         .notification-item {
-            padding: 1rem;
+                padding: 1rem;
             border-bottom: 1px solid #f3f4f6;
             cursor: pointer;
             transition: background-color 0.2s ease;
@@ -775,28 +775,28 @@
             <div class="logo">
                 <div class="logo-icon"></div>
                 <div class="logo-text">IdealFit Merchant Dashboard</div>
-            </div>
-        </div>
-        
+                    </div>
+                    </div>
+                    
         <div class="header-right">
             <div class="notification-bell" onclick="toggleNotifications()">
                 🔔
                 <span class="notification-badge" id="notificationCount">3</span>
-            </div>
+                </div>
             <button class="header-btn" onclick="openSettings()">
                 ⚙️ Settings
             </button>
             <button class="header-btn" onclick="logout()">
                 🚪 Logout
             </button>
-        </div>
-    </div>
-
+                    </div>
+                </div>
+                
     <!-- Notification Panel -->
     <div class="notification-panel" id="notificationPanel">
         <div class="notification-header">
             <h3 class="notification-title">Notifications</h3>
-        </div>
+                    </div>
         <div id="notificationList">
             <!-- Notifications will be populated here -->
         </div>
@@ -813,8 +813,8 @@
                 <div class="user-info-sidebar">
                     <div class="user-name">Merchant Store</div>
                     <div class="user-email">store@example.com</div>
-        </div>
-    </div>
+                </div>
+            </div>
 
                 <div class="sidebar-nav">
                     <button class="tab active" onclick="showTab('analytics')">
@@ -840,8 +840,8 @@
                 <button class="logout-btn" onclick="logout()">
                     <span class="tab-icon">🚪</span>
                     <span class="tab-label">Logout</span>
-                </button>
-            </div>
+                    </button>
+                </div>
             </div>
 
             <!-- Main Content Area -->
@@ -1186,7 +1186,7 @@
                         </h2>
                         <div style="color: #6b7280; font-size: 0.875rem;">
                             Showing 5 of 5 customers
-                        </div>
+                    </div>
                     </div>
                     
                     <div style="overflow-x: auto;">
@@ -1405,7 +1405,7 @@
                     <div class="notification-content">
                         <div class="notification-icon ${notification.type}">
                             ${notification.icon}
-                        </div>
+                </div>
                         <div class="notification-text">
                             <div class="notification-message">${notification.message}</div>
                             <div class="notification-time">${notification.time}</div>
@@ -1809,7 +1809,7 @@
                             showRow = false;
                             console.log('Hidden by size filter');
                         }
-                    } else {
+            } else {
                         console.log('No size badge found in row', index);
                     }
                 }
