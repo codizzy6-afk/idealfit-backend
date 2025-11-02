@@ -638,7 +638,12 @@
 
                 <!-- Date Filters -->
                 <div class="card" style="margin-bottom: 1.5rem;">
-                    <h3 style="margin-bottom: 1rem;">📅 Filter Data by Date Range</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin: 0;">📅 Filter Data by Date Range</h3>
+                        <div id="activeFiltersBadge" style="display: none; background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 600;">
+                            <span id="activeFiltersText"></span>
+                        </div>
+                    </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                         <div>
                             <label for="analyticsDateFrom" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">From Date</label>
@@ -1194,6 +1199,35 @@
         // Store original analytics data for filtering
         let originalAnalyticsData = null;
         
+        // Update active filters badge
+        function updateActiveFiltersBadge() {
+            const dateFrom = document.getElementById('analyticsDateFrom')?.value || '';
+            const dateTo = document.getElementById('analyticsDateTo')?.value || '';
+            const month = document.getElementById('analyticsMonth')?.value || '';
+            const year = document.getElementById('analyticsYear')?.value || '';
+            
+            const badge = document.getElementById('activeFiltersBadge');
+            const badgeText = document.getElementById('activeFiltersText');
+            
+            if (!badge || !badgeText) return;
+            
+            const filters = [];
+            if (dateFrom) filters.push(`From: ${dateFrom}`);
+            if (dateTo) filters.push(`To: ${dateTo}`);
+            if (month) {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                filters.push(monthNames[parseInt(month) - 1]);
+            }
+            if (year) filters.push(year);
+            
+            if (filters.length > 0) {
+                badge.style.display = 'block';
+                badgeText.textContent = `📌 ${filters.join(' • ')}`;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
         // Apply analytics filters
         function applyAnalyticsFilters() {
             const dateFrom = document.getElementById('analyticsDateFrom').value;
@@ -1202,6 +1236,9 @@
             const year = document.getElementById('analyticsYear').value;
             
             console.log('Applying filters:', { dateFrom, dateTo, month, year });
+            
+            // Update active filters badge
+            updateActiveFiltersBadge();
             
             // Reload data with filters applied
             loadAnalyticsData();
@@ -1218,6 +1255,9 @@
             document.getElementById('analyticsYear').value = currentYear;
             
             console.log('Cleared filters, reloading data...');
+            
+            // Hide active filters badge
+            updateActiveFiltersBadge();
             
             // Load default data
             loadAnalyticsData();
@@ -2865,6 +2905,9 @@
             
             // Set current month as default for analytics
             setCurrentMonthDefault();
+            
+            // Update active filters badge on load
+            updateActiveFiltersBadge();
             
             // Restore saved tab
             restoreSavedTab();
