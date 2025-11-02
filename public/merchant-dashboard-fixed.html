@@ -935,21 +935,16 @@
                     <p id="billingBreakdown" style="color: #6b7280;">Loading billing information...</p>
                     
                     <!-- Make Payment Section -->
-                    <div id="makePaymentSection" style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; display: none;">
-                        <h3 style="margin-bottom: 1rem; color: #1f2937;">💳 Payment Options</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                            <button onclick="initiatePayment('razorpay')" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem 2rem; font-size: 1rem;">
-                                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">💳</div>
-                                <div>Pay with Razorpay</div>
-                                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">Secure & Fast</div>
-                            </button>
-                            <button onclick="initiatePayment('stripe')" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 1rem 2rem; font-size: 1rem;">
-                                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">💳</div>
-                                <div>Pay with Stripe</div>
-                                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">Global Payments</div>
+                    <div id="makePaymentSection" style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e5e7eb;">
+                        <h3 style="margin-bottom: 1rem; color: #1f2937;">💳 Make Payment</h3>
+                        <div style="display: flex; justify-content: center;">
+                            <button onclick="initiatePayment('razorpay')" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem 3rem; font-size: 1.1rem; min-width: 250px;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">💳</div>
+                                <div style="font-weight: 600;">Pay with Razorpay</div>
+                                <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.5rem;">Secure & Fast Payments</div>
                             </button>
                         </div>
-                        <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem; text-align: center;">
+                        <p style="margin-top: 1.5rem; color: #6b7280; font-size: 0.875rem; text-align: center;">
                             🔒 All payments are secured with 256-bit SSL encryption
                         </p>
                     </div>
@@ -2246,11 +2241,7 @@
                             </p>
                         `;
                           
-                          // Show payment section if there are orders
-                          const paymentSection = document.getElementById('makePaymentSection');
-                          if (paymentSection && orderCount > 0) {
-                              paymentSection.style.display = 'block';
-                          }
+                          // Payment section is always visible now
                       }
                     
                                                               // Skip billing history for now (would need orders data)
