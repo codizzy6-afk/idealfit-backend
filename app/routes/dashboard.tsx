@@ -34,7 +34,4 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 }
 
-export default function Dashboard() {
-  return null;
-}
 
