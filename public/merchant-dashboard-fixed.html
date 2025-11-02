@@ -1027,6 +1027,7 @@
     <script>
         // Global variables
         let dashboardState;
+        let lastBillingAmount = 0; // Store last fetched billing amount
         // Ensure dashboard state is available globally for inline handlers
         if (typeof window !== 'undefined') {
             window.dashboardState = window.dashboardState || { currentTab: 'analytics' };
@@ -2196,6 +2197,7 @@
                     // Get values from API response
                     const orderCount = monthData.orderCount || 0;
                     const totalCost = monthData.totalBill || 0;
+                    lastBillingAmount = totalCost; // Store for payment use
                     const plan = pricing.currentTier.name;
                     const rate = pricing.currentTier.pricePerOrder;
                     const currencyFromAPI = monthData.currency;
@@ -2443,29 +2445,18 @@
                  await loadBillingData(true); // Force refresh to bypass cache
                  await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms for UI update
                  
-                 // Get the current estimated cost from the page
-                 const breakdownEl = document.getElementById('billingBreakdown');
-                 if (!breakdownEl) {
-                     alert('⚠️ Please wait for billing information to load');
+                 // Use stored billing amount from API
+                 const amountUSD = lastBillingAmount || 0;
+                 
+                 // Convert to INR for Razorpay
+                 const finalAmount = amountUSD * 83;
+                 
+                 console.log('Payment details:', { amountUSD, finalAmountINR: finalAmount, orderCount: getOrdersCount() });
+                 
+                 if (finalAmount === 0 || finalAmount < 1) {
+                     alert('⚠️ No billing amount to charge. Minimum amount is ₹1.');
                      return;
                  }
-                 
-                // Extract amount and currency from the page
-                const breakdownText = breakdownEl.textContent;
-                const costMatch = breakdownText.match(/[\$₹](\d+\.\d+)/);
-                let amount = costMatch ? parseFloat(costMatch[1]) : 0;
-                const detectedCurrency = breakdownText.includes('₹') ? 'INR' : 'USD';
-                
-                // If amount is 0, use a minimum test amount
-                if (amount === 0 || isNaN(amount)) {
-                    console.warn('No billing amount found, using test amount of 100');
-                    amount = 100; // Test amount in INR
-                }
-                
-                // Convert to INR if USD
-                const finalAmount = detectedCurrency === 'USD' ? amount * 83 : amount;
-                
-                console.log('Payment details:', { amount, detectedCurrency, finalAmount });
                  
                  // Get invoice number and shop from billing data
                  const shop = 'idealfit-2.myshopify.com';
