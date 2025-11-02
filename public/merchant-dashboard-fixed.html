@@ -2263,22 +2263,31 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Persist cleaned data and pad back to 10 for UI
+                    console.log('✅ Save successful, server response:', data.data);
+                    
+                    // Update local state with what was saved
                     sizeChartData = JSON.parse(JSON.stringify(cleaned));
                     sizeChartOriginalData = JSON.parse(JSON.stringify(cleaned));
-                    ensureMinimumRows(10);
+                    
+                    // Add placeholder rows for UI (only if less than 10)
+                    if (sizeChartData.length < 10) {
+                        ensureMinimumRows(10);
+                    }
+                    
                     renderSizeChart();
                     hasUnsavedChanges = false;
                     
-                    // Force reload from server to confirm save (bypass any cache)
-                    setTimeout(() => {
-                        loadSizeChart();
-                    }, 500);
-                    
                     if (statusEl) statusEl.textContent = '✅ Size chart saved successfully!';
-                    alert('✅ Size chart saved successfully!');
+                    
+                    // Wait a bit, then reload from server to confirm (with cache-busting)
+                    setTimeout(() => {
+                        console.log('🔄 Reloading from server to verify save...');
+                        loadSizeChart();
+                    }, 1000); // Increased delay to ensure server has processed
+                    
+                    alert('✅ Size chart saved successfully! Reloading...');
                 } else {
-                    throw new Error('Save failed');
+                    throw new Error('Save failed: ' + (data.error || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error saving size chart:', error);
