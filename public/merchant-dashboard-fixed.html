@@ -1943,13 +1943,16 @@
             let labelIndex = 0;
             while (sizeChartData.length < minRows) {
                 let label = preferredLabels[labelIndex] || `SIZE ${labelIndex + 1}`;
-                // avoid duplicates
-                while (existingLabels.has(label)) {
+                // avoid duplicates - check both uppercase versions
+                while (existingLabels.has(label.toUpperCase())) {
                     labelIndex++;
                     label = preferredLabels[labelIndex] || `SIZE ${labelIndex + 1}`;
                 }
-                sizeChartData.push({ size: label, bust: 0, waist: 0, hip: 0 });
-                existingLabels.add(label);
+                // Only add if we don't already have this label
+                if (!existingLabels.has(label.toUpperCase())) {
+                    sizeChartData.push({ size: label, bust: 0, waist: 0, hip: 0 });
+                    existingLabels.add(label.toUpperCase());
+                }
                 labelIndex++;
             }
         }
@@ -1959,23 +1962,32 @@
             const inputs = document.querySelectorAll('#sizeChartBody .editable-input');
             const collected = JSON.parse(JSON.stringify(sizeChartData)); // Start with current data
             
+            console.log('📝 Collecting inputs, starting with', collected.length, 'rows');
+            
             inputs.forEach(input => {
                 const index = parseInt(input.dataset.index);
                 const field = input.dataset.field;
                 
                 if (index >= 0 && index < collected.length) {
                     if (field === 'size') {
-                        collected[index][field] = input.value.trim();
+                        const newValue = input.value.trim();
+                        collected[index][field] = newValue;
+                        console.log(`  Row ${index}: size = "${newValue}"`);
                     } else {
                         // Parse measurement values based on current unit
                         const inputValue = parseFloat(input.value);
                         if (!isNaN(inputValue)) {
-                            collected[index][field] = parseInputValue(inputValue);
+                            const parsedValue = parseInputValue(inputValue);
+                            collected[index][field] = parsedValue;
+                            console.log(`  Row ${index}: ${field} = ${parsedValue} (from input ${inputValue})`);
                         }
                     }
+                } else {
+                    console.warn(`⚠️ Invalid index ${index} for input field ${field}`);
                 }
             });
             
+            console.log('📝 Collected data:', collected.map(r => ({ size: r.size, bust: r.bust, waist: r.waist, hip: r.hip })));
             return collected;
         }
 
@@ -2139,14 +2151,29 @@
                 const collected = collectCurrentInputValues();
                 console.log('💾 Collected input values:', collected);
                 
-                // Clean: keep only filled rows, ignore blank placeholders
+                // Clean: keep ALL rows with data - don't filter out any valid entries
+                // Keep rows that have a size label AND at least one measurement > 0
                 const cleaned = collected.filter(r => {
-                    const hasSize = r.size && r.size.trim() !== '';
-                    const hasAnyMeasure = Number(r.bust) > 0 || Number(r.waist) > 0 || Number(r.hip) > 0;
-                    return hasSize && hasAnyMeasure;
+                    const size = (r.size || '').trim();
+                    const bust = Number(r.bust) || 0;
+                    const waist = Number(r.waist) || 0;
+                    const hip = Number(r.hip) || 0;
+                    
+                    // Keep row if it has a non-empty size label AND at least one measurement > 0
+                    const hasSize = size !== '';
+                    const hasMeasurements = bust > 0 || waist > 0 || hip > 0;
+                    const shouldKeep = hasSize && hasMeasurements;
+                    
+                    if (!shouldKeep && hasSize) {
+                        console.log(`⚠️ Filtering out row "${size}" - no measurements`);
+                    }
+                    
+                    return shouldKeep;
                 });
                 
+                console.log('💾 Collected data before cleaning:', collected);
                 console.log('💾 Cleaned data to save:', cleaned);
+                console.log('💾 Rows being saved:', cleaned.map(r => ({ size: r.size, bust: r.bust, waist: r.waist, hip: r.hip })));
                 if (cleaned.length === 0) {
                     alert('⚠️ Please enter at least one valid size with measurements.');
                     if (statusEl) statusEl.textContent = '❌ Validation failed';
