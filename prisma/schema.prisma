@@ -51,3 +51,24 @@ model SizeChart {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Invoices for billing tracking
+model Invoice {
+  id             String   @id @default(cuid())
+  shop           String   // Shop domain
+  invoiceNumber  String   @unique // e.g., "INV-202501"
+  month          String   // YYYY-MM format
+  orderCount     Int      @default(0)
+  pricePerOrder  Float    @default(0.12)
+  total          Float    @default(0)
+  totalINR       Float    @default(0)
+  currency       String   @default("USD")
+  tier           String   @default("Starter")
+  status         String   @default("pending") // pending, paid, overdue
+  paymentMethod  String?  // stripe, razorpay, bank_transfer
+  paymentId      String?  // External payment ID from Stripe/Razorpay
+  paidAt         DateTime?
+  dueDate        DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

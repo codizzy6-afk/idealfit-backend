@@ -2453,33 +2453,60 @@
                      return;
                  }
                  
-                 // Extract amount from the page (for demo purposes)
-                 const costMatch = breakdownEl.textContent.match(/\$(\d+\.\d+)/);
+                 // Extract amount and currency from the page
+                 const breakdownText = breakdownEl.textContent;
+                 const costMatch = breakdownText.match(/[\$₹](\d+\.\d+)/);
                  const amount = costMatch ? parseFloat(costMatch[1]) : 0;
+                 const detectedCurrency = breakdownText.includes('₹') ? 'INR' : 'USD';
                  
                  if (amount === 0) {
                      alert('⚠️ No payment amount found. Please refresh the billing data.');
                      return;
                  }
                  
+                 // Get invoice number and shop from billing data
+                 const shop = 'idealfit-2.myshopify.com';
+                 const invoiceNumber = 'INV-' + new Date().toISOString().substring(0, 7).replace('-', '');
+                 const invoiceId = 'invoice_' + Date.now();
+                 
+                 const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : 'https://ideal-fit-app1.onrender.com/api';
+                 
                  if (gateway === 'razorpay') {
-                     // Razorpay payment
+                     // Razorpay payment - create order on backend
+                     const response = await fetch(`${apiBaseUrl}/payments/razorpay`, {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json' },
+                         body: JSON.stringify({
+                             invoiceId,
+                             invoiceNumber,
+                             amount: amount,
+                             currency: detectedCurrency,
+                             shop,
+                             description: `IdealFit Monthly Subscription - ${getOrdersCount()} orders`
+                         })
+                     });
+                     
+                     const data = await response.json();
+                     if (!data.success) {
+                         alert('❌ Failed to initialize Razorpay: ' + (data.error || 'Unknown error'));
+                         return;
+                     }
+                     
+                     // Create Razorpay Checkout
                      const options = {
-                         key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Razorpay Key ID
-                         amount: amount * 100, // Amount in paise (multiply by 100)
-                         currency: 'USD',
+                         key: data.keyId,
+                         amount: data.amount,
+                         currency: data.currency,
+                         order_id: data.orderId,
                          name: 'IdealFit',
-                         description: `Monthly subscription - ${amount} orders`,
-                         handler: function(response) {
-                             // Handle success
-                             console.log('Payment successful:', response);
-                             alert('✅ Payment successful! Transaction ID: ' + response.razorpay_payment_id);
-                             // Reload billing data
-                             loadBillingData();
-                         },
+                         description: `Invoice ${data.invoiceNumber}`,
                          prefill: {
-                             email: 'store@example.com',
-                             contact: '+919876543210'
+                             email: localStorage.getItem('idealfit_email') || 'store@example.com'
+                         },
+                         handler: async function(response) {
+                             alert('✅ Payment successful! Transaction ID: ' + response.razorpay_payment_id);
+                             loadBillingData();
+                             if (typeof loadBillingHistory === 'function') loadBillingHistory();
                          },
                          theme: {
                              color: '#667eea'
@@ -2491,22 +2518,43 @@
                          }
                      };
                      
-                     // Note: This is a placeholder. In production, you'd load Razorpay checkout script
-                     // and initialize it with the options above.
-                     alert(`🔄 Initiating Razorpay payment for $${amount}\n\nThis is a demo. In production, this would open the Razorpay payment gateway.`);
+                     // Load Razorpay Checkout script dynamically
+                     if (!window.Razorpay) {
+                         const script = document.createElement('script');
+                         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                         script.onload = function() {
+                             const rzp = new window.Razorpay(options);
+                             rzp.open();
+                         };
+                         document.head.appendChild(script);
+                     } else {
+                         const rzp = new window.Razorpay(options);
+                         rzp.open();
+                     }
                      
                  } else if (gateway === 'stripe') {
-                     // Stripe payment
-                     const options = {
-                         amount: amount * 100, // Amount in cents
-                         currency: 'usd',
-                         description: `IdealFit Monthly Subscription - ${amount} orders`,
-                         source: 'card' // or other payment methods
-                     };
+                     // Stripe payment - create checkout session on backend
+                     const response = await fetch(`${apiBaseUrl}/payments/stripe`, {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json' },
+                         body: JSON.stringify({
+                             invoiceId,
+                             invoiceNumber,
+                             amount: amount,
+                             currency: detectedCurrency,
+                             shop,
+                             description: `IdealFit Monthly Subscription - ${getOrdersCount()} orders`
+                         })
+                     });
                      
-                     // Note: This is a placeholder. In production, you'd create a Stripe Checkout session
-                     // or use Stripe Elements to handle the payment
-                     alert(`🔄 Initiating Stripe payment for $${amount}\n\nThis is a demo. In production, this would open the Stripe payment gateway.`);
+                     const data = await response.json();
+                     if (!data.success) {
+                         alert('❌ Failed to initialize Stripe: ' + (data.error || 'Unknown error'));
+                         return;
+                     }
+                     
+                     // Redirect to Stripe Checkout
+                     window.location.href = data.checkoutUrl;
                      
                  }
                  
@@ -2514,6 +2562,17 @@
                  console.error('Error initiating payment:', error);
                  alert('❌ Error initiating payment. Please try again.');
              }
+         }
+         
+         // Helper to get current month's order count
+         function getOrdersCount() {
+             const ordersEl = document.getElementById('ordersThisMonth');
+             if (ordersEl) {
+                 const text = ordersEl.textContent;
+                 const match = text.match(/(\d+)/);
+                 return match ? parseInt(match[1]) : 0;
+             }
+             return 0;
          }
          
          // Authentication check

@@ -1,0 +1,87 @@
+import type { ActionFunctionArgs } from "react-router";
+
+// Razorpay Payment API
+// POST /api/payments/razorpay - Initialize Razorpay order
+export const action = async ({ request }: ActionFunctionArgs) => {
+  if (request.method !== "POST") {
+    return new Response(JSON.stringify({ success: false, error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    const body = await request.json();
+    const { invoiceId, invoiceNumber, amount, currency, shop, description } = body;
+
+    if (!invoiceId || !amount || !shop) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+    const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Razorpay not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to environment variables." }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Convert to paise (100 * INR amount)
+    const amountInPaise = Math.round(amount * 100);
+
+    // Create Razorpay Order
+    const razorpayResponse = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString("base64")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: amountInPaise,
+        currency: "INR",
+        receipt: invoiceNumber,
+        notes: {
+          invoiceId,
+          shop,
+          description: description || `Payment for ${shop}`,
+        },
+      }),
+    });
+
+    if (!razorpayResponse.ok) {
+      const errorData = await razorpayResponse.json();
+      console.error("Razorpay API error:", errorData);
+      return new Response(
+        JSON.stringify({ success: false, error: "Razorpay order creation failed", details: errorData }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const order = await razorpayResponse.json();
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        orderId: order.id,
+        keyId: RAZORPAY_KEY_ID,
+        amount: amountInPaise,
+        currency: "INR",
+        invoiceId,
+        invoiceNumber,
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error: any) {
+    console.error("Razorpay payment error:", error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message || "Payment processing failed" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+};
+
