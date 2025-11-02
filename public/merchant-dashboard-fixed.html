@@ -2044,9 +2044,40 @@
             }
         }
 
+        // Collect current input values before any operation
+        function collectCurrentInputValues() {
+            const inputs = document.querySelectorAll('#sizeChartBody .editable-input');
+            const collected = JSON.parse(JSON.stringify(sizeChartData)); // Start with current data
+            
+            inputs.forEach(input => {
+                const index = parseInt(input.dataset.index);
+                const field = input.dataset.field;
+                
+                if (index >= 0 && index < collected.length) {
+                    if (field === 'size') {
+                        collected[index][field] = input.value.trim();
+                    } else {
+                        // Parse measurement values based on current unit
+                        const inputValue = parseFloat(input.value);
+                        if (!isNaN(inputValue)) {
+                            collected[index][field] = parseInputValue(inputValue);
+                        }
+                    }
+                }
+            });
+            
+            return collected;
+        }
+
         // Load size chart from API
         async function loadSizeChart() {
             try {
+                // First, collect any unsaved changes from inputs before loading
+                const inputs = document.querySelectorAll('#sizeChartBody .editable-input');
+                if (inputs.length > 0 && hasUnsavedChanges) {
+                    console.log('⚠️ Warning: Loading will discard unsaved changes');
+                }
+                
                 const statusEl = document.getElementById('sizeChartStatus');
                 if (statusEl) statusEl.textContent = '🔄 Loading...';
                 
@@ -2067,12 +2098,22 @@
                 
                 if (data.success && data.data && data.data.length > 0) {
                     const chart = data.data[0].sizeChart;
-                    sizeChartData = JSON.parse(JSON.stringify(chart)); // Deep copy
-                    sizeChartOriginalData = JSON.parse(JSON.stringify(chart)); // Store original
-                    ensureMinimumRows(10);
+                    console.log('📥 Loaded from database:', chart);
+                    
+                    // Deep copy the loaded data
+                    sizeChartData = JSON.parse(JSON.stringify(chart));
+                    sizeChartOriginalData = JSON.parse(JSON.stringify(chart));
+                    
+                    // Only add placeholder rows if we have less than 10 rows
+                    // But preserve all existing data
+                    if (sizeChartData.length < 10) {
+                        ensureMinimumRows(10);
+                    }
+                    
                     renderSizeChart();
                     hasUnsavedChanges = false; // Reset unsaved changes flag
                     
+                    console.log('✅ Size chart loaded, rows:', sizeChartData.length);
                     if (statusEl) statusEl.textContent = '✅ Size chart loaded';
                 } else {
                     // Default size chart if none exists (seed 6 + auto-expand to 10)
@@ -2184,27 +2225,18 @@
                 const statusEl = document.getElementById('sizeChartStatus');
                 if (statusEl) statusEl.textContent = '💾 Saving...';
                 
-                // Collect all input values and convert based on current unit
-                const inputs = document.querySelectorAll('#sizeChartBody .editable-input');
-                inputs.forEach(input => {
-                    const index = parseInt(input.dataset.index);
-                    const field = input.dataset.field;
-                    
-                    if (field === 'size') {
-                        sizeChartData[index][field] = input.value.trim();
-                    } else {
-                        // Parse measurement values based on current unit
-                        const inputValue = parseFloat(input.value);
-                        sizeChartData[index][field] = parseInputValue(inputValue);
-                    }
-                });
+                // Collect all input values from the UI first
+                const collected = collectCurrentInputValues();
+                console.log('💾 Collected input values:', collected);
                 
                 // Clean: keep only filled rows, ignore blank placeholders
-                const cleaned = sizeChartData.filter(r => {
+                const cleaned = collected.filter(r => {
                     const hasSize = r.size && r.size.trim() !== '';
                     const hasAnyMeasure = Number(r.bust) > 0 || Number(r.waist) > 0 || Number(r.hip) > 0;
                     return hasSize && hasAnyMeasure;
                 });
+                
+                console.log('💾 Cleaned data to save:', cleaned);
                 if (cleaned.length === 0) {
                     alert('⚠️ Please enter at least one valid size with measurements.');
                     if (statusEl) statusEl.textContent = '❌ Validation failed';
