@@ -2437,6 +2437,11 @@
                  // Initiate payment based on gateway
          async function initiatePayment(gateway) {
              try {
+                 // Refresh billing data first to get latest amounts
+                 console.log('Refreshing billing data before payment...');
+                 await loadBillingData();
+                 await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms for UI update
+                 
                  // Get the current estimated cost from the page
                  const breakdownEl = document.getElementById('billingBreakdown');
                  if (!breakdownEl) {
