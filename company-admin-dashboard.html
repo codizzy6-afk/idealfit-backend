@@ -1723,9 +1723,12 @@
         function checkAuth() {
             const isLoggedIn = localStorage.getItem('company_admin_logged_in');
             if (isLoggedIn !== 'true') {
-                // Only redirect if not on login page
-                if (!window.location.href.includes('company-auth.html') && !window.location.href.includes('login')) {
-                    window.location.href = 'company-auth.html';
+                // Only redirect if not on login page - delay to allow page to render
+                const currentUrl = window.location.href.toLowerCase();
+                if (!currentUrl.includes('company-auth.html') && !currentUrl.includes('login')) {
+                    setTimeout(() => {
+                        window.location.href = 'company-auth.html';
+                    }, 500);
                     return false;
                 }
             }
@@ -1735,12 +1738,12 @@
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             try {
-                // Check authentication first
-                if (!checkAuth()) {
-                    return; // Stop initialization if not logged in
-                }
-                
                 console.log('🎯 IdealFit Company Admin Dashboard Loaded Successfully!');
+                
+                // Check authentication after a small delay to ensure page renders
+                setTimeout(() => {
+                    checkAuth();
+                }, 200);
                 
                 // Restore saved tab first
                 restoreSavedTab();
@@ -1779,6 +1782,22 @@
                 showNotification('Failed to initialize dashboard. Please refresh the page.');
             }
         });
+        
+        // Also check auth on page load (before DOM ready)
+        if (document.readyState === 'loading') {
+            // If page is still loading, wait for DOMContentLoaded
+        } else {
+            // Page already loaded, check auth immediately but with delay
+            setTimeout(() => {
+                const isLoggedIn = localStorage.getItem('company_admin_logged_in');
+                if (isLoggedIn !== 'true') {
+                    const currentUrl = window.location.href.toLowerCase();
+                    if (!currentUrl.includes('company-auth.html') && !currentUrl.includes('login')) {
+                        window.location.href = 'company-auth.html';
+                    }
+                }
+            }, 300);
+        }
     </script>
 </body>
 </html>
