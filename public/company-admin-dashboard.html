@@ -532,27 +532,31 @@
             </div>
             
             <div class="sidebar-nav">
-                <button class="tab active" onclick="showTab('overview')">
+                <button class="tab active" onclick="showTab('overview', event)">
                     <span class="tab-icon">📊</span>
                     <span class="tab-label">Overview</span>
                 </button>
-                <button class="tab" onclick="showTab('users')">
+                <button class="tab" onclick="showTab('users', event)">
                     <span class="tab-icon">👥</span>
                     <span class="tab-label">User Management</span>
                 </button>
-                <button class="tab" onclick="showTab('merchants')">
+                <button class="tab" onclick="showTab('merchants', event)">
                     <span class="tab-icon">🏪</span>
                     <span class="tab-label">Merchant Management</span>
                 </button>
-                <button class="tab" onclick="showTab('billing')">
+                <button class="tab" onclick="showTab('customers', event)">
+                    <span class="tab-icon">👤</span>
+                    <span class="tab-label">Customers</span>
+                </button>
+                <button class="tab" onclick="showTab('billing', event)">
                     <span class="tab-icon">💰</span>
                     <span class="tab-label">Billing & Revenue</span>
                 </button>
-                <button class="tab" onclick="showTab('analytics')">
+                <button class="tab" onclick="showTab('analytics', event)">
                     <span class="tab-icon">📈</span>
                     <span class="tab-label">Analytics</span>
                 </button>
-                <button class="tab" onclick="showTab('settings')">
+                <button class="tab" onclick="showTab('settings', event)">
                     <span class="tab-icon">⚙️</span>
                     <span class="tab-label">Settings</span>
                 </button>
@@ -1090,36 +1094,71 @@
         let revenueChart = null;
         let userGrowthChart = null;
         
-        // Tab navigation
-        function showTab(tabName) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Show selected tab content
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked tab
-            event.target.closest('.tab').classList.add('active');
-            
-            currentTab = tabName;
-            
-            // Save current tab to localStorage for persistence
-            localStorage.setItem('idealfit_admin_current_tab', tabName);
-            
-            // Initialize tab-specific features
-            if (tabName === 'analytics') {
-                initializeCharts();
+        // Tab navigation - make it global and fix event handling
+        window.showTab = function(tabName, event) {
+            try {
+                console.log('showTab called with:', tabName);
+                
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                    content.style.display = 'none';
+                });
+                
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Show selected tab content
+                const contentElement = document.getElementById(tabName);
+                if (contentElement) {
+                    contentElement.classList.add('active');
+                    contentElement.style.display = 'block';
+                } else {
+                    console.error('Tab content not found:', tabName);
+                    return;
+                }
+                
+                // Add active class to clicked tab - better event handling
+                if (event && event.target) {
+                    const clickedTab = event.target.closest('.tab');
+                    if (clickedTab) {
+                        clickedTab.classList.add('active');
+                    }
+                } else {
+                    // Fallback: find tab button by onclick attribute
+                    const tabButton = document.querySelector(`button[onclick*="showTab('${tabName}')"]`);
+                    if (tabButton) {
+                        tabButton.classList.add('active');
+                    }
+                }
+                
+                currentTab = tabName;
+                
+                // Save current tab to localStorage for persistence
+                localStorage.setItem('idealfit_admin_current_tab', tabName);
+                
+                // Initialize tab-specific features
+                if (tabName === 'analytics' && typeof initializeCharts === 'function') {
+                    initializeCharts();
+                } else if (tabName === 'customers' && typeof loadCustomers === 'function') {
+                    loadCustomers();
+                } else if (tabName === 'merchants' && typeof loadMerchants === 'function') {
+                    loadMerchants();
+                } else if (tabName === 'billing' && typeof loadBilling === 'function') {
+                    loadBilling();
+                }
+                
+                if (typeof showNotification === 'function') {
+                    showNotification(`Switched to ${tabName} page`);
+                }
+                
+                console.log('Tab switched successfully to:', tabName);
+            } catch (error) {
+                console.error('Error in showTab:', error);
             }
-            
-            showNotification(`Switched to ${tabName} page`);
-        }
+        };
         
         // Restore saved tab on page load
         function restoreSavedTab() {
@@ -1616,9 +1655,9 @@
                 console.log('✅ Dashboard initialization completed');
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
-                showNotification('Failed to initialize dashboard. Please refresh the page.');
-            } catch(e) {
-                console.error('DOMContentLoaded error:', e);
+                if (typeof showNotification === 'function') {
+                    showNotification('Failed to initialize dashboard. Please refresh the page.');
+                }
             }
         });
         
