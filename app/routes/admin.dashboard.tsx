@@ -34,7 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 }
 
-export default function CompanyAdminDashboard() {
+export default function AdminDashboard() {
   return null;
 }
 
