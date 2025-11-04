@@ -1619,8 +1619,32 @@
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
                 showNotification('Failed to initialize dashboard. Please refresh the page.');
+            } catch(e) {
+                console.error('DOMContentLoaded error:', e);
             }
         });
+        
+        // Check authentication AFTER page is fully loaded (non-blocking)
+        window.onload = function() {
+            setTimeout(function() {
+                try {
+                    const isLoggedIn = localStorage.getItem('company_admin_logged_in');
+                    if (isLoggedIn !== 'true') {
+                        const currentUrl = window.location.href.toLowerCase();
+                        if (!currentUrl.includes('company-auth.html') && !currentUrl.includes('login')) {
+                            window.location.href = 'company-auth.html';
+                        }
+                    }
+                } catch(e) {
+                    console.error('Auth check error:', e);
+                }
+            }, 1000);
+        };
+        } catch(e) {
+            console.error('Main script error:', e);
+            // Show error message on page
+            document.body.innerHTML = '<div style="padding: 2rem; text-align: center;"><h1>Error Loading Dashboard</h1><p>' + e.message + '</p><p>Check console for details.</p></div>';
+        }
     </script>
 </body>
 </html>
