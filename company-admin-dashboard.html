@@ -533,6 +533,10 @@
                     <span class="tab-icon">🏪</span>
                     <span class="tab-label">Merchant Management</span>
                 </button>
+                <button class="tab" onclick="showTab('customers')">
+                    <span class="tab-icon">👥</span>
+                    <span class="tab-label">Customers</span>
+                </button>
                 <button class="tab" onclick="showTab('billing')">
                     <span class="tab-icon">💰</span>
                     <span class="tab-label">Billing & Revenue</span>
@@ -781,6 +785,48 @@
                         <button class="active">1</button>
                         <button onclick="nextPage('merchants')" id="nextMerchantsBtn">Next</button>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Customers Tab -->
+            <div id="customers" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">👥 Customers</h1>
+                    <p class="page-subtitle">View customer data from all merchants</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">All Customers</h2>
+                        <button class="btn" onclick="loadCustomers()">🔄 Refresh</button>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <input type="text" class="search-box" id="customerSearch" placeholder="Search by customer name..." onkeyup="filterCustomers()">
+                        <select id="customerShopFilter" onchange="filterCustomers()">
+                            <option value="">All Shops</option>
+                        </select>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Customer Name</th>
+                                <th>Shop</th>
+                                <th>Submissions</th>
+                                <th>Orders</th>
+                                <th>Avg Measurements</th>
+                                <th>Latest Size</th>
+                                <th>Most Common Size</th>
+                                <th>Last Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody">
+                            <tr>
+                                <td colspan="8" class="loading">⏳ Loading customers...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
@@ -1103,6 +1149,8 @@
             // Initialize tab-specific features
             if (tabName === 'analytics') {
                 initializeCharts();
+            } else if (tabName === 'customers') {
+                loadCustomers();
             }
             
             showNotification(`Switched to ${tabName} page`);
@@ -1142,6 +1190,113 @@
             } catch (error) {
                 console.error('Error restoring saved tab:', error);
             }
+        }
+        
+        // Load customers data
+        let allCustomersData = [];
+        
+        async function loadCustomers() {
+            try {
+                console.log('👥 Loading customers...');
+                const tbody = document.getElementById('customersTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="loading">⏳ Loading customers...</td></tr>';
+                }
+                
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3000/api' 
+                    : 'https://ideal-fit-app1.onrender.com/api';
+                
+                const response = await fetch(`${apiBaseUrl}/admin?action=getCustomers`);
+                console.log('👥 Customers response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('👥 Customers data:', result);
+                
+                if (result.success && result.data) {
+                    allCustomersData = result.data;
+                    displayCustomers(allCustomersData);
+                    
+                    // Populate shop filter (clear existing options first, except "All Shops")
+                    const shopFilter = document.getElementById('customerShopFilter');
+                    if (shopFilter) {
+                        // Keep only the first "All Shops" option
+                        while (shopFilter.children.length > 1) {
+                            shopFilter.removeChild(shopFilter.lastChild);
+                        }
+                        const shops = [...new Set(allCustomersData.map(c => c.shop))];
+                        shops.forEach(shop => {
+                            const option = document.createElement('option');
+                            option.value = shop;
+                            option.textContent = shop;
+                            shopFilter.appendChild(option);
+                        });
+                    }
+                } else {
+                    throw new Error(result.error || 'Failed to load customers');
+                }
+            } catch (error) {
+                console.error('❌ Error loading customers:', error);
+                const tbody = document.getElementById('customersTableBody');
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="padding: 2rem; text-align: center; color: #ef4444;">
+                        ❌ Error loading customers: ${error.message}
+                    </td></tr>`;
+                }
+                showNotification('Failed to load customers', 'error');
+            }
+        }
+        
+        function displayCustomers(customers) {
+            const tbody = document.getElementById('customersTableBody');
+            if (!tbody) return;
+            
+            if (customers.length === 0) {
+                tbody.innerHTML = `<tr>
+                    <td colspan="8" class="empty-state" style="padding: 3rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">👥</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin-bottom: 0.5rem;">No Customers Yet</div>
+                        <div style="color: #6b7280;">Customer data will appear here once merchants start receiving submissions.</div>
+                    </td>
+                </tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = customers.map(customer => `
+                <tr>
+                    <td>${customer.customerName || 'Anonymous'}</td>
+                    <td>${customer.shop}</td>
+                    <td>${customer.totalSubmissions}</td>
+                    <td>${customer.totalOrders}</td>
+                    <td>B:${customer.averageMeasurements?.bust || 'N/A'}, W:${customer.averageMeasurements?.waist || 'N/A'}, H:${customer.averageMeasurements?.hip || 'N/A'}</td>
+                    <td><span class="status-badge active">${customer.latestSize || 'N/A'}</span></td>
+                    <td><span class="status-badge active">${customer.mostCommonSize || 'N/A'}</span></td>
+                    <td>${new Date(customer.latestSubmission).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function filterCustomers() {
+            const searchTerm = (document.getElementById('customerSearch')?.value || '').toLowerCase();
+            const shopFilter = document.getElementById('customerShopFilter')?.value || '';
+            
+            let filtered = allCustomersData;
+            
+            if (shopFilter) {
+                filtered = filtered.filter(c => c.shop === shopFilter);
+            }
+            
+            if (searchTerm) {
+                filtered = filtered.filter(c => 
+                    (c.customerName || '').toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            displayCustomers(filtered);
         }
         
         // Notification system
@@ -1564,9 +1719,27 @@
             }, 30000); // Update every 30 seconds
         }
         
+        // Authentication check - only redirect if NOT logged in
+        function checkAuth() {
+            const isLoggedIn = localStorage.getItem('company_admin_logged_in');
+            if (isLoggedIn !== 'true') {
+                // Only redirect if not on login page
+                if (!window.location.href.includes('company-auth.html') && !window.location.href.includes('login')) {
+                    window.location.href = 'company-auth.html';
+                    return false;
+                }
+            }
+            return true;
+        }
+        
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             try {
+                // Check authentication first
+                if (!checkAuth()) {
+                    return; // Stop initialization if not logged in
+                }
+                
                 console.log('🎯 IdealFit Company Admin Dashboard Loaded Successfully!');
                 
                 // Restore saved tab first
