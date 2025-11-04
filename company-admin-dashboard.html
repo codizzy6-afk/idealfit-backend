@@ -1719,31 +1719,10 @@
             }, 30000); // Update every 30 seconds
         }
         
-        // Authentication check - only redirect if NOT logged in
-        function checkAuth() {
-            const isLoggedIn = localStorage.getItem('company_admin_logged_in');
-            if (isLoggedIn !== 'true') {
-                // Only redirect if not on login page - delay to allow page to render
-                const currentUrl = window.location.href.toLowerCase();
-                if (!currentUrl.includes('company-auth.html') && !currentUrl.includes('login')) {
-                    setTimeout(() => {
-                        window.location.href = 'company-auth.html';
-                    }, 500);
-                    return false;
-                }
-            }
-            return true;
-        }
-        
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 console.log('🎯 IdealFit Company Admin Dashboard Loaded Successfully!');
-                
-                // Check authentication after a small delay to ensure page renders
-                setTimeout(() => {
-                    checkAuth();
-                }, 200);
                 
                 // Restore saved tab first
                 restoreSavedTab();
@@ -1783,11 +1762,8 @@
             }
         });
         
-        // Also check auth on page load (before DOM ready)
-        if (document.readyState === 'loading') {
-            // If page is still loading, wait for DOMContentLoaded
-        } else {
-            // Page already loaded, check auth immediately but with delay
+        // Check authentication AFTER page is fully loaded (non-blocking)
+        window.addEventListener('load', function() {
             setTimeout(() => {
                 const isLoggedIn = localStorage.getItem('company_admin_logged_in');
                 if (isLoggedIn !== 'true') {
@@ -1796,8 +1772,8 @@
                         window.location.href = 'company-auth.html';
                     }
                 }
-            }, 300);
-        }
+            }, 1000); // 1 second delay to ensure page is fully rendered
+        });
     </script>
 </body>
 </html>
