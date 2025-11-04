@@ -1,38 +1,27 @@
 import { readFileSync, existsSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { join } from "path";
 import type { LoaderFunctionArgs } from "react-router";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
-    // Try multiple possible paths
-    const possiblePaths = [
-      join(process.cwd(), "public", "company-admin-dashboard.html"),
-      join(process.cwd(), "company-admin-dashboard.html"),
-      join(__dirname, "..", "..", "public", "company-admin-dashboard.html"),
-      join(__dirname, "..", "..", "company-admin-dashboard.html"),
-    ];
-
+    // Simple path resolution - just use process.cwd()
+    const publicPath = join(process.cwd(), "public", "company-admin-dashboard.html");
+    const rootPath = join(process.cwd(), "company-admin-dashboard.html");
+    
     let filePath: string | null = null;
     let content: string | null = null;
 
-    for (const path of possiblePaths) {
-      console.log(`Checking path: ${path}`);
-      if (existsSync(path)) {
-        filePath = path;
-        try {
-          content = readFileSync(path, "utf-8");
-          console.log(`✅ Found company-admin-dashboard.html at: ${path} (${content.length} bytes)`);
-          break;
-        } catch (readError) {
-          console.error(`Error reading file at ${path}:`, readError);
-        }
-      } else {
-        console.log(`❌ File not found at: ${path}`);
-      }
+    // Try public folder first
+    if (existsSync(publicPath)) {
+      filePath = publicPath;
+      content = readFileSync(publicPath, "utf-8");
+      console.log(`✅ Found company-admin-dashboard.html at: ${publicPath} (${content.length} bytes)`);
+    } 
+    // Fallback to root
+    else if (existsSync(rootPath)) {
+      filePath = rootPath;
+      content = readFileSync(rootPath, "utf-8");
+      console.log(`✅ Found company-admin-dashboard.html at: ${rootPath} (${content.length} bytes)`);
     }
 
     if (content) {
@@ -47,9 +36,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       });
     }
 
-    // If file not found, return helpful error message
-    const errorMessage = `Company admin dashboard file not found.\n\nChecked paths:\n${possiblePaths.map((p, i) => `${i + 1}. ${p} (${existsSync(p) ? 'EXISTS' : 'NOT FOUND'})`).join('\n')}\n\nCurrent working directory: ${process.cwd()}\n__dirname: ${__dirname}`;
-    console.error(errorMessage);
+    // File not found - return helpful error
+    const errorMessage = `File not found. Checked:\n1. ${publicPath} (${existsSync(publicPath) ? 'EXISTS' : 'NOT FOUND'})\n2. ${rootPath} (${existsSync(rootPath) ? 'EXISTS' : 'NOT FOUND'})\n\nCWD: ${process.cwd()}`;
+    console.error(`❌ ${errorMessage}`);
     
     return new Response(`<html><body><h1>404 - File Not Found</h1><pre>${errorMessage}</pre></body></html>`, {
       status: 404,
@@ -58,8 +47,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     });
   } catch (error: any) {
-    console.error("Error serving company-admin-dashboard.html:", error);
-    const errorDetails = `Error: ${error.message}\n\nStack: ${error.stack}\n\nCWD: ${process.cwd()}\n__dirname: ${__dirname}`;
+    console.error("❌ Error in company-admin-dashboard loader:", error);
+    const errorDetails = `Error: ${error.message}\n\nStack: ${error.stack || 'No stack trace'}\n\nCWD: ${process.cwd()}`;
     return new Response(`<html><body><h1>500 - Server Error</h1><pre>${errorDetails}</pre></body></html>`, {
       status: 500,
       headers: {
@@ -69,7 +58,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 }
 
-// Return null component to prevent React Router from rendering anything
 export default function CompanyAdminDashboard() {
   return null;
 }
