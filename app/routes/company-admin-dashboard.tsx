@@ -2,6 +2,7 @@ import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import type { LoaderFunctionArgs } from "react-router";
 
+// Resource route - no default export means React Router won't try to render it as a component
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
     // Simple path resolution - just use process.cwd()
@@ -58,6 +59,4 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 }
 
-export default function CompanyAdminDashboard() {
-  return null;
-}
+// No default export - this makes it a resource route
