@@ -506,6 +506,11 @@
     </style>
 </head>
 <body>
+    <!-- Test script to verify page loads -->
+    <script>
+        console.log('✅ HTML body is loading...');
+        document.body.style.display = 'block';
+    </script>
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -1722,6 +1727,7 @@
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             try {
+                console.log('🎯 DOMContentLoaded fired!');
                 console.log('🎯 IdealFit Company Admin Dashboard Loaded Successfully!');
                 
                 // Restore saved tab first
