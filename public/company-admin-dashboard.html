@@ -661,11 +661,12 @@
                 const data = await response.json();
                 console.log('📊 Stats data:', data);
                 
-                if (data.success) {
-                    document.getElementById('statTotalMerchants').textContent = data.data.totalMerchants || 0;
-                    document.getElementById('statTotalSubmissions').textContent = data.data.totalSubmissions || 0;
-                    document.getElementById('statTotalInvoices').textContent = data.data.totalInvoices || 0;
-                    document.getElementById('statTotalRevenue').textContent = '$' + (data.data.totalRevenue || '0.00');
+                if (data.success && data.data) {
+                    const stats = data.data;
+                    document.getElementById('statTotalMerchants').textContent = stats.totalMerchants ?? 0;
+                    document.getElementById('statTotalSubmissions').textContent = stats.totalSubmissions ?? 0;
+                    document.getElementById('statTotalInvoices').textContent = stats.totalInvoices ?? 0;
+                    document.getElementById('statTotalRevenue').textContent = '$' + (parseFloat(stats.totalRevenue || 0).toFixed(2));
                     
                     // Create revenue chart
                     createRevenueChart();
@@ -712,29 +713,51 @@
 
         async function loadSubmissions() {
             try {
+                console.log('📋 Loading submissions...');
                 const response = await fetch('/api/admin?action=getSubmissions');
+                console.log('📋 Submissions response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('📋 Submissions data:', data);
                 
                 if (data.success) {
-                    renderSubmissionsTable(data.data);
+                    renderSubmissionsTable(data.data || []);
+                } else {
+                    console.error('❌ Submissions API returned success=false:', data.error);
+                    document.getElementById('submissionsTableBody').innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⚠️</div>API Error: ' + (data.error || 'Unknown error') + '</td></tr>';
                 }
             } catch (error) {
-                console.error('Error loading submissions:', error);
-                document.getElementById('submissionsTableBody').innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⚠️</div>Failed to load submissions</td></tr>';
+                console.error('❌ Error loading submissions:', error);
+                document.getElementById('submissionsTableBody').innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⚠️</div>Failed to load: ' + error.message + '</td></tr>';
             }
         }
 
         async function loadBilling() {
             try {
+                console.log('💰 Loading billing...');
                 const response = await fetch('/api/admin?action=getBilling');
+                console.log('💰 Billing response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('💰 Billing data:', data);
                 
                 if (data.success) {
-                    renderBillingTable(data.data);
+                    renderBillingTable(data.data || []);
+                } else {
+                    console.error('❌ Billing API returned success=false:', data.error);
+                    document.getElementById('billingTableBody').innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⚠️</div>API Error: ' + (data.error || 'Unknown error') + '</td></tr>';
                 }
             } catch (error) {
-                console.error('Error loading billing:', error);
-                document.getElementById('billingTableBody').innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⚠️</div>Failed to load billing data</td></tr>';
+                console.error('❌ Error loading billing:', error);
+                document.getElementById('billingTableBody').innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">⚠️</div>Failed to load: ' + error.message + '</td></tr>';
             }
         }
 
@@ -748,8 +771,16 @@
         function renderMerchantsTable(merchants) {
             const tbody = document.getElementById('merchantsTableBody');
             
-            if (merchants.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div class="empty-state-icon">🏪</div>No merchants found</td></tr>';
+            if (!merchants || merchants.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state" style="padding: 3rem;">
+                            <div class="empty-state-icon" style="font-size: 4rem; margin-bottom: 1rem;">🏪</div>
+                            <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin-bottom: 0.5rem;">No Merchants Yet</div>
+                            <div style="color: #6b7280;">Your first merchant will appear here once they sign up.</div>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             
@@ -770,8 +801,16 @@
         function renderSubmissionsTable(submissions) {
             const tbody = document.getElementById('submissionsTableBody');
             
-            if (submissions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">📋</div>No submissions found</td></tr>';
+            if (!submissions || submissions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state" style="padding: 3rem;">
+                            <div class="empty-state-icon" style="font-size: 4rem; margin-bottom: 1rem;">📋</div>
+                            <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin-bottom: 0.5rem;">No Submissions Yet</div>
+                            <div style="color: #6b7280;">Customer size recommendations will appear here once merchants start using the app.</div>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             
@@ -791,8 +830,16 @@
         function renderBillingTable(invoices) {
             const tbody = document.getElementById('billingTableBody');
             
-            if (invoices.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state-icon">💰</div>No invoices found</td></tr>';
+            if (!invoices || invoices.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state" style="padding: 3rem;">
+                            <div class="empty-state-icon" style="font-size: 4rem; margin-bottom: 1rem;">💰</div>
+                            <div style="font-size: 1.25rem; font-weight: 600; color: #1a202c; margin-bottom: 0.5rem;">No Invoices Yet</div>
+                            <div style="color: #6b7280;">Monthly invoices will appear here once merchants start placing orders.</div>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             
