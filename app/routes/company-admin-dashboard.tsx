@@ -1,6 +1,10 @@
 import { readFileSync, existsSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import type { LoaderFunctionArgs } from "react-router";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
@@ -20,6 +24,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         filePath = path;
         try {
           content = readFileSync(path, "utf-8");
+          console.log(`✅ Found company-admin-dashboard.html at: ${path}`);
           break;
         } catch (readError) {
           console.error(`Error reading file at ${path}:`, readError);
@@ -40,7 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     // If file not found, return helpful error message
-    const errorMessage = `Company admin dashboard file not found. Checked paths:\n${possiblePaths.join('\n')}\n\nCurrent working directory: ${process.cwd()}`;
+    const errorMessage = `Company admin dashboard file not found. Checked paths:\n${possiblePaths.join('\n')}\n\nCurrent working directory: ${process.cwd()}\n__dirname: ${__dirname}`;
     console.error(errorMessage);
     
     return new Response(`<html><body><h1>404 - File Not Found</h1><pre>${errorMessage}</pre></body></html>`, {
