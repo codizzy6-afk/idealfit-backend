@@ -799,6 +799,64 @@
                 </div>
             </div>
             
+            <!-- Customers Tab -->
+            <div id="customers" class="tab-content" style="display: none;">
+                <div class="page-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div>
+                            <h1 class="page-title">👤 Customers</h1>
+                            <p class="page-subtitle">View customer data aggregated from all merchants</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadCustomers()">🔄 Refresh</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">All Customers</h2>
+                        <div style="color: #6b7280; font-size: 0.875rem;">
+                            Showing <span id="customerCount">0</span> customers
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <input type="text" class="search-box" id="customerSearch" placeholder="🔍 Search by customer name..." onkeyup="filterCustomers()">
+                        <select id="customerShopFilter" onchange="filterCustomers()">
+                            <option value="">All Shops</option>
+                        </select>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Shop</th>
+                                    <th>Submissions</th>
+                                    <th>Orders</th>
+                                    <th>Avg Measurements</th>
+                                    <th>Latest Size</th>
+                                    <th>Most Common Size</th>
+                                    <th>Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTableBody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">
+                                        Loading customer data...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="customersEmptyState" style="display: none; text-align: center; padding: 3rem; color: #6b7280;">
+                        <p style="font-size: 1.125rem; margin-bottom: 0.5rem;">No customer data available</p>
+                        <p style="font-size: 0.875rem;">Customer data will appear here once merchants start receiving submissions.</p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Billing & Revenue Tab -->
             <div id="billing" class="tab-content">
                 <div class="page-header">
@@ -1159,6 +1217,127 @@
                 console.error('Error in showTab:', error);
             }
         };
+        
+        // Store all customers data for filtering
+        let allCustomersData = [];
+        
+        // Load customers data
+        async function loadCustomers() {
+            try {
+                console.log('Loading customers data...');
+                const tbody = document.getElementById('customersTableBody');
+                const emptyState = document.getElementById('customersEmptyState');
+                const customerCount = document.getElementById('customerCount');
+                
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">Loading customer data...</td></tr>';
+                }
+                
+                const apiBaseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3000' 
+                    : 'https://ideal-fit-app1.onrender.com';
+                
+                const response = await fetch(`${apiBaseUrl}/api/admin?action=getCustomers`);
+                const result = await response.json();
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    allCustomersData = result.data;
+                    displayCustomers(allCustomersData);
+                    
+                    // Populate shop filter
+                    const shopFilter = document.getElementById('customerShopFilter');
+                    if (shopFilter) {
+                        // Clear existing options except "All Shops"
+                        while (shopFilter.options.length > 1) {
+                            shopFilter.remove(1);
+                        }
+                        
+                        // Get unique shops
+                        const uniqueShops = [...new Set(allCustomersData.map(c => c.shop))].sort();
+                        uniqueShops.forEach(shop => {
+                            const option = document.createElement('option');
+                            option.value = shop;
+                            option.textContent = shop;
+                            shopFilter.appendChild(option);
+                        });
+                    }
+                    
+                    if (customerCount) {
+                        customerCount.textContent = allCustomersData.length;
+                    }
+                    
+                    if (emptyState) {
+                        emptyState.style.display = 'none';
+                    }
+                } else {
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                    }
+                    if (emptyState) {
+                        emptyState.style.display = 'block';
+                    }
+                    if (customerCount) {
+                        customerCount.textContent = '0';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                const tbody = document.getElementById('customersTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading customer data. Please try again.</td></tr>';
+                }
+            }
+        }
+        
+        // Display customers in table
+        function displayCustomers(customers) {
+            const tbody = document.getElementById('customersTableBody');
+            if (!tbody) return;
+            
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">No customers found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = customers.map(customer => `
+                <tr>
+                    <td style="font-weight: 600;">${customer.customerName || 'Anonymous'}</td>
+                    <td>${customer.shop || 'N/A'}</td>
+                    <td>${customer.totalSubmissions || 0}</td>
+                    <td>${customer.totalOrders || 0}</td>
+                    <td>B: ${customer.averageMeasurements?.bust || 'N/A'}, W: ${customer.averageMeasurements?.waist || 'N/A'}, H: ${customer.averageMeasurements?.hip || 'N/A'}</td>
+                    <td><span class="status-badge active">${customer.latestSize || 'N/A'}</span></td>
+                    <td>${customer.mostCommonSize || 'N/A'}</td>
+                    <td>${customer.latestSubmission ? new Date(customer.latestSubmission).toLocaleDateString() : 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Filter customers
+        function filterCustomers() {
+            const searchTerm = document.getElementById('customerSearch')?.value.toLowerCase() || '';
+            const shopFilter = document.getElementById('customerShopFilter')?.value || '';
+            
+            let filtered = allCustomersData;
+            
+            if (searchTerm) {
+                filtered = filtered.filter(c => 
+                    (c.customerName || '').toLowerCase().includes(searchTerm) ||
+                    (c.shop || '').toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (shopFilter) {
+                filtered = filtered.filter(c => c.shop === shopFilter);
+            }
+            
+            displayCustomers(filtered);
+            
+            const customerCount = document.getElementById('customerCount');
+            if (customerCount) {
+                customerCount.textContent = filtered.length;
+            }
+        }
         
         // Restore saved tab on page load
         function restoreSavedTab() {
