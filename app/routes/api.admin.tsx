@@ -4,8 +4,10 @@ import db from "../db.server";
 // Company admin API endpoint
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
+    console.log('📊 Admin API called:', request.url);
     const url = new URL(request.url);
     const action = url.searchParams.get("action");
+    console.log('📊 Action:', action);
 
     // Get all merchants
     if (action === "getAllMerchants") {

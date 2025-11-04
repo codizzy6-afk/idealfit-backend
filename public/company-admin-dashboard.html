@@ -650,34 +650,63 @@
 
         async function loadStats() {
             try {
+                console.log('📊 Loading stats...');
                 const response = await fetch('/api/admin?action=getStats');
+                console.log('📊 Stats response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('📊 Stats data:', data);
                 
                 if (data.success) {
-                    document.getElementById('statTotalMerchants').textContent = data.data.totalMerchants;
-                    document.getElementById('statTotalSubmissions').textContent = data.data.totalSubmissions;
-                    document.getElementById('statTotalInvoices').textContent = data.data.totalInvoices;
-                    document.getElementById('statTotalRevenue').textContent = '$' + data.data.totalRevenue;
+                    document.getElementById('statTotalMerchants').textContent = data.data.totalMerchants || 0;
+                    document.getElementById('statTotalSubmissions').textContent = data.data.totalSubmissions || 0;
+                    document.getElementById('statTotalInvoices').textContent = data.data.totalInvoices || 0;
+                    document.getElementById('statTotalRevenue').textContent = '$' + (data.data.totalRevenue || '0.00');
                     
                     // Create revenue chart
                     createRevenueChart();
+                } else {
+                    console.error('❌ Stats API returned success=false:', data.error);
+                    document.getElementById('statTotalMerchants').textContent = 'Error';
+                    document.getElementById('statTotalSubmissions').textContent = 'Error';
+                    document.getElementById('statTotalInvoices').textContent = 'Error';
+                    document.getElementById('statTotalRevenue').textContent = 'Error';
                 }
             } catch (error) {
-                console.error('Error loading stats:', error);
+                console.error('❌ Error loading stats:', error);
+                document.getElementById('statTotalMerchants').textContent = 'Error';
+                document.getElementById('statTotalSubmissions').textContent = 'Error';
+                document.getElementById('statTotalInvoices').textContent = 'Error';
+                document.getElementById('statTotalRevenue').textContent = 'Error';
             }
         }
 
         async function loadMerchants() {
             try {
+                console.log('🏪 Loading merchants...');
                 const response = await fetch('/api/admin?action=getAllMerchants');
+                console.log('🏪 Merchants response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('🏪 Merchants data:', data);
                 
                 if (data.success) {
-                    renderMerchantsTable(data.data);
+                    renderMerchantsTable(data.data || []);
+                } else {
+                    console.error('❌ Merchants API returned success=false:', data.error);
+                    document.getElementById('merchantsTableBody').innerHTML = '<tr><td colspan="6" class="empty-state"><div class="empty-state-icon">⚠️</div>API Error: ' + (data.error || 'Unknown error') + '</td></tr>';
                 }
             } catch (error) {
-                console.error('Error loading merchants:', error);
-                document.getElementById('merchantsTableBody').innerHTML = '<tr><td colspan="6" class="empty-state"><div class="empty-state-icon">⚠️</div>Failed to load merchants</td></tr>';
+                console.error('❌ Error loading merchants:', error);
+                document.getElementById('merchantsTableBody').innerHTML = '<tr><td colspan="6" class="empty-state"><div class="empty-state-icon">⚠️</div>Failed to load: ' + error.message + '</td></tr>';
             }
         }
 
@@ -825,6 +854,21 @@
             document.getElementById('dashboardContainer').style.display = 'flex';
             loadDashboardData();
         }
+
+        // Test API connectivity on load
+        async function testAPI() {
+            try {
+                console.log('🔍 Testing API connectivity...');
+                const response = await fetch('/api/admin?action=getStats');
+                console.log('✅ API is reachable, status:', response.status);
+            } catch (error) {
+                console.error('❌ API is NOT reachable:', error);
+                alert('⚠️ Cannot connect to API. Check console for details.');
+            }
+        }
+        
+        // Test on page load
+        testAPI();
     </script>
 </body>
 </html>
