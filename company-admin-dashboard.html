@@ -1763,17 +1763,22 @@
         });
         
         // Check authentication AFTER page is fully loaded (non-blocking)
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                const isLoggedIn = localStorage.getItem('company_admin_logged_in');
-                if (isLoggedIn !== 'true') {
-                    const currentUrl = window.location.href.toLowerCase();
-                    if (!currentUrl.includes('company-auth.html') && !currentUrl.includes('login')) {
-                        window.location.href = 'company-auth.html';
+        // Using window.onload instead of addEventListener to avoid issues
+        window.onload = function() {
+            setTimeout(function() {
+                try {
+                    const isLoggedIn = localStorage.getItem('company_admin_logged_in');
+                    if (isLoggedIn !== 'true') {
+                        const currentUrl = window.location.href.toLowerCase();
+                        if (!currentUrl.includes('company-auth.html') && !currentUrl.includes('login')) {
+                            window.location.href = 'company-auth.html';
+                        }
                     }
+                } catch(e) {
+                    console.error('Auth check error:', e);
                 }
-            }, 1000); // 1 second delay to ensure page is fully rendered
-        });
+            }, 1000);
+        };
     </script>
 </body>
 </html>
