@@ -820,7 +820,7 @@
                     </div>
                     
                     <div class="filter-section">
-                        <input type="text" class="search-box" id="customerSearch" placeholder="🔍 Search by customer name..." onkeyup="filterCustomers()">
+                        <input type="text" class="search-box" id="customerSearch" placeholder="🔍 Search by name, email, phone..." onkeyup="filterCustomers()">
                         <select id="customerShopFilter" onchange="filterCustomers()">
                             <option value="">All Shops</option>
                         </select>
@@ -831,6 +831,12 @@
                             <thead>
                                 <tr>
                                     <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Address</th>
+                                    <th>City</th>
+                                    <th>State</th>
+                                    <th>Country</th>
                                     <th>Shop</th>
                                     <th>Submissions</th>
                                     <th>Orders</th>
@@ -842,7 +848,7 @@
                             </thead>
                             <tbody id="customersTableBody">
                                 <tr>
-                                    <td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">
+                                    <td colspan="13" style="text-align: center; padding: 2rem; color: #6b7280;">
                                         Loading customer data...
                                     </td>
                                 </tr>
@@ -1230,7 +1236,7 @@
                 const customerCount = document.getElementById('customerCount');
                 
                 if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">Loading customer data...</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 2rem; color: #6b7280;">Loading customer data...</td></tr>';
                 }
                 
                 const apiBaseUrl = window.location.hostname === 'localhost' 
@@ -1284,7 +1290,7 @@
                 console.error('Error loading customers:', error);
                 const tbody = document.getElementById('customersTableBody');
                 if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading customer data. Please try again.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading customer data. Please try again.</td></tr>';
                 }
             }
         }
@@ -1295,13 +1301,21 @@
             if (!tbody) return;
             
             if (customers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">No customers found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 2rem; color: #6b7280;">No customers found</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = customers.map(customer => `
+            tbody.innerHTML = customers.map(customer => {
+                const contact = customer.contact || {};
+                return `
                 <tr>
                     <td style="font-weight: 600;">${customer.customerName || 'Anonymous'}</td>
+                    <td>${contact.email || '—'}</td>
+                    <td>${contact.phone || '—'}</td>
+                    <td>${contact.address || '—'}</td>
+                    <td>${contact.city || '—'}</td>
+                    <td>${contact.state || '—'}</td>
+                    <td>${contact.country || '—'}</td>
                     <td>${customer.shop || 'N/A'}</td>
                     <td>${customer.totalSubmissions || 0}</td>
                     <td>${customer.totalOrders || 0}</td>
@@ -1310,7 +1324,8 @@
                     <td>${customer.mostCommonSize || 'N/A'}</td>
                     <td>${customer.latestSubmission ? new Date(customer.latestSubmission).toLocaleDateString() : 'N/A'}</td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
         
         // Filter customers
@@ -1323,7 +1338,13 @@
             if (searchTerm) {
                 filtered = filtered.filter(c => 
                     (c.customerName || '').toLowerCase().includes(searchTerm) ||
-                    (c.shop || '').toLowerCase().includes(searchTerm)
+                    (c.shop || '').toLowerCase().includes(searchTerm) ||
+                    (c.contact?.email || '').toLowerCase().includes(searchTerm) ||
+                    (c.contact?.phone || '').toLowerCase().includes(searchTerm) ||
+                    (c.contact?.address || '').toLowerCase().includes(searchTerm) ||
+                    (c.contact?.city || '').toLowerCase().includes(searchTerm) ||
+                    (c.contact?.state || '').toLowerCase().includes(searchTerm) ||
+                    (c.contact?.country || '').toLowerCase().includes(searchTerm)
                 );
             }
             

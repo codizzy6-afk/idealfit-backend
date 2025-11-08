@@ -17,7 +17,13 @@ async function handleAction(request: Request) {
       productId, 
       orderId, 
       shop,
-      unit
+      unit,
+      email,
+      phone,
+      address,
+      city,
+      state,
+      country
     } = data;
 
     // Validate required fields
@@ -81,6 +87,12 @@ async function handleAction(request: Request) {
         hip: parseFloat(hip),
         recommendedSize: calculatedSize || 'N/A',
         orderId: orderId || null,
+        email: email || null,
+        phone: phone || null,
+        address: address || null,
+        city: city || null,
+        state: state || null,
+        country: country || null,
         date: new Date()
       }
     });

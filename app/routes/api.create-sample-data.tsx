@@ -77,11 +77,36 @@ async function createSampleData() {
       'Amanda White', 'Matthew Harris', 'Ashley Clark'
     ];
 
+    const customerEmails = customerNames.map(name => {
+      const base = name.toLowerCase().replace(/[^a-z]/g, '.');
+      return `${base}@example.com`;
+    });
+
+    const customerPhones = [
+      '+1-415-555-1234', '+1-646-555-9876', '+44-20-7946-0958', '+61-2-9374-4000',
+      '+91-80-1234-5678', '+1-213-555-3322', '+1-305-555-7744', '+1-206-555-9988',
+      '+1-323-555-1144', '+1-702-555-7766', '+44-161-555-2233', '+33-1-55-55-55-55'
+    ];
+
+    const customerAddresses = [
+      { address: '123 Market Street', city: 'San Francisco', state: 'CA', country: 'USA' },
+      { address: '45 Queen Street', city: 'Toronto', state: 'ON', country: 'Canada' },
+      { address: '89 Oxford Street', city: 'London', state: 'London', country: 'United Kingdom' },
+      { address: '12 Rue de Rivoli', city: 'Paris', state: 'Île-de-France', country: 'France' },
+      { address: '78 Collins Street', city: 'Melbourne', state: 'VIC', country: 'Australia' },
+      { address: '56 MG Road', city: 'Bengaluru', state: 'Karnataka', country: 'India' },
+      { address: '220 Madison Ave', city: 'New York', state: 'NY', country: 'USA' },
+      { address: '501 Brickell Ave', city: 'Miami', state: 'FL', country: 'USA' }
+    ];
+
     const createdSubmissions = [];
     for (let i = 0; i < 25; i++) {
       const merchant = createdMerchants[Math.floor(Math.random() * createdMerchants.length)];
       const size = submissionSizes[Math.floor(Math.random() * submissionSizes.length)];
       const customerName = customerNames[Math.floor(Math.random() * customerNames.length)];
+      const email = customerEmails[Math.floor(Math.random() * customerEmails.length)];
+      const phone = customerPhones[Math.floor(Math.random() * customerPhones.length)];
+      const addressInfo = customerAddresses[Math.floor(Math.random() * customerAddresses.length)];
       
       // Generate realistic measurements based on size
       const sizeRanges: Record<string, { bust: number[], waist: number[], hip: number[] }> = {
@@ -113,6 +138,12 @@ async function createSampleData() {
           recommendedSize: size,
           productId: `product-${Math.floor(Math.random() * 1000)}`,
           orderId: `order-${Math.floor(Math.random() * 10000)}`,
+          email: email,
+          phone: phone,
+          address: addressInfo.address,
+          city: addressInfo.city,
+          state: addressInfo.state,
+          country: addressInfo.country,
           date: date
         }
       });

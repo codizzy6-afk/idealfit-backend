@@ -208,6 +208,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
             productId: true,
             date: true,
             createdAt: true,
+            email: true,
+            phone: true,
+            address: true,
+            city: true,
+            state: true,
+            country: true,
           },
           orderBy: {
             date: 'desc'
@@ -230,7 +236,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
               latestSubmission: sub.date,
               latestSize: sub.recommendedSize,
               measurements: [],
-              orders: []
+              orders: [],
+              email: sub.email || null,
+              phone: sub.phone || null,
+              address: sub.address || null,
+              city: sub.city || null,
+              state: sub.state || null,
+              country: sub.country || null,
             });
           }
 
@@ -288,7 +300,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
               waist: parseFloat(avgWaist.toFixed(1)),
               hip: parseFloat(avgHip.toFixed(1))
             },
-            orders: customer.orders
+            orders: customer.orders,
+            contact: {
+              email: customer.email,
+              phone: customer.phone,
+              address: customer.address,
+              city: customer.city,
+              state: customer.state,
+              country: customer.country
+            }
           };
         });
 
