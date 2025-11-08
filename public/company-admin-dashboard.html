@@ -506,17 +506,6 @@
     </style>
 </head>
 <body>
-    <!-- Test script to verify page loads -->
-    <script>
-        try {
-            console.log('✅ HTML body is loading...');
-            document.body.style.display = 'block';
-            // Add a visible test element
-            document.body.insertAdjacentHTML('afterbegin', '<div style="background: red; color: white; padding: 10px; text-align: center; z-index: 99999; position: fixed; top: 0; left: 0; right: 0;">PAGE IS LOADING - If you see this, HTML is working</div>');
-        } catch(e) {
-            console.error('Body script error:', e);
-        }
-    </script>
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
@@ -532,31 +521,31 @@
             </div>
             
             <div class="sidebar-nav">
-                <button class="tab active" onclick="showTab('overview', event)">
+                <button class="tab active" onclick="showTab('overview')">
                     <span class="tab-icon">📊</span>
                     <span class="tab-label">Overview</span>
                 </button>
-                <button class="tab" onclick="showTab('users', event)">
-                    <span class="tab-icon">👥</span>
-                    <span class="tab-label">User Management</span>
-                </button>
-                <button class="tab" onclick="showTab('merchants', event)">
+                <button class="tab" onclick="showTab('merchants')">
                     <span class="tab-icon">🏪</span>
                     <span class="tab-label">Merchant Management</span>
                 </button>
-                <button class="tab" onclick="showTab('customers', event)">
-                    <span class="tab-icon">👤</span>
-                    <span class="tab-label">Customers</span>
-                </button>
-                <button class="tab" onclick="showTab('billing', event)">
+                <button class="tab" onclick="showTab('billing')">
                     <span class="tab-icon">💰</span>
                     <span class="tab-label">Billing & Revenue</span>
                 </button>
-                <button class="tab" onclick="showTab('analytics', event)">
+                <button class="tab" onclick="showTab('analytics')">
                     <span class="tab-icon">📈</span>
                     <span class="tab-label">Analytics</span>
                 </button>
-                <button class="tab" onclick="showTab('settings', event)">
+                <button class="tab" onclick="showTab('customers')">
+                    <span class="tab-icon">👤</span>
+                    <span class="tab-label">Customers</span>
+                </button>
+                <button class="tab" onclick="showTab('users')">
+                    <span class="tab-icon">👥</span>
+                    <span class="tab-label">User Management</span>
+                </button>
+                <button class="tab" onclick="showTab('settings')">
                     <span class="tab-icon">⚙️</span>
                     <span class="tab-label">Settings</span>
                 </button>
@@ -625,91 +614,6 @@
                             <div style="font-weight: 600; color: #dc2626;">Storage</div>
                             <div style="color: #dc2626; font-size: 0.875rem;">85% Full</div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- User Management Tab -->
-            <div id="users" class="tab-content">
-                <div class="page-header">
-                    <h1 class="page-title">👥 User Management</h1>
-                    <p class="page-subtitle">Manage platform users and their permissions</p>
-                </div>
-                
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="color: #1e3a8a;">All Users</h2>
-                        <button class="btn" onclick="openAddUserModal()">➕ Add User</button>
-                    </div>
-                    
-                    <div class="filter-section">
-                        <input type="text" class="search-box" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()">
-                        <select id="userRoleFilter" onchange="filterUsers()">
-                            <option value="">All Roles</option>
-                            <option value="admin">Admin</option>
-                            <option value="manager">Manager</option>
-                            <option value="support">Support</option>
-                        </select>
-                        <select id="userStatusFilter" onchange="filterUsers()">
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="suspended">Suspended</option>
-                        </select>
-                    </div>
-                    
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Last Login</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userTable">
-                            <tr>
-                                <td>John Doe</td>
-                                <td>john@example.com</td>
-                                <td>Admin</td>
-                                <td><span class="status-badge active">Active</span></td>
-                                <td>2 hours ago</td>
-                                <td>
-                                    <button class="btn" onclick="editUser('john')">✏️ Edit</button>
-                                    <button class="btn btn-danger" onclick="deleteUser('john')">🗑️ Delete</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Jane Smith</td>
-                                <td>jane@example.com</td>
-                                <td>Manager</td>
-                                <td><span class="status-badge active">Active</span></td>
-                                <td>1 day ago</td>
-                                <td>
-                                    <button class="btn" onclick="editUser('jane')">✏️ Edit</button>
-                                    <button class="btn btn-danger" onclick="deleteUser('jane')">🗑️ Delete</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Mike Johnson</td>
-                                <td>mike@example.com</td>
-                                <td>Support</td>
-                                <td><span class="status-badge suspended">Suspended</span></td>
-                                <td>1 week ago</td>
-                                <td>
-                                    <button class="btn" onclick="editUser('mike')">✏️ Edit</button>
-                                    <button class="btn btn-success" onclick="activateUser('mike')">✅ Activate</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <div class="pagination">
-                        <button onclick="previousPage('users')" id="prevUsersBtn">Previous</button>
-                        <button class="active">1</button>
-                        <button onclick="nextPage('users')" id="nextUsersBtn">Next</button>
                     </div>
                 </div>
             </div>
@@ -795,70 +699,6 @@
                         <button onclick="previousPage('merchants')" id="prevMerchantsBtn">Previous</button>
                         <button class="active">1</button>
                         <button onclick="nextPage('merchants')" id="nextMerchantsBtn">Next</button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Customers Tab -->
-            <div id="customers" class="tab-content" style="display: none;">
-                <div class="page-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div>
-                            <h1 class="page-title">👤 Customers</h1>
-                            <p class="page-subtitle">View customer data aggregated from all merchants</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="loadCustomers()">🔄 Refresh</button>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="color: #1e3a8a;">All Customers</h2>
-                        <div style="color: #6b7280; font-size: 0.875rem;">
-                            Showing <span id="customerCount">0</span> customers
-                        </div>
-                    </div>
-                    
-                    <div class="filter-section">
-                        <input type="text" class="search-box" id="customerSearch" placeholder="🔍 Search by name, email, phone..." onkeyup="filterCustomers()">
-                        <select id="customerShopFilter" onchange="filterCustomers()">
-                            <option value="">All Shops</option>
-                        </select>
-                    </div>
-                    
-                    <div style="overflow-x: auto;">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>Address</th>
-                                    <th>City</th>
-                                    <th>State</th>
-                                    <th>Country</th>
-                                    <th>Shop</th>
-                                    <th>Submissions</th>
-                                    <th>Orders</th>
-                                    <th>Avg Measurements</th>
-                                    <th>Latest Size</th>
-                                    <th>Most Common Size</th>
-                                    <th>Last Activity</th>
-                                </tr>
-                            </thead>
-                            <tbody id="customersTableBody">
-                                <tr>
-                                    <td colspan="13" style="text-align: center; padding: 2rem; color: #6b7280;">
-                                        Loading customer data...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div id="customersEmptyState" style="display: none; text-align: center; padding: 3rem; color: #6b7280;">
-                        <p style="font-size: 1.125rem; margin-bottom: 0.5rem;">No customer data available</p>
-                        <p style="font-size: 0.875rem;">Customer data will appear here once merchants start receiving submissions.</p>
                     </div>
                 </div>
             </div>
@@ -998,6 +838,109 @@
                             <div style="font-weight: 600; color: #dc2626;">Error Rate</div>
                             <div style="color: #dc2626; font-size: 1.5rem; font-weight: 700;">0.1%</div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Customers Tab -->
+            <div id="customers" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">👤 Customers</h1>
+                    <p class="page-subtitle">Review customer activity across all merchants</p>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: #1e3a8a; margin-bottom: 1.5rem;">Customer Directory</h2>
+                    <p style="color: #6b7280; margin-bottom: 1rem;">Customer insights will appear here. This view can include submissions, contact information, and order history aggregated from every merchant account.</p>
+                    <div style="padding: 1.5rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5f5; text-align: center; color: #64748b;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">Customers data coming soon</div>
+                        <div style="font-size: 0.95rem;">Hook this tab up to the admin API once customer syncing is ready.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Management Tab -->
+            <div id="users" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">👥 User Management</h1>
+                    <p class="page-subtitle">Manage platform users and their permissions</p>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="color: #1e3a8a;">All Users</h2>
+                        <button class="btn" onclick="openAddUserModal()">➕ Add User</button>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <input type="text" class="search-box" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()">
+                        <select id="userRoleFilter" onchange="filterUsers()">
+                            <option value="">All Roles</option>
+                            <option value="admin">Admin</option>
+                            <option value="manager">Manager</option>
+                            <option value="support">Support</option>
+                        </select>
+                        <select id="userStatusFilter" onchange="filterUsers()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTable">
+                            <tr>
+                                <td>John Doe</td>
+                                <td>john@example.com</td>
+                                <td>Admin</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>2 hours ago</td>
+                                <td>
+                                    <button class="btn" onclick="editUser('john')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="deleteUser('john')">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Jane Smith</td>
+                                <td>jane@example.com</td>
+                                <td>Manager</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>1 day ago</td>
+                                <td>
+                                    <button class="btn" onclick="editUser('jane')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="deleteUser('jane')">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mike Johnson</td>
+                                <td>mike@example.com</td>
+                                <td>Support</td>
+                                <td><span class="status-badge suspended">Suspended</span></td>
+                                <td>1 week ago</td>
+                                <td>
+                                    <button class="btn" onclick="editUser('mike')">✏️ Edit</button>
+                                    <button class="btn btn-success" onclick="activateUser('mike')">✅ Activate</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination">
+                        <button onclick="previousPage('users')" id="prevUsersBtn">Previous</button>
+                        <button class="active">1</button>
+                        <button onclick="nextPage('users')" id="nextUsersBtn">Next</button>
                     </div>
                 </div>
             </div>
@@ -1145,8 +1088,6 @@
     </div>
 
     <script>
-        console.log('✅ Main script tag started loading...');
-        
         // Global variables
         let currentTab = 'overview';
         let totalRevenue = 0;
@@ -1158,206 +1099,35 @@
         let revenueChart = null;
         let userGrowthChart = null;
         
-        // Tab navigation - make it global and fix event handling
-        window.showTab = function(tabName, event) {
-            try {
-                console.log('showTab called with:', tabName);
-                
-                // Hide all tab contents
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                    content.style.display = 'none';
-                });
-                
-                // Remove active class from all tabs
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                
-                // Show selected tab content
-                const contentElement = document.getElementById(tabName);
-                if (contentElement) {
-                    contentElement.classList.add('active');
-                    contentElement.style.display = 'block';
-                } else {
-                    console.error('Tab content not found:', tabName);
-                    return;
-                }
-                
-                // Add active class to clicked tab - better event handling
-                if (event && event.target) {
-                    const clickedTab = event.target.closest('.tab');
-                    if (clickedTab) {
-                        clickedTab.classList.add('active');
-                    }
-                } else {
-                    // Fallback: find tab button by onclick attribute
-                    const tabButton = document.querySelector(`button[onclick*="showTab('${tabName}')"]`);
-                    if (tabButton) {
-                        tabButton.classList.add('active');
-                    }
-                }
-                
-                currentTab = tabName;
-                
-                // Save current tab to localStorage for persistence
-                localStorage.setItem('idealfit_admin_current_tab', tabName);
-                
-                // Initialize tab-specific features
-                if (tabName === 'analytics' && typeof initializeCharts === 'function') {
-                    initializeCharts();
-                } else if (tabName === 'customers' && typeof loadCustomers === 'function') {
-                    loadCustomers();
-                } else if (tabName === 'merchants' && typeof loadMerchants === 'function') {
-                    loadMerchants();
-                } else if (tabName === 'billing' && typeof loadBilling === 'function') {
-                    loadBilling();
-                }
-                
-                if (typeof showNotification === 'function') {
-                    showNotification(`Switched to ${tabName} page`);
-                }
-                
-                console.log('Tab switched successfully to:', tabName);
-            } catch (error) {
-                console.error('Error in showTab:', error);
-            }
-        };
-        
-        // Store all customers data for filtering
-        let allCustomersData = [];
-        
-        // Load customers data
-        async function loadCustomers() {
-            try {
-                console.log('Loading customers data...');
-                const tbody = document.getElementById('customersTableBody');
-                const emptyState = document.getElementById('customersEmptyState');
-                const customerCount = document.getElementById('customerCount');
-                
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 2rem; color: #6b7280;">Loading customer data...</td></tr>';
-                }
-                
-                const apiBaseUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3000' 
-                    : 'https://ideal-fit-app1.onrender.com';
-                
-                const response = await fetch(`${apiBaseUrl}/api/admin?action=getCustomers`);
-                const result = await response.json();
-                
-                if (result.success && result.data && result.data.length > 0) {
-                    allCustomersData = result.data;
-                    displayCustomers(allCustomersData);
-                    
-                    // Populate shop filter
-                    const shopFilter = document.getElementById('customerShopFilter');
-                    if (shopFilter) {
-                        // Clear existing options except "All Shops"
-                        while (shopFilter.options.length > 1) {
-                            shopFilter.remove(1);
-                        }
-                        
-                        // Get unique shops
-                        const uniqueShops = [...new Set(allCustomersData.map(c => c.shop))].sort();
-                        uniqueShops.forEach(shop => {
-                            const option = document.createElement('option');
-                            option.value = shop;
-                            option.textContent = shop;
-                            shopFilter.appendChild(option);
-                        });
-                    }
-                    
-                    if (customerCount) {
-                        customerCount.textContent = allCustomersData.length;
-                    }
-                    
-                    if (emptyState) {
-                        emptyState.style.display = 'none';
-                    }
-                } else {
-                    if (tbody) {
-                        tbody.innerHTML = '';
-                    }
-                    if (emptyState) {
-                        emptyState.style.display = 'block';
-                    }
-                    if (customerCount) {
-                        customerCount.textContent = '0';
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading customers:', error);
-                const tbody = document.getElementById('customersTableBody');
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading customer data. Please try again.</td></tr>';
-                }
-            }
-        }
-        
-        // Display customers in table
-        function displayCustomers(customers) {
-            const tbody = document.getElementById('customersTableBody');
-            if (!tbody) return;
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
             
-            if (customers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 2rem; color: #6b7280;">No customers found</td></tr>';
-                return;
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.closest('.tab').classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Save current tab to localStorage for persistence
+            localStorage.setItem('idealfit_admin_current_tab', tabName);
+            
+            // Initialize tab-specific features
+            if (tabName === 'analytics') {
+                initializeCharts();
             }
             
-            tbody.innerHTML = customers.map(customer => {
-                const contact = customer.contact || {};
-                return `
-                <tr>
-                    <td style="font-weight: 600;">${customer.customerName || 'Anonymous'}</td>
-                    <td>${contact.email || '—'}</td>
-                    <td>${contact.phone || '—'}</td>
-                    <td>${contact.address || '—'}</td>
-                    <td>${contact.city || '—'}</td>
-                    <td>${contact.state || '—'}</td>
-                    <td>${contact.country || '—'}</td>
-                    <td>${customer.shop || 'N/A'}</td>
-                    <td>${customer.totalSubmissions || 0}</td>
-                    <td>${customer.totalOrders || 0}</td>
-                    <td>B: ${customer.averageMeasurements?.bust || 'N/A'}, W: ${customer.averageMeasurements?.waist || 'N/A'}, H: ${customer.averageMeasurements?.hip || 'N/A'}</td>
-                    <td><span class="status-badge active">${customer.latestSize || 'N/A'}</span></td>
-                    <td>${customer.mostCommonSize || 'N/A'}</td>
-                    <td>${customer.latestSubmission ? new Date(customer.latestSubmission).toLocaleDateString() : 'N/A'}</td>
-                </tr>
-                `;
-            }).join('');
-        }
-        
-        // Filter customers
-        function filterCustomers() {
-            const searchTerm = document.getElementById('customerSearch')?.value.toLowerCase() || '';
-            const shopFilter = document.getElementById('customerShopFilter')?.value || '';
-            
-            let filtered = allCustomersData;
-            
-            if (searchTerm) {
-                filtered = filtered.filter(c => 
-                    (c.customerName || '').toLowerCase().includes(searchTerm) ||
-                    (c.shop || '').toLowerCase().includes(searchTerm) ||
-                    (c.contact?.email || '').toLowerCase().includes(searchTerm) ||
-                    (c.contact?.phone || '').toLowerCase().includes(searchTerm) ||
-                    (c.contact?.address || '').toLowerCase().includes(searchTerm) ||
-                    (c.contact?.city || '').toLowerCase().includes(searchTerm) ||
-                    (c.contact?.state || '').toLowerCase().includes(searchTerm) ||
-                    (c.contact?.country || '').toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            if (shopFilter) {
-                filtered = filtered.filter(c => c.shop === shopFilter);
-            }
-            
-            displayCustomers(filtered);
-            
-            const customerCount = document.getElementById('customerCount');
-            if (customerCount) {
-                customerCount.textContent = filtered.length;
-            }
+            showNotification(`Switched to ${tabName} page`);
         }
         
         // Restore saved tab on page load
@@ -1855,28 +1625,9 @@
                 console.log('✅ Dashboard initialization completed');
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
-                if (typeof showNotification === 'function') {
-                    showNotification('Failed to initialize dashboard. Please refresh the page.');
-                }
+                showNotification('Failed to initialize dashboard. Please refresh the page.');
             }
         });
-        
-        // Check authentication AFTER page is fully loaded (non-blocking)
-        window.onload = function() {
-            setTimeout(function() {
-                try {
-                    const isLoggedIn = localStorage.getItem('company_admin_logged_in');
-                    if (isLoggedIn !== 'true') {
-                        const currentUrl = window.location.href.toLowerCase();
-                        if (!currentUrl.includes('company-auth.html') && !currentUrl.includes('login')) {
-                            window.location.href = 'company-auth.html';
-                        }
-                    }
-                } catch(e) {
-                    console.error('Auth check error:', e);
-                }
-            }, 1000);
-        };
     </script>
 </body>
 </html>
