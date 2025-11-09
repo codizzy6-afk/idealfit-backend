@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { redirect, json, useLoaderData } from "react-router";
+import { redirect, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { Redirect as AppBridgeRedirect } from "@shopify/app-bridge/actions";
@@ -34,9 +34,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           process.env.SHOPIFY_APP_URL || new URL(request.url).origin;
         const absoluteUrl = new URL(redirectLocation, origin).toString();
 
-        return json<LoaderData>(
-          { requiresRedirect: true, redirectUrl: absoluteUrl },
-          { headers: error.headers }
+        const headers = new Headers(error.headers);
+        headers.set("Content-Type", "application/json");
+
+        return new Response(
+          JSON.stringify({
+            requiresRedirect: true,
+            redirectUrl: absoluteUrl,
+          }),
+          {
+            status: 200,
+            headers,
+          }
         );
       }
 
@@ -48,7 +57,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function AppIndex() {
-  const data = useLoaderData<typeof loader>();
+  const data = useLoaderData<LoaderData>();
   const appBridge = useAppBridge();
 
   useEffect(() => {
@@ -58,7 +67,10 @@ export default function AppIndex() {
 
     if (appBridge) {
       const redirect = AppBridgeRedirect.create(appBridge);
-      redirect.dispatch(AppBridgeRedirect.Action.REMOTE, data.redirectUrl);
+      redirect.dispatch(
+        AppBridgeRedirect.Action.REMOTE,
+        data.redirectUrl
+      );
     } else {
       window.location.href = data.redirectUrl;
     }
