@@ -7,12 +7,10 @@ import { Redirect as AppBridgeRedirect } from "@shopify/app-bridge/actions";
 
 import { authenticate, registerWebhooks } from "../shopify.server";
 
-type LoaderData = {
-  requiresRedirect: boolean;
-  redirectUrl?: string;
-};
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const shopParameter = url.searchParams.get("shop");
+
   try {
     const { session } = await authenticate.admin(request);
     try {
@@ -31,25 +29,22 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
       if (redirectLocation && redirectLocation.startsWith("/auth")) {
         const origin =
-          process.env.SHOPIFY_APP_URL || new URL(request.url).origin;
+          process.env.SHOPIFY_APP_URL || url.origin;
         const absoluteUrl = new URL(redirectLocation, origin).toString();
 
-        const headers = new Headers(error.headers);
-        headers.set("Content-Type", "application/json");
-
-        return new Response(
-          JSON.stringify({
-            requiresRedirect: true,
-            redirectUrl: absoluteUrl,
-          }),
-          {
-            status: 200,
-            headers,
-          }
-        );
+        return { requiresRedirect: true, redirectUrl: absoluteUrl };
       }
 
       throw error;
+    }
+
+    if (!shopParameter) {
+      const origin = process.env.SHOPIFY_APP_URL || url.origin;
+      const absoluteUrl = new URL("/auth/login", origin);
+      if (!absoluteUrl.searchParams.has("shop") && shopParameter) {
+        absoluteUrl.searchParams.set("shop", shopParameter);
+      }
+      return { requiresRedirect: true, redirectUrl: absoluteUrl.toString() };
     }
 
     throw error;
@@ -57,7 +52,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function AppIndex() {
-  const data = useLoaderData<LoaderData>();
+  const data = useLoaderData<{ requiresRedirect: boolean; redirectUrl?: string }>();
   const appBridge = useAppBridge();
 
   useEffect(() => {
