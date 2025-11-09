@@ -11,7 +11,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     return new Response(null, { status: 200 });
   }
 
-  return { errors: {} };
+  const errors = loginErrorMessage(await login(request));
+
+  return { errors };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
