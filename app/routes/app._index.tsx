@@ -62,10 +62,10 @@ export default function AppIndex() {
 
     if (appBridge) {
       const redirect = AppBridgeRedirect.create(appBridge);
-      redirect.dispatch(
-        AppBridgeRedirect.Action.REMOTE,
-        data.redirectUrl
-      );
+      redirect.dispatch(AppBridgeRedirect.Action.REMOTE, {
+        url: data.redirectUrl,
+        newContext: true,
+      });
     } else {
       window.location.href = data.redirectUrl;
     }
@@ -77,3 +77,4 @@ export default function AppIndex() {
 export const headers: HeadersFunction = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+
