@@ -8,12 +8,10 @@ import { loginErrorMessage } from "./error.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (request.method === "HEAD") {
-    return { errors: {} };
+    return new Response(null, { status: 200 });
   }
 
-  const errors = loginErrorMessage(await login(request));
-
-  return { errors };
+  return { errors: {} };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
