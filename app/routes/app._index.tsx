@@ -1,23 +1,71 @@
 import { useEffect } from "react";
-import type {
-  HeadersFunction,
-  LoaderFunctionArgs,
-} from "react-router";
-import { redirect } from "react-router";
-import { authenticate, registerWebhooks } from "../shopify.server";
+import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
+import { redirect, json, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import { useAppBridge } from "@shopify/app-bridge-react";
+import { Redirect as AppBridgeRedirect } from "@shopify/app-bridge/actions";
+
+import { authenticate, registerWebhooks } from "../shopify.server";
+
+type LoaderData = {
+  requiresRedirect: boolean;
+  redirectUrl?: string;
+};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
-  // Ensure webhooks are registered for this shop/session
   try {
-    await registerWebhooks({ session });
-  } catch (e) {
-    console.warn("Webhook registration skipped/failed:", e instanceof Error ? e.message : e);
+    const { session } = await authenticate.admin(request);
+    try {
+      await registerWebhooks({ session });
+    } catch (e) {
+      console.warn(
+        "Webhook registration skipped/failed:",
+        e instanceof Error ? e.message : e
+      );
+    }
+
+    throw redirect("/app/merchant-dashboard");
+  } catch (error) {
+    if (error instanceof Response && error.status === 302) {
+      const redirectLocation = error.headers.get("Location");
+
+      if (redirectLocation && redirectLocation.startsWith("/auth")) {
+        const origin =
+          process.env.SHOPIFY_APP_URL || new URL(request.url).origin;
+        const absoluteUrl = new URL(redirectLocation, origin).toString();
+
+        return json<LoaderData>(
+          { requiresRedirect: true, redirectUrl: absoluteUrl },
+          { headers: error.headers }
+        );
+      }
+
+      throw error;
+    }
+
+    throw error;
   }
-  // Redirect to merchant dashboard (SSO)
-  throw redirect("/app/merchant-dashboard");
 };
+
+export default function AppIndex() {
+  const data = useLoaderData<typeof loader>();
+  const appBridge = useAppBridge();
+
+  useEffect(() => {
+    if (!data?.requiresRedirect || !data.redirectUrl) {
+      return;
+    }
+
+    if (appBridge) {
+      const redirect = AppBridgeRedirect.create(appBridge);
+      redirect.dispatch(AppBridgeRedirect.Action.REMOTE, data.redirectUrl);
+    } else {
+      window.location.href = data.redirectUrl;
+    }
+  }, [data, appBridge]);
+
+  return null;
+}
 
 export const headers: HeadersFunction = (headersArgs) => {
   return boundary.headers(headersArgs);
