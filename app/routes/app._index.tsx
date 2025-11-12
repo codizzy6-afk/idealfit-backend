@@ -52,15 +52,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     if (error instanceof Response && error.status === 302) {
       const redirectLocation = error.headers.get("Location");
 
-      if (redirectLocation && redirectLocation.startsWith("/auth")) {
-        const origin =
-          process.env.SHOPIFY_APP_URL || url.origin;
-        const absoluteUrl = new URL(redirectLocation, origin).toString();
+      if (redirectLocation) {
+        let redirectUrl: URL;
+        try {
+          redirectUrl = new URL(redirectLocation, url);
+        } catch (parseError) {
+          console.warn("Unable to parse redirect location", parseError);
+          throw error;
+        }
 
-        return jsonResponse(
-          { requiresRedirect: true, redirectUrl: absoluteUrl },
-          { headers: error.headers }
-        );
+        if (redirectUrl.pathname.startsWith("/auth")) {
+          const origin = process.env.SHOPIFY_APP_URL || url.origin;
+          const absoluteUrl = new URL(
+            `${redirectUrl.pathname}${redirectUrl.search}`,
+            origin
+          ).toString();
+
+          return jsonResponse(
+            { requiresRedirect: true, redirectUrl: absoluteUrl },
+            { headers: error.headers }
+          );
+        }
       }
 
       throw error;
