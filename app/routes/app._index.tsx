@@ -7,9 +7,34 @@ import { Redirect as AppBridgeRedirect } from "@shopify/app-bridge/actions";
 
 import { authenticate, registerWebhooks } from "../shopify.server";
 
+const jsonResponse = (data: unknown, init?: ResponseInit) => {
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  return new Response(JSON.stringify(data), { ...init, headers });
+};
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
-  const shopParameter = url.searchParams.get("shop");
+  const headerShop =
+    request.headers.get("shopify-shop-domain") ||
+    request.headers.get("x-shopify-shop-domain");
+  let refererShop: string | null = null;
+  const refererHeader = request.headers.get("referer");
+  if (refererHeader) {
+    try {
+      const refererUrl = new URL(refererHeader);
+      refererShop = refererUrl.searchParams.get("shop");
+    } catch (refererError) {
+      console.warn(
+        "Unable to parse referer for shop domain",
+        refererError instanceof Error ? refererError.message : refererError
+      );
+    }
+  }
+  const shopParameter =
+    url.searchParams.get("shop") || headerShop || refererShop || undefined;
 
   try {
     const { session } = await authenticate.admin(request);
@@ -32,7 +57,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           process.env.SHOPIFY_APP_URL || url.origin;
         const absoluteUrl = new URL(redirectLocation, origin).toString();
 
-        return { requiresRedirect: true, redirectUrl: absoluteUrl };
+        return jsonResponse(
+          { requiresRedirect: true, redirectUrl: absoluteUrl },
+          { headers: error.headers }
+        );
       }
 
       throw error;
@@ -44,7 +72,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       if (!absoluteUrl.searchParams.has("shop") && shopParameter) {
         absoluteUrl.searchParams.set("shop", shopParameter);
       }
-      return { requiresRedirect: true, redirectUrl: absoluteUrl.toString() };
+      return jsonResponse({
+        requiresRedirect: true,
+        redirectUrl: absoluteUrl.toString(),
+      });
     }
 
     throw error;
@@ -52,7 +83,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function AppIndex() {
-  const data = useLoaderData<{ requiresRedirect: boolean; redirectUrl?: string }>();
+  const data = useLoaderData<typeof loader>();
   const appBridge = useAppBridge();
 
   useEffect(() => {
@@ -77,4 +108,3 @@ export default function AppIndex() {
 export const headers: HeadersFunction = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
-
