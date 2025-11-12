@@ -61,12 +61,21 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           throw error;
         }
 
-        if (redirectUrl.pathname.startsWith("/auth")) {
+        const isRelativeAuth =
+          redirectUrl.origin === url.origin &&
+          redirectUrl.pathname.startsWith("/auth");
+        const isShopifyOauth =
+          /(?:^|\.)shopify\.com$/i.test(redirectUrl.hostname) &&
+          redirectUrl.pathname.includes("/oauth/");
+
+        if (isRelativeAuth || isShopifyOauth) {
           const origin = process.env.SHOPIFY_APP_URL || url.origin;
-          const absoluteUrl = new URL(
-            `${redirectUrl.pathname}${redirectUrl.search}`,
-            origin
-          ).toString();
+          const absoluteUrl = isRelativeAuth
+            ? new URL(
+                `${redirectUrl.pathname}${redirectUrl.search}`,
+                origin
+              ).toString()
+            : redirectUrl.toString();
 
           return jsonResponse(
             { requiresRedirect: true, redirectUrl: absoluteUrl },
